@@ -2,7 +2,7 @@
   "dockerComposeFile": ["../docker-compose.yml"],
   "service": "auth-api",
   "workspaceFolder": "/workspace",
-  "postAttachCommand": "git config --global --add safe.directory /workspace",
+  "postAttachCommand": "git config --global --add safe.directory /workspace && air -c .air.toml",
   "containerEnv": {
     "SHELL": "/bin/bash"
   },

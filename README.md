@@ -4,7 +4,7 @@
 
 ### Dev Containers
 
-本環境には[Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)を利用.
+開発環境には[Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)を利用.
 
 Visual Studio Code拡張機能.<br />
 https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
@@ -31,4 +31,25 @@ issue-${ISSUE_NUMBER}   // issue-1
 
 ```
 create: 新規機能を作成.
+```
+
+## データベース接続
+
+本開発環境はDBコンテナをhostにポートフォワードしていない.<br />
+データベースクライアントにadminerを利用する場合、以下のdocker-compose.ymlを作成し起動する.
+
+```yml
+services:
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - nw-holos
+    ports:
+      - 8080:8080
+
+networks:
+  nw-holos:
+    external: true
+
 ```

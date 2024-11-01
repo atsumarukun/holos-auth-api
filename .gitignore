@@ -1,2 +1,5 @@
 # database directory
 db/data/
+
+# log file
+server.log

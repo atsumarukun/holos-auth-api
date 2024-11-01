@@ -1,12 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"holos-auth-api/internal/app/api"
+)
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("HelloWorld"))
-	})
-	if err := http.ListenAndServe(":8000", nil); err != nil {
-		panic(err)
-	}
+	api.Serve()
 }

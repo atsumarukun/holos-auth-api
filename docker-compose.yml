@@ -1,0 +1,49 @@
+services:
+  auth-db:
+    image: mysql:9.0
+    volumes:
+      - ./db/data:/var/lib/mysql
+    networks:
+      - nw-holos
+    environment:
+      TZ: UTC
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: develop
+      MYSQL_PASSWORD: develop
+      MYSQL_DATABASE: develop
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  auth-api:
+    build:
+      context: ./build/package
+      dockerfile: Dockerfile.local
+    volumes:
+      - .:/workspace
+      - db_data:/workspace/db/data
+    working_dir: /workspace
+    networks:
+      - nw-holos
+    ports:
+      - 8001:8000
+    environment:
+      TZ: UTC
+      MYSQL_HOST: auth-db
+      MYSQL_PORT: 3306
+      MYSQL_USER: develop
+      MYSQL_PASSWORD: develop
+      MYSQL_DATABASE: develop
+    tty: true
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+
+networks:
+  nw-holos:
+    external: true

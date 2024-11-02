@@ -9,5 +9,5 @@ type UserRepository interface {
 	Create(context.Context, *entity.User) error
 	Update(context.Context, *entity.User) error
 	Delete(context.Context, *entity.User) error
-	FindOneByID(context.Context, string) (*entity.User, error)
+	FindOneByName(context.Context, string) (*entity.User, error)
 }

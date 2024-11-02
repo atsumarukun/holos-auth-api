@@ -23,17 +23,17 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
-  /users/{id}:
+  /users/{name}:
     put:
       summary: "ユーザー更新"
       tags:
         - "users"
       parameters:
         - in: "path"
-          name: "id"
+          name: "name"
           required: true
           schema:
-            $ref: "#/components/schemas/user/properties/id"
+            $ref: "#/components/schemas/user/properties/name"
       requestBody:
         $ref: "#/components/requestBodies/update_user"
       responses:
@@ -55,10 +55,10 @@ paths:
         - "users"
       parameters:
         - in: "path"
-          name: "id"
+          name: "name"
           required: true
           schema:
-            $ref: "#/components/schemas/user/properties/id"
+            $ref: "#/components/schemas/user/properties/name"
       responses:
         204:
           description: "成功"
@@ -89,10 +89,10 @@ components:
     user:
       type: "object"
       properties:
-        id:
+        name:
           type: "string"
-          description: "ユーザーID"
-          example: "user_id"
+          description: "ユーザー名"
+          example: "user_name"
         password:
           type: "string"
           description: "パスワード"

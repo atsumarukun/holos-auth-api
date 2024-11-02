@@ -4,24 +4,32 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        string    `db:"id"`
+	ID        uuid.UUID `db:"id"`
+	Name      string    `db:"name"`
 	Password  string    `db:"password"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func NewUser(id string, password string) (*User, error) {
-	if 255 < len(id) {
+func NewUser(name string, password string) (*User, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	if 255 < len(name) {
 		return nil, errors.New("id must be less than 255 characters")
 	}
 
 	now := time.Now()
 	user := &User{
 		ID:        id,
+		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

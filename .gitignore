@@ -1,5 +1,8 @@
 # database directory
 db/data/
 
+# temporary build files
+tmp/
+
 # log file
 server.log

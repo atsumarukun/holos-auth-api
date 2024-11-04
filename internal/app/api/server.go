@@ -65,6 +65,6 @@ func Serve() {
 	defer stop()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Println(err.Error())
+		log.Fatalln(err.Error())
 	}
 }

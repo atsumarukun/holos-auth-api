@@ -34,7 +34,7 @@ func (ui *userInfrastructure) Update(ctx context.Context, user *entity.User) err
 	driver := getSqlxDriver(ctx, ui.db)
 	_, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE users SET name = :name, password = :password, updated_at :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE users SET name = :name, password = :password, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		user,
 	)
 	return err

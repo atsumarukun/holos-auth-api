@@ -4,7 +4,7 @@
 erDiagram
 
 users {
-  binary(16) id PK
+  char(36) id PK
   varchar(255) name
   varchar(60) password
   datetime(6) created_at
@@ -19,7 +19,7 @@ users {
 **ユーザーテーブル**
 | type | name | key | nullable | comment |
 | --- | --- | --- | --- | --- |
-| binary(16) | id | PK | | ID |
+| char(36) | id | PK | | ID |
 | varchar(255) | name | UQ | | ユーザー名 |
 | varchar(60) | password | | | パスワード |
 | datetime(6) | created_at | | | 作成日 |

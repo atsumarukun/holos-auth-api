@@ -53,7 +53,7 @@ func (uh *userHandler) Update(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.Update(ctx, c.Param("name"), req.NewPassword, req.NewPassword, req.ConfirmNewPassword)
+	dto, err := uh.userUsecase.Update(ctx, c.Param("name"), req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

@@ -22,7 +22,7 @@ func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
 }
 
 func (sto *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
-	tx, err := sto.db.Begin()
+	tx, err := sto.db.Beginx()
 	if err != nil {
 		return err
 	}

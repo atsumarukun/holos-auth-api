@@ -22,23 +22,32 @@ func NewUser(name string, password string) (*User, error) {
 		return nil, err
 	}
 
-	if 255 < len(name) {
-		return nil, errors.New("id must be less than 255 characters")
+	user := &User{
+		ID: id,
 	}
 
-	now := time.Now()
-	user := &User{
-		ID:        id,
-		Name:      name,
-		CreatedAt: now,
-		UpdatedAt: now,
+	if err := user.SetName(name); err != nil {
+		return nil, err
 	}
 
 	if err := user.SetPassword(password); err != nil {
 		return nil, err
 	}
 
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+
 	return user, nil
+}
+
+func (u *User) SetName(name string) error {
+	if 255 < len(name) {
+		return errors.New("id must be less than 255 characters")
+	}
+	u.Name = name
+	u.UpdatedAt = time.Now()
+	return nil
 }
 
 func (u *User) SetPassword(password string) error {
@@ -47,6 +56,7 @@ func (u *User) SetPassword(password string) error {
 		return err
 	}
 	u.Password = string(hashed)
+	u.UpdatedAt = time.Now()
 	return nil
 }
 

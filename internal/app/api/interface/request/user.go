@@ -1,8 +1,9 @@
 package request
 
 type CreateUserRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name            string `json:"name"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
 }
 
 type UpdateUserRequest struct {

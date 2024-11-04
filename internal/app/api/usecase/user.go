@@ -11,7 +11,7 @@ import (
 )
 
 type UserUsecase interface {
-	Create(context.Context, string, string) (*dto.UserDTO, error)
+	Create(context.Context, string, string, string) (*dto.UserDTO, error)
 	Update(context.Context, string, string, string, string) (*dto.UserDTO, error)
 	Delete(context.Context, string) error
 }
@@ -30,8 +30,8 @@ func NewUserUsecase(transactionObject domain.TransactionObject, userRepository r
 	}
 }
 
-func (uu *userUsecase) Create(ctx context.Context, name string, password string) (*dto.UserDTO, error) {
-	user, err := entity.NewUser(name, password)
+func (uu *userUsecase) Create(ctx context.Context, name string, password string, confirmPassword string) (*dto.UserDTO, error) {
+	user, err := entity.NewUser(name, password, confirmPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +68,7 @@ func (uu *userUsecase) Update(ctx context.Context, name string, currentPassword 
 			return err
 		}
 
-		if newPassword != confirmNewPassword {
-			return errors.New("new password does not match")
-		}
-
-		if err := user.SetPassword(newPassword); err != nil {
+		if err := user.SetPassword(newPassword, confirmNewPassword); err != nil {
 			return err
 		}
 

@@ -35,7 +35,7 @@ func (uh *userHandler) Create(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.Create(ctx, req.Name, req.Password)
+	dto, err := uh.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

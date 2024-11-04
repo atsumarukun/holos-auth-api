@@ -16,7 +16,7 @@ type User struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func NewUser(name string, password string) (*User, error) {
+func NewUser(name string, password string, confirmPassword string) (*User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func NewUser(name string, password string) (*User, error) {
 		return nil, err
 	}
 
-	if err := user.SetPassword(password); err != nil {
+	if err := user.SetPassword(password, confirmPassword); err != nil {
 		return nil, err
 	}
 
@@ -50,7 +50,10 @@ func (u *User) SetName(name string) error {
 	return nil
 }
 
-func (u *User) SetPassword(password string) error {
+func (u *User) SetPassword(password string, confirmPassword string) error {
+	if password != confirmPassword {
+		return errors.New("password does not match")
+	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err

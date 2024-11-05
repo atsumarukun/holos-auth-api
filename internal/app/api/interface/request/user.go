@@ -11,3 +11,7 @@ type UpdateUserRequest struct {
 	NewPassword        string `json:"new_password"`
 	ConfirmNewPassword string `json:"confirm_new_password"`
 }
+
+type DeleteUserRequest struct {
+	Password string `json:"password"`
+}

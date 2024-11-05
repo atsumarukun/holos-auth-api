@@ -59,6 +59,8 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/user/properties/name"
+      requestBody:
+        $ref: "#/components/requestBodies/delete_user"
       responses:
         204:
           description: "成功"
@@ -110,6 +112,7 @@ components:
       required:
         - "id"
         - "password"
+        - "confirm_password"
         - "created_at"
         - "updated_at"
 
@@ -131,17 +134,30 @@ components:
             properties:
               current_password:
                 type: "string"
-                description: "パスワード"
+                description: "現在のパスワード"
                 example: "current_password"
               new_password:
                 type: "string"
-                description: "パスワード"
+                description: "新規パスワード"
                 example: "new_password"
               confirm_new_password:
                 type: "string"
-                description: "パスワード"
-                example: "confirm_new_password"
-
+                description: "確認用新規パスワード"
+                example: "new_password"
+    delete_user:
+      description: "ユーザー削除"
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/user"
+              - type: "object"
+                properties:
+                  name:
+                    readOnly: true
+                  confirm_password:
+                    readOnly: true
   responses:
     create_user:
       description: "ユーザー作成"

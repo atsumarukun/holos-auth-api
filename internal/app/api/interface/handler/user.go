@@ -63,9 +63,15 @@ func (uh *userHandler) Update(c *gin.Context) {
 }
 
 func (uh *userHandler) Delete(c *gin.Context) {
+	var req request.DeleteUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
 	ctx := context.Background()
 
-	if err := uh.userUsecase.Delete(ctx, c.Param("name")); err != nil {
+	if err := uh.userUsecase.Delete(ctx, c.Param("name"), req.Password); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

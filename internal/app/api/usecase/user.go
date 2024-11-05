@@ -13,7 +13,7 @@ import (
 type UserUsecase interface {
 	Create(context.Context, string, string, string) (*dto.UserDTO, error)
 	Update(context.Context, string, string, string, string) (*dto.UserDTO, error)
-	Delete(context.Context, string) error
+	Delete(context.Context, string, string) error
 }
 
 type userUsecase struct {
@@ -80,7 +80,7 @@ func (uu *userUsecase) Update(ctx context.Context, name string, currentPassword 
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) Delete(ctx context.Context, name string) error {
+func (uu *userUsecase) Delete(ctx context.Context, name string, password string) error {
 	return uu.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		user, err := uu.userRepository.FindOneByName(ctx, name)
 		if err != nil {
@@ -88,6 +88,10 @@ func (uu *userUsecase) Delete(ctx context.Context, name string) error {
 		}
 		if user == nil {
 			return errors.New("user not found")
+		}
+
+		if err := user.ComparePassword(password); err != nil {
+			return err
 		}
 
 		return uu.userRepository.Delete(ctx, user)

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,6 +46,13 @@ func (u *User) SetName(name string) error {
 	if 255 < len(name) {
 		return errors.New("id must be less than 255 characters")
 	}
+	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return errors.New("invalid name")
+	}
 	u.Name = name
 	u.UpdatedAt = time.Now()
 	return nil
@@ -53,6 +61,13 @@ func (u *User) SetName(name string) error {
 func (u *User) SetPassword(password string, confirmPassword string) error {
 	if password != confirmPassword {
 		return errors.New("password does not match")
+	}
+	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return errors.New("invalid password")
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

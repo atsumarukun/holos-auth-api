@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-func TestExists(t *testing.T) {
+func TestUser_Exists(t *testing.T) {
 	tests := []struct {
 		name        string
 		password    string

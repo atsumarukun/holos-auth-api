@@ -10,6 +10,11 @@ import (
 	"holos-auth-api/internal/app/api/usecase/dto"
 )
 
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound      = errors.New("user not found")
+)
+
 type UserUsecase interface {
 	Create(context.Context, string, string, string) (*dto.UserDTO, error)
 	Update(context.Context, string, string, string, string) (*dto.UserDTO, error)
@@ -40,7 +45,7 @@ func (uu *userUsecase) Create(ctx context.Context, name string, password string,
 		if exists, err := uu.userService.Exists(ctx, user); err != nil {
 			return err
 		} else if exists {
-			return errors.New("user already exists")
+			return ErrUserAlreadyExists
 		}
 
 		return uu.userRepository.Create(ctx, user)
@@ -61,7 +66,7 @@ func (uu *userUsecase) Update(ctx context.Context, name string, currentPassword 
 			return err
 		}
 		if user == nil {
-			return errors.New("user not found")
+			return ErrUserNotFound
 		}
 
 		if err := user.ComparePassword(currentPassword); err != nil {
@@ -87,7 +92,7 @@ func (uu *userUsecase) Delete(ctx context.Context, name string, password string)
 			return err
 		}
 		if user == nil {
-			return errors.New("user not found")
+			return ErrUserNotFound
 		}
 
 		if err := user.ComparePassword(password); err != nil {

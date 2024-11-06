@@ -106,6 +106,26 @@ func TestSetPassword(t *testing.T) {
 			confirmPassword: "ぱすわーど",
 			expect:          entity.ErrInvalidUserPassword,
 		},
+		{
+			password:        strings.Repeat("a", 7),
+			confirmPassword: strings.Repeat("a", 7),
+			expect:          entity.ErrUserPasswordTooShort,
+		},
+		{
+			password:        strings.Repeat("a", 8),
+			confirmPassword: strings.Repeat("a", 8),
+			expect:          nil,
+		},
+		{
+			password:        strings.Repeat("a", 72),
+			confirmPassword: strings.Repeat("a", 72),
+			expect:          nil,
+		},
+		{
+			password:        strings.Repeat("a", 73),
+			confirmPassword: strings.Repeat("a", 73),
+			expect:          entity.ErrUserPasswordTooLong,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.password, func(t *testing.T) {

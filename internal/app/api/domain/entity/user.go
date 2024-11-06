@@ -13,8 +13,10 @@ var (
 	ErrUserNameTooShort         = errors.New("user name must be 3 characters or more")
 	ErrUserNameTooLong          = errors.New("user name must be 24 characters or less")
 	ErrInvalidUserName          = errors.New("invalid user name")
-	ErrInvalidUserPassword      = errors.New("invalid user password")
 	ErrUserPasswordDoesNotMatch = errors.New("password does not match")
+	ErrUserPasswordTooShort     = errors.New("user password must be 8 characters or more")
+	ErrUserPasswordTooLong      = errors.New("user password must be 72 characters or less")
+	ErrInvalidUserPassword      = errors.New("invalid user password")
 )
 
 type User struct {
@@ -72,6 +74,12 @@ func (u *User) SetName(name string) error {
 func (u *User) SetPassword(password string, confirmPassword string) error {
 	if password != confirmPassword {
 		return ErrUserPasswordDoesNotMatch
+	}
+	if len(password) < 8 {
+		return ErrUserPasswordTooShort
+	}
+	if 72 < len(password) {
+		return ErrUserPasswordTooLong
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
 	if err != nil {

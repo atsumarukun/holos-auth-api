@@ -9,6 +9,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	ErrInvalidUserName          = errors.New("invalid user name")
+	ErrUserNameTooLong          = errors.New("id must be less than 255 characters")
+	ErrInvalidUserPassword      = errors.New("invalid user password")
+	ErrUserPasswordDoesNotMatch = errors.New("password does not match")
+)
+
 type User struct {
 	ID        uuid.UUID `db:"id"`
 	Name      string    `db:"name"`
@@ -44,14 +51,14 @@ func NewUser(name string, password string, confirmPassword string) (*User, error
 
 func (u *User) SetName(name string) error {
 	if 255 < len(name) {
-		return errors.New("id must be less than 255 characters")
+		return ErrUserNameTooLong
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
 		return err
 	}
 	if !matched {
-		return errors.New("invalid name")
+		return ErrInvalidUserName
 	}
 	u.Name = name
 	u.UpdatedAt = time.Now()
@@ -60,14 +67,14 @@ func (u *User) SetName(name string) error {
 
 func (u *User) SetPassword(password string, confirmPassword string) error {
 	if password != confirmPassword {
-		return errors.New("password does not match")
+		return ErrUserPasswordDoesNotMatch
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
 	if err != nil {
 		return err
 	}
 	if !matched {
-		return errors.New("invalid password")
+		return ErrInvalidUserPassword
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

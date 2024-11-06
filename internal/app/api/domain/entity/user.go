@@ -10,8 +10,9 @@ import (
 )
 
 var (
+	ErrUserNameTooShort         = errors.New("user name must be 3 characters or more")
+	ErrUserNameTooLong          = errors.New("user name must be 24 characters or less")
 	ErrInvalidUserName          = errors.New("invalid user name")
-	ErrUserNameTooLong          = errors.New("id must be less than 255 characters")
 	ErrInvalidUserPassword      = errors.New("invalid user password")
 	ErrUserPasswordDoesNotMatch = errors.New("password does not match")
 )
@@ -50,7 +51,10 @@ func NewUser(name string, password string, confirmPassword string) (*User, error
 }
 
 func (u *User) SetName(name string) error {
-	if 255 < len(name) {
+	if len(name) < 3 {
+		return ErrUserNameTooShort
+	}
+	if 24 < len(name) {
 		return ErrUserNameTooLong
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)

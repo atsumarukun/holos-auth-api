@@ -40,23 +40,31 @@ func TestSetName(t *testing.T) {
 		expect error
 	}{
 		{
-			name:   "NAME",
+			name:   "valid_NAME",
 			expect: nil,
 		},
 		{
-			name:   "valid_name",
+			name:   "invalid-NAME",
+			expect: entity.ErrInvalidUserName,
+		},
+		{
+			name:   "なまえ",
+			expect: entity.ErrInvalidUserName,
+		},
+		{
+			name:   strings.Repeat("a", 2),
+			expect: entity.ErrUserNameTooShort,
+		},
+		{
+			name:   strings.Repeat("a", 3),
 			expect: nil,
 		},
 		{
-			name:   "invalid-name",
-			expect: entity.ErrInvalidUserName,
+			name:   strings.Repeat("a", 24),
+			expect: nil,
 		},
 		{
-			name:   "名前",
-			expect: entity.ErrInvalidUserName,
-		},
-		{
-			name:   strings.Repeat("a", 256),
+			name:   strings.Repeat("a", 25),
 			expect: entity.ErrUserNameTooLong,
 		},
 	}

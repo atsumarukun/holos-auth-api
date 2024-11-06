@@ -5,7 +5,7 @@ erDiagram
 
 users {
   char(36) id PK
-  varchar(255) name
+  varchar(24) name
   varchar(60) password
   datetime(6) created_at
   datetime(6) updated_at
@@ -20,7 +20,7 @@ users {
 | type | name | key | nullable | comment |
 | --- | --- | --- | --- | --- |
 | char(36) | id | PK | | ID |
-| varchar(255) | name | UQ | | ユーザー名 |
+| varchar(24) | name | UQ | | ユーザー名 |
 | varchar(60) | password | | | パスワード |
 | datetime(6) | created_at | | | 作成日 |
 | datetime(6) | updated_at | | | 更新日 |

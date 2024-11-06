@@ -20,8 +20,8 @@ func TestNewUser(t *testing.T) {
 	if u.Name == "" {
 		t.Error("name: expect string but got empty")
 	}
-	if u.Name == "" {
-		t.Error("password: expect string but got empty")
+	if len(u.Password) != 60 {
+		t.Errorf("password: expect 60 characters but got %d characters", len(u.Password))
 	}
 	if u.CreatedAt.IsZero() {
 		t.Error("created_at: expect time but got empty")

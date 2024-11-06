@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestNewUser(t *testing.T) {
@@ -34,7 +35,7 @@ func TestNewUser(t *testing.T) {
 	}
 }
 
-func TestSetName(t *testing.T) {
+func TestUser_SetName(t *testing.T) {
 	tests := []struct {
 		name   string
 		expect error
@@ -85,7 +86,7 @@ func TestSetName(t *testing.T) {
 	}
 }
 
-func TestSetPassword(t *testing.T) {
+func TestUser_SetPassword(t *testing.T) {
 	tests := []struct {
 		password        string
 		confirmPassword string
@@ -134,6 +135,37 @@ func TestSetPassword(t *testing.T) {
 				t.Error(err.Error())
 			}
 			if err := u.SetPassword(tt.password, tt.confirmPassword); !errors.Is(err, tt.expect) {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestUser_ComparePassword(t *testing.T) {
+	tests := []struct {
+		password string
+		expect   error
+	}{
+		{
+			password: "password",
+			expect:   nil,
+		},
+		{
+			password: "test_password",
+			expect:   bcrypt.ErrMismatchedHashAndPassword,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.password, func(t *testing.T) {
+			u, err := entity.NewUser("name", "password", "password")
+			if err != nil {
+				t.Error(err.Error())
+			}
+			if err := u.ComparePassword(tt.password); !errors.Is(err, tt.expect) {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {

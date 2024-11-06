@@ -13,26 +13,23 @@ import (
 func TestUser_Exists(t *testing.T) {
 	tests := []struct {
 		name        string
-		password    string
 		isReturnNil bool
 		expect      bool
 	}{
 		{
 			name:        "exists",
-			password:    "password",
 			isReturnNil: false,
 			expect:      true,
 		},
 		{
 			name:        "not_exists",
-			password:    "password",
 			isReturnNil: true,
 			expect:      false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, tt.password, tt.password)
+			user, err := entity.NewUser(tt.name, "password", "password")
 			if err != nil {
 				t.Error(err.Error())
 			}

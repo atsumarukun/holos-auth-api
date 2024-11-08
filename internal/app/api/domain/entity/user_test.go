@@ -11,26 +11,26 @@ import (
 )
 
 func TestNewUser(t *testing.T) {
-	u, err := entity.NewUser("name", "password", "password")
+	user, err := entity.NewUser("name", "password", "password")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if u.ID == uuid.Nil {
+	if user.ID == uuid.Nil {
 		t.Error("id: expect uuid but got empty")
 	}
-	if u.Name == "" {
+	if user.Name == "" {
 		t.Error("name: expect string but got empty")
 	}
-	if len(u.Password) != 60 {
-		t.Errorf("password: expect 60 characters but got %d characters", len(u.Password))
+	if len(user.Password) != 60 {
+		t.Errorf("password: expect 60 characters but got %d characters", len(user.Password))
 	}
-	if u.CreatedAt.IsZero() {
+	if user.CreatedAt.IsZero() {
 		t.Error("created_at: expect time but got empty")
 	}
-	if u.UpdatedAt.IsZero() {
+	if user.UpdatedAt.IsZero() {
 		t.Error("updated_at: expect time but got empty")
 	}
-	if !u.CreatedAt.Equal(u.UpdatedAt) {
+	if !user.CreatedAt.Equal(user.UpdatedAt) {
 		t.Error("expect created_at and updated_at to be equal")
 	}
 }
@@ -71,11 +71,11 @@ func TestUser_SetName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u, err := entity.NewUser("name", "password", "password")
+			user, err := entity.NewUser("name", "password", "password")
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := u.SetName(tt.name); !errors.Is(err, tt.expect) {
+			if err := user.SetName(tt.name); !errors.Is(err, tt.expect) {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -130,11 +130,11 @@ func TestUser_SetPassword(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.password, func(t *testing.T) {
-			u, err := entity.NewUser("name", "password", "password")
+			user, err := entity.NewUser("name", "password", "password")
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := u.SetPassword(tt.password, tt.confirmPassword); !errors.Is(err, tt.expect) {
+			if err := user.SetPassword(tt.password, tt.confirmPassword); !errors.Is(err, tt.expect) {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -161,11 +161,11 @@ func TestUser_ComparePassword(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.password, func(t *testing.T) {
-			u, err := entity.NewUser("name", "password", "password")
+			user, err := entity.NewUser("name", "password", "password")
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := u.ComparePassword(tt.password); !errors.Is(err, tt.expect) {
+			if err := user.ComparePassword(tt.password); !errors.Is(err, tt.expect) {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {

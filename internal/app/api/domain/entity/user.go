@@ -1,0 +1,102 @@
+package entity
+
+import (
+	"errors"
+	"regexp"
+	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	ErrUserNameTooShort         = errors.New("user name must be 3 characters or more")
+	ErrUserNameTooLong          = errors.New("user name must be 24 characters or less")
+	ErrInvalidUserName          = errors.New("invalid user name")
+	ErrUserPasswordDoesNotMatch = errors.New("password does not match")
+	ErrUserPasswordTooShort     = errors.New("user password must be 8 characters or more")
+	ErrUserPasswordTooLong      = errors.New("user password must be 72 characters or less")
+	ErrInvalidUserPassword      = errors.New("invalid user password")
+)
+
+type User struct {
+	ID        uuid.UUID `db:"id"`
+	Name      string    `db:"name"`
+	Password  string    `db:"password"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+}
+
+func NewUser(name string, password string, confirmPassword string) (*User, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		ID: id,
+	}
+
+	if err := user.SetName(name); err != nil {
+		return nil, err
+	}
+
+	if err := user.SetPassword(password, confirmPassword); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+
+	return user, nil
+}
+
+func (u *User) SetName(name string) error {
+	if len(name) < 3 {
+		return ErrUserNameTooShort
+	}
+	if 24 < len(name) {
+		return ErrUserNameTooLong
+	}
+	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return ErrInvalidUserName
+	}
+	u.Name = name
+	u.UpdatedAt = time.Now()
+	return nil
+}
+
+func (u *User) SetPassword(password string, confirmPassword string) error {
+	if password != confirmPassword {
+		return ErrUserPasswordDoesNotMatch
+	}
+	if len(password) < 8 {
+		return ErrUserPasswordTooShort
+	}
+	if 72 < len(password) {
+		return ErrUserPasswordTooLong
+	}
+	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return ErrInvalidUserPassword
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.Password = string(hashed)
+	u.UpdatedAt = time.Now()
+	return nil
+}
+
+func (u *User) ComparePassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+}

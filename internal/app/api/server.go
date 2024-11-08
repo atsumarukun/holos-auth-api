@@ -40,10 +40,10 @@ func Serve() {
 		log.Fatalln(err)
 	}
 
+	inject(db)
+
 	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello World")
-	})
+	getRoutes(r)
 
 	srv := &http.Server{
 		Addr:    ":8000",
@@ -65,6 +65,6 @@ func Serve() {
 	defer stop()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Println(err.Error())
+		log.Fatalln(err.Error())
 	}
 }

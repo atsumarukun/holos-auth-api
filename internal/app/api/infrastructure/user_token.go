@@ -51,7 +51,7 @@ func (ui *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Conte
 	driver := getSqlxDriver(ctx, ui.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND expires_at < NOW(6) LIMIT 1;`,
+		`SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;`,
 		token,
 	).StructScan(&userToken); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

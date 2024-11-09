@@ -65,6 +65,9 @@ func (uu *authUsecase) Signout(ctx context.Context, token string) apierr.ApiErro
 		if err != nil {
 			return err
 		}
+		if userToken == nil {
+			return ErrAuthenticationFailed
+		}
 
 		return uu.userTokenRepository.Delete(ctx, userToken)
 	})

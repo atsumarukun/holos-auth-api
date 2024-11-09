@@ -19,13 +19,9 @@ type UserToken struct {
 }
 
 func NewUserToken(userID uuid.UUID) (*UserToken, apierr.ApiError) {
-	buf := make([]byte, 24)
-	if _, err := rand.Read(buf); err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
-	}
-	token := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(buf)
-	if 32 < len(token) {
-		return nil, ErrUserTokenTooLong
+	token, err := generateToken()
+	if err != nil {
+		return nil, err
 	}
 
 	return &UserToken{
@@ -33,4 +29,16 @@ func NewUserToken(userID uuid.UUID) (*UserToken, apierr.ApiError) {
 		Token:     token,
 		ExpiresAt: time.Now().Add(time.Hour * 24 * 30),
 	}, nil
+}
+
+func generateToken() (string, apierr.ApiError) {
+	buf := make([]byte, 24)
+	if _, err := rand.Read(buf); err != nil {
+		return "", apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	token := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(buf)
+	if 32 < len(token) {
+		return "", ErrUserTokenTooLong
+	}
+	return token, nil
 }

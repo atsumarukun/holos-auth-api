@@ -31,11 +31,11 @@ func NewAuthUsecase(transactionObject domain.TransactionObject, userRepository r
 	}
 }
 
-func (uu *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
+func (au *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
 	var userToken *entity.UserToken
 
-	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := uu.userRepository.FindOneByName(ctx, userName)
+	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		user, err := au.userRepository.FindOneByName(ctx, userName)
 		if err != nil {
 			return err
 		}
@@ -52,16 +52,16 @@ func (uu *authUsecase) Signin(ctx context.Context, userName string, password str
 			return err
 		}
 
-		return uu.userTokenRepository.Save(ctx, userToken)
+		return au.userTokenRepository.Save(ctx, userToken)
 	}); err != nil {
 		return "", err
 	}
 	return userToken.Token, nil
 }
 
-func (uu *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
-	return uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		userToken, err := uu.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
+	return au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 		if err != nil {
 			return err
 		}
@@ -69,6 +69,6 @@ func (uu *authUsecase) Signout(ctx context.Context, token string) apierr.ApiErro
 			return ErrAuthenticationFailed
 		}
 
-		return uu.userTokenRepository.Delete(ctx, userToken)
+		return au.userTokenRepository.Delete(ctx, userToken)
 	})
 }

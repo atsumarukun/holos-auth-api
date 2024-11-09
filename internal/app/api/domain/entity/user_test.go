@@ -1,13 +1,12 @@
 package entity_test
 
 import (
-	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
+	"holos-auth-api/internal/pkg/apierr"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func TestNewUser(t *testing.T) {
@@ -38,7 +37,7 @@ func TestNewUser(t *testing.T) {
 func TestUser_SetName(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect error
+		expect apierr.ApiError
 	}{
 		{
 			name:   "valid_NAME",
@@ -75,7 +74,7 @@ func TestUser_SetName(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := user.SetName(tt.name); !errors.Is(err, tt.expect) {
+			if err := user.SetName(tt.name); err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -90,7 +89,7 @@ func TestUser_SetPassword(t *testing.T) {
 	tests := []struct {
 		password        string
 		confirmPassword string
-		expect          error
+		expect          apierr.ApiError
 	}{
 		{
 			password:        "password",
@@ -134,7 +133,7 @@ func TestUser_SetPassword(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := user.SetPassword(tt.password, tt.confirmPassword); !errors.Is(err, tt.expect) {
+			if err := user.SetPassword(tt.password, tt.confirmPassword); err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -148,7 +147,7 @@ func TestUser_SetPassword(t *testing.T) {
 func TestUser_ComparePassword(t *testing.T) {
 	tests := []struct {
 		password string
-		expect   error
+		expect   apierr.ApiError
 	}{
 		{
 			password: "password",
@@ -156,7 +155,7 @@ func TestUser_ComparePassword(t *testing.T) {
 		},
 		{
 			password: "test_password",
-			expect:   bcrypt.ErrMismatchedHashAndPassword,
+			expect:   entity.ErrAuthenticationFailed,
 		},
 	}
 	for _, tt := range tests {
@@ -165,7 +164,7 @@ func TestUser_ComparePassword(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := user.ComparePassword(tt.password); !errors.Is(err, tt.expect) {
+			if err := user.ComparePassword(tt.password); err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {

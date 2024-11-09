@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"holos-auth-api/internal/app/api/domain"
+	"holos-auth-api/internal/pkg/apierr"
 	"log"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -21,10 +23,10 @@ func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
 	}
 }
 
-func (sto *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
+func (sto *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) apierr.ApiError) apierr.ApiError {
 	tx, err := sto.db.Beginx()
 	if err != nil {
-		return err
+		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 
 	defer func() {

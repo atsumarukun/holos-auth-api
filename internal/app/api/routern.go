@@ -9,4 +9,10 @@ func getRoutes(r *gin.Engine) {
 		users.PUT("/:name", userHandler.Update)
 		users.DELETE("/:name", userHandler.Delete)
 	}
+
+	auth := r.Group("auth")
+	{
+		auth.POST("/signin", authHandler.Signin)
+		auth.DELETE("signout", authHandler.Signout)
+	}
 }

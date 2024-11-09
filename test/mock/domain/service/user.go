@@ -7,6 +7,7 @@ package mock_service
 import (
 	context "context"
 	entity "holos-auth-api/internal/app/api/domain/entity"
+	apierr "holos-auth-api/internal/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,11 +37,11 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 }
 
 // Exists mocks base method.
-func (m *MockUserService) Exists(arg0 context.Context, arg1 *entity.User) (bool, error) {
+func (m *MockUserService) Exists(arg0 context.Context, arg1 *entity.User) (bool, apierr.ApiError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Exists", arg0, arg1)
 	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 

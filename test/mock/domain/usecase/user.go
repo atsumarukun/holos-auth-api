@@ -7,6 +7,7 @@ package mock_usecase
 import (
 	context "context"
 	dto "holos-auth-api/internal/app/api/usecase/dto"
+	apierr "holos-auth-api/internal/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,11 +37,11 @@ func (m *MockUserUsecase) EXPECT() *MockUserUsecaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserUsecase) Create(arg0 context.Context, arg1, arg2, arg3 string) (*dto.UserDTO, error) {
+func (m *MockUserUsecase) Create(arg0 context.Context, arg1, arg2, arg3 string) (*dto.UserDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*dto.UserDTO)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 
@@ -51,10 +52,10 @@ func (mr *MockUserUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3 interface{}
 }
 
 // Delete mocks base method.
-func (m *MockUserUsecase) Delete(arg0 context.Context, arg1, arg2 string) error {
+func (m *MockUserUsecase) Delete(arg0 context.Context, arg1, arg2 string) apierr.ApiError {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(apierr.ApiError)
 	return ret0
 }
 
@@ -65,11 +66,11 @@ func (mr *MockUserUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gom
 }
 
 // Update mocks base method.
-func (m *MockUserUsecase) Update(arg0 context.Context, arg1, arg2, arg3, arg4 string) (*dto.UserDTO, error) {
+func (m *MockUserUsecase) Update(arg0 context.Context, arg1, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*dto.UserDTO)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 

@@ -2,9 +2,9 @@ package handler_test
 
 import (
 	"bytes"
-	"errors"
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/usecase/dto"
+	"holos-auth-api/internal/pkg/apierr"
 	mock_usecase "holos-auth-api/test/mock/domain/usecase"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +22,7 @@ func TestUser_Create(t *testing.T) {
 		name        string
 		requestJSON string
 		resultDTO   *dto.UserDTO
-		resultError error
+		resultError apierr.ApiError
 		expect      int
 	}{
 		{
@@ -43,7 +43,7 @@ func TestUser_Create(t *testing.T) {
 			name:        "result_error",
 			requestJSON: `{"name": "name", "password": "password", "confirm_password": "password"}`,
 			resultDTO:   nil,
-			resultError: errors.New("test error"),
+			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:      http.StatusInternalServerError,
 		},
 	}
@@ -80,7 +80,7 @@ func TestUser_Update(t *testing.T) {
 		name        string
 		requestJSON string
 		resultDTO   *dto.UserDTO
-		resultError error
+		resultError apierr.ApiError
 		expect      int
 	}{
 		{
@@ -101,7 +101,7 @@ func TestUser_Update(t *testing.T) {
 			name:        "result_error",
 			requestJSON: `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
 			resultDTO:   nil,
-			resultError: errors.New("test error"),
+			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:      http.StatusInternalServerError,
 		},
 	}
@@ -139,7 +139,7 @@ func TestUser_Delete(t *testing.T) {
 		name        string
 		requestJSON string
 		resultDTO   *dto.UserDTO
-		resultError error
+		resultError apierr.ApiError
 		expect      int
 	}{
 		{
@@ -157,7 +157,7 @@ func TestUser_Delete(t *testing.T) {
 		{
 			name:        "result_error",
 			requestJSON: `{"password": "password"}`,
-			resultError: errors.New("test error"),
+			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:      http.StatusInternalServerError,
 		},
 	}

@@ -7,6 +7,7 @@ package mock_repository
 import (
 	context "context"
 	entity "holos-auth-api/internal/app/api/domain/entity"
+	apierr "holos-auth-api/internal/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,10 +37,10 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserRepository) Create(arg0 context.Context, arg1 *entity.User) error {
+func (m *MockUserRepository) Create(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(apierr.ApiError)
 	return ret0
 }
 
@@ -50,10 +51,10 @@ func (mr *MockUserRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomock
 }
 
 // Delete mocks base method.
-func (m *MockUserRepository) Delete(arg0 context.Context, arg1 *entity.User) error {
+func (m *MockUserRepository) Delete(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(apierr.ApiError)
 	return ret0
 }
 
@@ -64,11 +65,11 @@ func (mr *MockUserRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomock
 }
 
 // FindOneByName mocks base method.
-func (m *MockUserRepository) FindOneByName(arg0 context.Context, arg1 string) (*entity.User, error) {
+func (m *MockUserRepository) FindOneByName(arg0 context.Context, arg1 string) (*entity.User, apierr.ApiError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOneByName", arg0, arg1)
 	ret0, _ := ret[0].(*entity.User)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 
@@ -79,10 +80,10 @@ func (mr *MockUserRepositoryMockRecorder) FindOneByName(arg0, arg1 interface{}) 
 }
 
 // Update mocks base method.
-func (m *MockUserRepository) Update(arg0 context.Context, arg1 *entity.User) error {
+func (m *MockUserRepository) Update(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(apierr.ApiError)
 	return ret0
 }
 

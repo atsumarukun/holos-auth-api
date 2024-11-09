@@ -2,9 +2,9 @@ package usecase_test
 
 import (
 	"context"
-	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/usecase"
+	"holos-auth-api/internal/pkg/apierr"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
 	mock_service "holos-auth-api/test/mock/domain/service"
@@ -19,7 +19,7 @@ func TestUser_Create(t *testing.T) {
 		name     string
 		password string
 		exists   bool
-		expect   error
+		expect   apierr.ApiError
 	}{
 		{
 			name:     "exists",
@@ -51,7 +51,7 @@ func TestUser_Create(t *testing.T) {
 
 			uu := usecase.NewUserUsecase(to, ur, us)
 			dto, err := uu.Create(ctx, tt.name, tt.password, tt.password)
-			if !errors.Is(err, tt.expect) {
+			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -70,7 +70,7 @@ func TestUser_Update(t *testing.T) {
 		name        string
 		password    string
 		isReturnNil bool
-		expect      error
+		expect      apierr.ApiError
 	}{
 		{
 			name:        "exists",
@@ -112,7 +112,7 @@ func TestUser_Update(t *testing.T) {
 
 			uu := usecase.NewUserUsecase(to, ur, us)
 			dto, err := uu.Update(ctx, tt.name, tt.password, tt.password, tt.password)
-			if !errors.Is(err, tt.expect) {
+			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {
@@ -131,7 +131,7 @@ func TestUser_Delete(t *testing.T) {
 		name        string
 		password    string
 		isReturnNil bool
-		expect      error
+		expect      apierr.ApiError
 	}{
 		{
 			name:        "exists",
@@ -173,7 +173,7 @@ func TestUser_Delete(t *testing.T) {
 
 			uu := usecase.NewUserUsecase(to, ur, us)
 			err = uu.Delete(ctx, tt.name, tt.password)
-			if !errors.Is(err, tt.expect) {
+			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {

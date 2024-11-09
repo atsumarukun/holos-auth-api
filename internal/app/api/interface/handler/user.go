@@ -37,7 +37,7 @@ func (uh *userHandler) Create(c *gin.Context) {
 
 	dto, err := uh.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(err.Error())
 		return
 	}
 
@@ -55,7 +55,7 @@ func (uh *userHandler) Update(c *gin.Context) {
 
 	dto, err := uh.userUsecase.Update(ctx, c.Param("name"), req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(err.Error())
 		return
 	}
 
@@ -72,7 +72,7 @@ func (uh *userHandler) Delete(c *gin.Context) {
 	ctx := context.Background()
 
 	if err := uh.userUsecase.Delete(ctx, c.Param("name"), req.Password); err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(err.Error())
 		return
 	}
 

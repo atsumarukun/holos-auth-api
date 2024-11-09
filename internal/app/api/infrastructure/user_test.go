@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure"
+	"holos-auth-api/internal/pkg/apierr"
 	"holos-auth-api/test"
+	"net/http"
 	"regexp"
 	"testing"
 	"time"
@@ -54,7 +56,7 @@ func TestUser_Create(t *testing.T) {
 			ui := infrastructure.NewUserInfrastructure(db)
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ui.Create(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -107,7 +109,7 @@ func TestUser_Update(t *testing.T) {
 			ui := infrastructure.NewUserInfrastructure(db)
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ui.Update(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -160,7 +162,7 @@ func TestUser_Delete(t *testing.T) {
 			ui := infrastructure.NewUserInfrastructure(db)
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ui.Delete(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -224,13 +226,13 @@ func TestUser_FindOneByName(t *testing.T) {
 			ui := infrastructure.NewUserInfrastructure(db)
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ui.FindOneByName(ctx, tt.name)
 					if err != nil {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return fmt.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {

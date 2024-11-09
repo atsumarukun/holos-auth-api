@@ -10,6 +10,25 @@ servers:
 
 paths:
   /users:
+    get:
+      summary: "ユーザー取得"
+      tags:
+        - "users"
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_user"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
     post:
       summary: "ユーザー作成"
       tags:
@@ -73,8 +92,47 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /auth/signin:
+    post:
+      summary: "サインイン"
+      tags:
+        - "auth"
+      requestBody:
+        $ref: "#/components/requestBodies/auth_signin"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/auth_signin"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /auth/signout:
+    delete:
+      summary: "サインアウト"
+      tags:
+        - "auth"
+      security:
+        - bearerAuth: []
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "アクセストークン"
+
   schemas:
     created_at:
       type: string
@@ -158,6 +216,19 @@ components:
                     readOnly: true
                   confirm_password:
                     readOnly: true
+    auth_signin:
+      description: "サインイン"
+      required: true
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              user_name:
+                $ref: "#/components/schemas/user/properties/name"
+              password:
+                $ref: "#/components/schemas/user/properties/password"
+
   responses:
     create_user:
       description: "ユーザー作成"
@@ -171,6 +242,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/user"
+    auth_signin:
+      description: "サインイン"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            description: "トークン"
+            example: "GyTPPWGLe32H_2lZuoM7x0AV8OS_Yvit"
     401:
       description: "Unauthorized"
       content:

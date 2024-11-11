@@ -47,6 +47,7 @@ func (ah *authHandler) Signout(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
 		c.String(http.StatusUnauthorized, "unauthorized")
+		return
 	}
 
 	ctx := context.Background()

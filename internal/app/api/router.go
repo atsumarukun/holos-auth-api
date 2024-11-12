@@ -6,8 +6,8 @@ func getRoutes(r *gin.Engine) {
 	users := r.Group("users")
 	{
 		users.POST("/", userHandler.Create)
-		users.PUT("/:name", userHandler.Update)
-		users.DELETE("/:name", userHandler.Delete)
+		users.PUT("/", authMiddleware.Authenticate, userHandler.Update)
+		users.DELETE("/", authMiddleware.Authenticate, userHandler.Delete)
 	}
 
 	auth := r.Group("auth")

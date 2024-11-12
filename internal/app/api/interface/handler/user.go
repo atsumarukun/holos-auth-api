@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserHandler interface {
@@ -51,9 +52,20 @@ func (uh *userHandler) Update(c *gin.Context) {
 		return
 	}
 
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.String(http.StatusInternalServerError, "context does not have user id")
+		return
+	}
+
+	id, ok := userID.(uuid.UUID)
+	if !ok {
+		c.String(http.StatusInternalServerError, "Invalid user id type")
+	}
+
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.Update(ctx, c.Param("name"), req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
+	dto, err := uh.userUsecase.Update(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -69,9 +81,20 @@ func (uh *userHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.String(http.StatusInternalServerError, "context does not have user id")
+		return
+	}
+
+	id, ok := userID.(uuid.UUID)
+	if !ok {
+		c.String(http.StatusInternalServerError, "Invalid user id type")
+	}
+
 	ctx := context.Background()
 
-	if err := uh.userUsecase.Delete(ctx, c.Param("name"), req.Password); err != nil {
+	if err := uh.userUsecase.Delete(ctx, id, req.Password); err != nil {
 		c.String(err.Error())
 		return
 	}

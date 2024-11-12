@@ -1,4 +1,4 @@
-//go:generate mockgen -source=$GOFILE -destination=../../../../test/mock/domain/usecase/$GOFILE
+//go:generate mockgen -source=$GOFILE -destination=../../../../test/mock/usecase/$GOFILE
 package usecase
 
 import (

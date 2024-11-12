@@ -23,17 +23,12 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
-  /users/{name}:
     put:
       summary: "ユーザー更新"
       tags:
         - "users"
-      parameters:
-        - in: "path"
-          name: "name"
-          required: true
-          schema:
-            $ref: "#/components/schemas/user/properties/name"
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/update_user"
       responses:
@@ -53,12 +48,8 @@ paths:
       summary: "ユーザー削除"
       tags:
         - "users"
-      parameters:
-        - in: "path"
-          name: "name"
-          required: true
-          schema:
-            $ref: "#/components/schemas/user/properties/name"
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/delete_user"
       responses:

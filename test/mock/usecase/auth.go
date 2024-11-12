@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 )
 
 // MockAuthUsecase is a mock of AuthUsecase interface.
@@ -33,6 +34,21 @@ func NewMockAuthUsecase(ctrl *gomock.Controller) *MockAuthUsecase {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAuthUsecase) EXPECT() *MockAuthUsecaseMockRecorder {
 	return m.recorder
+}
+
+// GetUserID mocks base method.
+func (m *MockAuthUsecase) GetUserID(arg0 context.Context, arg1 string) (uuid.UUID, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserID", arg0, arg1)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// GetUserID indicates an expected call of GetUserID.
+func (mr *MockAuthUsecaseMockRecorder) GetUserID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserID", reflect.TypeOf((*MockAuthUsecase)(nil).GetUserID), arg0, arg1)
 }
 
 // Signin mocks base method.

@@ -8,6 +8,8 @@ import (
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/pkg/apierr"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 var ErrAuthenticationFailed = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
@@ -15,6 +17,7 @@ var ErrAuthenticationFailed = apierr.NewApiError(http.StatusUnauthorized, "authe
 type AuthUsecase interface {
 	Signin(context.Context, string, string) (string, apierr.ApiError)
 	Signout(context.Context, string) apierr.ApiError
+	GetUserID(context.Context, string) (uuid.UUID, apierr.ApiError)
 }
 
 type authUsecase struct {
@@ -71,4 +74,13 @@ func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiErro
 
 		return au.userTokenRepository.Delete(ctx, userToken)
 	})
+}
+
+func (au *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, apierr.ApiError) {
+	userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return userToken.UserID, nil
 }

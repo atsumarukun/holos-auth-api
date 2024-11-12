@@ -176,6 +176,85 @@ func TestUser_Delete(t *testing.T) {
 	}
 }
 
+func TestUser_FindOneByID(t *testing.T) {
+	tests := []struct {
+		id            uuid.UUID
+		name          string
+		isTransaction bool
+		resultIsNil   bool
+		resultError   error
+	}{
+		{
+			id:            uuid.New(),
+			name:          "without_transaction",
+			isTransaction: false,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			name:          "with_transaction",
+			isTransaction: true,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			name:          "user_not_found",
+			isTransaction: false,
+			resultIsNil:   true,
+			resultError:   sql.ErrNoRows,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+				WithArgs(tt.id).
+				WillReturnRows(
+					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.name, "password", time.Now(), time.Now()),
+				).
+				WillReturnError(tt.resultError)
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			ui := infrastructure.NewUserInfrastructure(db)
+			if tt.isTransaction {
+				to := infrastructure.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					result, err := ui.FindOneByID(ctx, tt.id)
+					if err != nil {
+						return err
+					}
+					if (result == nil) != tt.resultIsNil {
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+					}
+					return nil
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				result, err := ui.FindOneByID(ctx, tt.id)
+				if err != nil {
+					t.Error(err.Error())
+				}
+				if (result == nil) != tt.resultIsNil {
+					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+				}
+			}
+		})
+	}
+}
+
 func TestUser_FindOneByName(t *testing.T) {
 	tests := []struct {
 		name          string

@@ -5,7 +5,7 @@ import (
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"holos-auth-api/internal/pkg/apierr"
-	mock_usecase "holos-auth-api/test/mock/domain/usecase"
+	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"
 	"testing"

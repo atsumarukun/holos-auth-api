@@ -73,6 +73,23 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /auth/user_id:
+    get:
+      summary: "ユーザーID取得"
+      tags:
+        - "auth"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_user_id"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
   /auth/signin:
     post:
       summary: "サインイン"
@@ -130,6 +147,11 @@ components:
     user:
       type: "object"
       properties:
+        id:
+          type: "string"
+          description: "id"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+          readOnly: true
         name:
           type: "string"
           description: "ユーザー名"
@@ -216,13 +238,29 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/user"
+            allOf:
+              - $ref: "#/components/schemas/user"
+              - type: "object"
+                properties:
+                  id:
+                    writeOnly: true
     update_user:
       description: "ユーザー更新"
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/user"
+            allOf:
+              - $ref: "#/components/schemas/user"
+              - type: "object"
+                properties:
+                  id:
+                    writeOnly: true
+    get_user_id:
+      description: "ユーザーID取得"
+      content:
+        text/plain:
+          schema:
+            $ref: "#/components/schemas/user/properties/id"
     auth_signin:
       description: "サインイン"
       content:

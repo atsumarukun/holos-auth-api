@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 )
 
 func TestAuth_Signin(t *testing.T) {
@@ -118,6 +119,61 @@ func TestAuth_Signout(t *testing.T) {
 
 			ah := handler.NewAuthHandler(au)
 			ah.Signout(ctx)
+
+			if w.Code != tt.expect {
+				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			}
+		})
+	}
+}
+
+func TestAuth_GetUserID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name                string
+		authorizationHeader string
+		resultError         apierr.ApiError
+		expect              int
+	}{
+		{
+			name:                "success",
+			authorizationHeader: "Bearer token",
+			resultError:         nil,
+			expect:              http.StatusOK,
+		},
+		{
+			name:                "invalid_header",
+			authorizationHeader: "",
+			resultError:         nil,
+			expect:              http.StatusUnauthorized,
+		},
+		{
+			name:                "result_error",
+			authorizationHeader: "Bearer token",
+			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:              http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "/auth/user_id", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			req.Header.Add("Authorization", tt.authorizationHeader)
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			au := mock_usecase.NewMockAuthUsecase(ctrl)
+			au.EXPECT().GetUserID(gomock.Any(), gomock.Any()).Return(uuid.New(), tt.resultError).AnyTimes()
+
+			ah := handler.NewAuthHandler(au)
+			ah.GetUserID(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)

@@ -9,6 +9,7 @@ import (
 	"holos-auth-api/internal/pkg/apierr"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -56,6 +57,23 @@ func (ui *userInfrastructure) Delete(ctx context.Context, user *entity.User) api
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 	return nil
+}
+
+func (ui *userInfrastructure) FindOneByID(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
+	var user entity.User
+	driver := getSqlxDriver(ctx, ui.db)
+	if err := driver.QueryRowxContext(
+		ctx,
+		`SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;`,
+		id,
+	).StructScan(&user); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return &user, nil
 }
 
 func (ui *userInfrastructure) FindOneByName(ctx context.Context, name string) (*entity.User, apierr.ApiError) {

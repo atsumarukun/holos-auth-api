@@ -137,3 +137,60 @@ func TestAuth_Signout(t *testing.T) {
 		})
 	}
 }
+
+func TestAuth_GetUserID(t *testing.T) {
+	tests := []struct {
+		name        string
+		token       string
+		isReturnNil bool
+		expect      apierr.ApiError
+	}{
+		{
+			name:        "success",
+			token:       "token",
+			isReturnNil: false,
+			expect:      nil,
+		},
+		{
+			name:        "user_token_not_found",
+			token:       "token",
+			isReturnNil: true,
+			expect:      usecase.ErrAuthenticationFailed,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userToken, err := entity.NewUserToken(uuid.New())
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			res := userToken
+			if tt.isReturnNil {
+				res = nil
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := context.Background()
+
+			to := test.NewTestTransactionObject()
+
+			ur := mock_repository.NewMockUserRepository(ctrl)
+
+			utr := mock_repository.NewMockUserTokenRepository(ctrl)
+			utr.EXPECT().FindOneByTokenAndNotExpired(ctx, tt.token).Return(res, nil)
+
+			au := usecase.NewAuthUsecase(to, ur, utr)
+			_, err = au.GetUserID(ctx, tt.token)
+			if err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}

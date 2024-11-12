@@ -81,6 +81,9 @@ func (au *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, 
 	if err != nil {
 		return uuid.Nil, err
 	}
+	if userToken == nil {
+		return uuid.Nil, ErrAuthenticationFailed
+	}
 
 	return userToken.UserID, nil
 }

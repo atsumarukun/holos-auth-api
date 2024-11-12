@@ -109,7 +109,7 @@ func TestUser_Update(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByName(ctx, tt.name).Return(res, nil)
+			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
@@ -173,7 +173,7 @@ func TestUser_Delete(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByName(ctx, tt.name).Return(res, nil)
+			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)

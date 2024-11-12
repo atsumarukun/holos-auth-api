@@ -10,25 +10,6 @@ servers:
 
 paths:
   /users:
-    get:
-      summary: "ユーザー取得"
-      tags:
-        - "users"
-      security:
-        - bearerAuth: []
-      responses:
-        201:
-          description: "成功"
-          $ref: "#/components/responses/create_user"
-        401:
-          description: "認証エラー"
-          $ref: "#/components/responses/401"
-        404:
-          description: "存在しないリソース"
-          $ref: "#/components/responses/404"
-        500:
-          description: "サーバーエラー"
-          $ref: "#/components/responses/500"
     post:
       summary: "ユーザー作成"
       tags:

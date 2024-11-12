@@ -12,6 +12,7 @@ func getRoutes(r *gin.Engine) {
 
 	auth := r.Group("auth")
 	{
+		auth.GET("/user_id", authHandler.GetUserID)
 		auth.POST("/signin", authHandler.Signin)
 		auth.DELETE("signout", authHandler.Signout)
 	}

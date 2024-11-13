@@ -6,7 +6,11 @@ type CreateUserRequest struct {
 	ConfirmPassword string `json:"confirm_password"`
 }
 
-type UpdateUserRequest struct {
+type UpdateUserNameRequest struct {
+	Name string `json:"name"`
+}
+
+type UpdateUserPasswordRequest struct {
 	CurrentPassword    string `json:"current_password"`
 	NewPassword        string `json:"new_password"`
 	ConfirmNewPassword string `json:"confirm_new_password"`

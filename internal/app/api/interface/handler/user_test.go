@@ -74,7 +74,80 @@ func TestUser_Create(t *testing.T) {
 	}
 }
 
-func TestUser_Update(t *testing.T) {
+func TestUser_UpdateName(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name                 string
+		isSetUserIDToContext bool
+		requestJSON          string
+		resultDTO            *dto.UserDTO
+		resultError          apierr.ApiError
+		expect               int
+	}{
+		{
+			name:                 "success",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"name": "name"}`,
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusOK,
+		},
+		{
+			name:                 "context_does_not_have_user_id",
+			isSetUserIDToContext: false,
+			requestJSON:          `{"name": "name"}`,
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusInternalServerError,
+		},
+		{
+			name:                 "invalid_request",
+			isSetUserIDToContext: true,
+			requestJSON:          "",
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusBadRequest,
+		},
+		{
+			name:                 "result_error",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"name": "name"}`,
+			resultDTO:            nil,
+			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:               http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("PUT", "/user/name", bytes.NewBuffer([]byte(tt.requestJSON)))
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", uuid.New())
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			uu := mock_usecase.NewMockUserUsecase(ctrl)
+			uu.EXPECT().UpdateName(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+
+			uh := handler.NewUserHandler(uu)
+			uh.UpdateName(ctx)
+
+			if w.Code != tt.expect {
+				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			}
+		})
+	}
+}
+
+func TestUser_UpdatePassword(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {
 		name                 string
@@ -119,7 +192,7 @@ func TestUser_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("PUT", "/user/:name", bytes.NewBuffer([]byte(tt.requestJSON)))
+			req, err := http.NewRequest("PUT", "/user/password", bytes.NewBuffer([]byte(tt.requestJSON)))
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -127,7 +200,6 @@ func TestUser_Update(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "name", Value: tt.name})
 			if tt.isSetUserIDToContext {
 				ctx.Set("userID", uuid.New())
 			}
@@ -136,10 +208,10 @@ func TestUser_Update(t *testing.T) {
 			defer ctrl.Finish()
 
 			uu := mock_usecase.NewMockUserUsecase(ctrl)
-			uu.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			uu.EXPECT().UpdatePassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
 
 			uh := handler.NewUserHandler(uu)
-			uh.Update(ctx)
+			uh.UpdatePassword(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)
@@ -198,7 +270,6 @@ func TestUser_Delete(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "name", Value: tt.name})
 			if tt.isSetUserIDToContext {
 				ctx.Set("userID", uuid.New())
 			}

@@ -11,6 +11,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 )
 
 // MockUserRepository is a mock of UserRepository interface.
@@ -62,6 +63,21 @@ func (m *MockUserRepository) Delete(arg0 context.Context, arg1 *entity.User) api
 func (mr *MockUserRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserRepository)(nil).Delete), arg0, arg1)
+}
+
+// FindOneByID mocks base method.
+func (m *MockUserRepository) FindOneByID(arg0 context.Context, arg1 uuid.UUID) (*entity.User, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindOneByID", arg0, arg1)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// FindOneByID indicates an expected call of FindOneByID.
+func (mr *MockUserRepositoryMockRecorder) FindOneByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByID", reflect.TypeOf((*MockUserRepository)(nil).FindOneByID), arg0, arg1)
 }
 
 // FindOneByName mocks base method.

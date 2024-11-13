@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 )
 
 func TestUser_Create(t *testing.T) {
@@ -67,18 +68,21 @@ func TestUser_Create(t *testing.T) {
 
 func TestUser_Update(t *testing.T) {
 	tests := []struct {
+		id          uuid.UUID
 		name        string
 		password    string
 		isReturnNil bool
 		expect      apierr.ApiError
 	}{
 		{
+			id:          uuid.New(),
 			name:        "exists",
 			password:    "password",
 			isReturnNil: false,
 			expect:      nil,
 		},
 		{
+			id:          uuid.New(),
 			name:        "not_exists",
 			password:    "password",
 			isReturnNil: true,
@@ -105,13 +109,13 @@ func TestUser_Update(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByName(ctx, tt.name).Return(res, nil)
+			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
 
 			uu := usecase.NewUserUsecase(to, ur, us)
-			dto, err := uu.Update(ctx, tt.name, tt.password, tt.password, tt.password)
+			dto, err := uu.Update(ctx, tt.id, tt.password, tt.password, tt.password)
 			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
@@ -128,18 +132,21 @@ func TestUser_Update(t *testing.T) {
 
 func TestUser_Delete(t *testing.T) {
 	tests := []struct {
+		id          uuid.UUID
 		name        string
 		password    string
 		isReturnNil bool
 		expect      apierr.ApiError
 	}{
 		{
+			id:          uuid.New(),
 			name:        "exists",
 			password:    "password",
 			isReturnNil: false,
 			expect:      nil,
 		},
 		{
+			id:          uuid.New(),
 			name:        "not_exists",
 			password:    "password",
 			isReturnNil: true,
@@ -166,13 +173,13 @@ func TestUser_Delete(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByName(ctx, tt.name).Return(res, nil)
+			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
 
 			uu := usecase.NewUserUsecase(to, ur, us)
-			err = uu.Delete(ctx, tt.name, tt.password)
+			err = uu.Delete(ctx, tt.id, tt.password)
 			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")

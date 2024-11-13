@@ -11,6 +11,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 )
 
 // MockUserUsecase is a mock of UserUsecase interface.
@@ -52,7 +53,7 @@ func (mr *MockUserUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3 interface{}
 }
 
 // Delete mocks base method.
-func (m *MockUserUsecase) Delete(arg0 context.Context, arg1, arg2 string) apierr.ApiError {
+func (m *MockUserUsecase) Delete(arg0 context.Context, arg1 uuid.UUID, arg2 string) apierr.ApiError {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
 	ret0, _ := ret[0].(apierr.ApiError)
@@ -66,7 +67,7 @@ func (mr *MockUserUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gom
 }
 
 // Update mocks base method.
-func (m *MockUserUsecase) Update(arg0 context.Context, arg1, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
+func (m *MockUserUsecase) Update(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*dto.UserDTO)

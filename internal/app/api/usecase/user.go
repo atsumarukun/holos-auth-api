@@ -10,6 +10,8 @@ import (
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"holos-auth-api/internal/pkg/apierr"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -19,8 +21,8 @@ var (
 
 type UserUsecase interface {
 	Create(context.Context, string, string, string) (*dto.UserDTO, apierr.ApiError)
-	Update(context.Context, string, string, string, string) (*dto.UserDTO, apierr.ApiError)
-	Delete(context.Context, string, string) apierr.ApiError
+	Update(context.Context, uuid.UUID, string, string, string) (*dto.UserDTO, apierr.ApiError)
+	Delete(context.Context, uuid.UUID, string) apierr.ApiError
 }
 
 type userUsecase struct {
@@ -58,12 +60,12 @@ func (uu *userUsecase) Create(ctx context.Context, name string, password string,
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) Update(ctx context.Context, name string, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, apierr.ApiError) {
+func (uu *userUsecase) Update(ctx context.Context, id uuid.UUID, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, apierr.ApiError) {
 	var user *entity.User
 
 	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		user, err = uu.userRepository.FindOneByName(ctx, name)
+		user, err = uu.userRepository.FindOneByID(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -87,9 +89,9 @@ func (uu *userUsecase) Update(ctx context.Context, name string, currentPassword 
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) Delete(ctx context.Context, name string, password string) apierr.ApiError {
+func (uu *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) apierr.ApiError {
 	return uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := uu.userRepository.FindOneByName(ctx, name)
+		user, err := uu.userRepository.FindOneByID(ctx, id)
 		if err != nil {
 			return err
 		}

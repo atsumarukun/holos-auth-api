@@ -77,32 +77,44 @@ func TestUser_Create(t *testing.T) {
 func TestUser_Update(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {
-		name        string
-		requestJSON string
-		resultDTO   *dto.UserDTO
-		resultError apierr.ApiError
-		expect      int
+		name                 string
+		isSetUserIDToContext bool
+		requestJSON          string
+		resultDTO            *dto.UserDTO
+		resultError          apierr.ApiError
+		expect               int
 	}{
 		{
-			name:        "success",
-			requestJSON: `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
-			resultDTO:   dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
-			resultError: nil,
-			expect:      http.StatusOK,
+			name:                 "success",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusOK,
 		},
 		{
-			name:        "invalid_request",
-			requestJSON: "",
-			resultDTO:   dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
-			resultError: nil,
-			expect:      http.StatusBadRequest,
+			name:                 "context_does_not_have_user_id",
+			isSetUserIDToContext: false,
+			requestJSON:          `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusInternalServerError,
 		},
 		{
-			name:        "result_error",
-			requestJSON: `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
-			resultDTO:   nil,
-			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
-			expect:      http.StatusInternalServerError,
+			name:                 "invalid_request",
+			isSetUserIDToContext: true,
+			requestJSON:          "",
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusBadRequest,
+		},
+		{
+			name:                 "result_error",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
+			resultDTO:            nil,
+			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:               http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
@@ -116,6 +128,9 @@ func TestUser_Update(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
 			ctx.Params = append(ctx.Params, gin.Param{Key: "name", Value: tt.name})
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", uuid.New())
+			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -136,29 +151,41 @@ func TestUser_Update(t *testing.T) {
 func TestUser_Delete(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {
-		name        string
-		requestJSON string
-		resultDTO   *dto.UserDTO
-		resultError apierr.ApiError
-		expect      int
+		name                 string
+		isSetUserIDToContext bool
+		requestJSON          string
+		resultDTO            *dto.UserDTO
+		resultError          apierr.ApiError
+		expect               int
 	}{
 		{
-			name:        "success",
-			requestJSON: `{"password": "password"}`,
-			resultError: nil,
-			expect:      http.StatusOK,
+			name:                 "success",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"password": "password"}`,
+			resultError:          nil,
+			expect:               http.StatusOK,
 		},
 		{
-			name:        "invalid_request",
-			requestJSON: "",
-			resultError: nil,
-			expect:      http.StatusBadRequest,
+			name:                 "context_does_not_have_user_id",
+			isSetUserIDToContext: false,
+			requestJSON:          `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
+			resultDTO:            dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
+			resultError:          nil,
+			expect:               http.StatusInternalServerError,
 		},
 		{
-			name:        "result_error",
-			requestJSON: `{"password": "password"}`,
-			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
-			expect:      http.StatusInternalServerError,
+			name:                 "invalid_request",
+			isSetUserIDToContext: true,
+			requestJSON:          "",
+			resultError:          nil,
+			expect:               http.StatusBadRequest,
+		},
+		{
+			name:                 "result_error",
+			isSetUserIDToContext: true,
+			requestJSON:          `{"password": "password"}`,
+			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:               http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
@@ -172,6 +199,9 @@ func TestUser_Delete(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
 			ctx.Params = append(ctx.Params, gin.Param{Key: "name", Value: tt.name})
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", uuid.New())
+			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

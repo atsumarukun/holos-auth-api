@@ -43,6 +43,28 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /users/name:
+    put:
+      summary: "ユーザー名更新"
+      tags:
+        - "users"
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/update_user_name"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_user_name"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
   /users/password:
     put:
       summary: "ユーザーパスワード更新"
@@ -177,6 +199,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/user"
+    update_user_name:
+      description: "ユーザー名更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/user"
+              - type: "object"
+                properties:
+                  password:
+                    readOnly: true
+                  confirm_password:
+                    readOnly: true
     update_user_password:
       description: "ユーザーパスワード更新"
       required: true
@@ -227,6 +263,17 @@ components:
   responses:
     create_user:
       description: "ユーザー作成"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/user"
+              - type: "object"
+                properties:
+                  id:
+                    writeOnly: true
+    update_user_name:
+      description: "ユーザー名更新"
       content:
         application/json:
           schema:

@@ -66,17 +66,17 @@ func (mr *MockUserUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserUsecase)(nil).Delete), arg0, arg1, arg2)
 }
 
-// Update mocks base method.
-func (m *MockUserUsecase) Update(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
+// UpdatePassword mocks base method.
+func (m *MockUserUsecase) UpdatePassword(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "UpdatePassword", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*dto.UserDTO)
 	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 
-// Update indicates an expected call of Update.
-func (mr *MockUserUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+// UpdatePassword indicates an expected call of UpdatePassword.
+func (mr *MockUserUsecaseMockRecorder) UpdatePassword(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUserUsecase)(nil).Update), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePassword", reflect.TypeOf((*MockUserUsecase)(nil).UpdatePassword), arg0, arg1, arg2, arg3, arg4)
 }

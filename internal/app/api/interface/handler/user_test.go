@@ -74,7 +74,7 @@ func TestUser_Create(t *testing.T) {
 	}
 }
 
-func TestUser_Update(t *testing.T) {
+func TestUser_UpdatePassword(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {
 		name                 string
@@ -136,10 +136,10 @@ func TestUser_Update(t *testing.T) {
 			defer ctrl.Finish()
 
 			uu := mock_usecase.NewMockUserUsecase(ctrl)
-			uu.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			uu.EXPECT().UpdatePassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
 
 			uh := handler.NewUserHandler(uu)
-			uh.Update(ctx)
+			uh.UpdatePassword(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)

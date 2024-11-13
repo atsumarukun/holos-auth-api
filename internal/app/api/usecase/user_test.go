@@ -66,7 +66,7 @@ func TestUser_Create(t *testing.T) {
 	}
 }
 
-func TestUser_Update(t *testing.T) {
+func TestUser_UpdatePassword(t *testing.T) {
 	tests := []struct {
 		id          uuid.UUID
 		name        string
@@ -115,7 +115,7 @@ func TestUser_Update(t *testing.T) {
 			us := mock_service.NewMockUserService(ctrl)
 
 			uu := usecase.NewUserUsecase(to, ur, us)
-			dto, err := uu.Update(ctx, tt.id, tt.password, tt.password, tt.password)
+			dto, err := uu.UpdatePassword(ctx, tt.id, tt.password, tt.password, tt.password)
 			if err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")

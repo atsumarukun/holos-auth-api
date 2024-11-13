@@ -13,7 +13,7 @@ import (
 
 type UserHandler interface {
 	Create(*gin.Context)
-	Update(*gin.Context)
+	UpdatePassword(*gin.Context)
 	Delete(*gin.Context)
 }
 
@@ -45,7 +45,7 @@ func (uh *userHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (uh *userHandler) Update(c *gin.Context) {
+func (uh *userHandler) UpdatePassword(c *gin.Context) {
 	var req request.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -65,7 +65,7 @@ func (uh *userHandler) Update(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.Update(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
+	dto, err := uh.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
 		c.String(err.Error())
 		return

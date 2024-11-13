@@ -34,7 +34,7 @@ func (am *authMiddleware) Authenticate(c *gin.Context) {
 	ctx := context.Background()
 
 	userID, err := am.authUsecase.GetUserID(ctx, bearerToken[1])
-	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
+	if err != nil {
 		c.String(err.Error())
 		c.Abort()
 		return

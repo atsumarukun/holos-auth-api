@@ -66,6 +66,67 @@ func TestUser_Create(t *testing.T) {
 	}
 }
 
+func TestUser_UpdateName(t *testing.T) {
+	tests := []struct {
+		id          uuid.UUID
+		name        string
+		isReturnNil bool
+		expect      apierr.ApiError
+	}{
+		{
+			id:          uuid.New(),
+			name:        "exists",
+			isReturnNil: false,
+			expect:      nil,
+		},
+		{
+			id:          uuid.New(),
+			name:        "not_exists",
+			isReturnNil: true,
+			expect:      usecase.ErrUserNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			user, err := entity.NewUser("name", "password", "password")
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			res := user
+			if tt.isReturnNil {
+				res = nil
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := context.Background()
+
+			to := test.NewTestTransactionObject()
+
+			ur := mock_repository.NewMockUserRepository(ctrl)
+			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
+			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
+
+			us := mock_service.NewMockUserService(ctrl)
+
+			uu := usecase.NewUserUsecase(to, ur, us)
+			dto, err := uu.UpdateName(ctx, tt.id, tt.name)
+			if err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+			if reflect.TypeOf(dto).Elem().Name() != "UserDTO" {
+				t.Errorf("expect UserDTO but got %s", reflect.TypeOf(dto).Elem().Name())
+			}
+		})
+	}
+}
+
 func TestUser_UpdatePassword(t *testing.T) {
 	tests := []struct {
 		id          uuid.UUID

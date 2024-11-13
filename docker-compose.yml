@@ -19,8 +19,8 @@ services:
 
   auth-api:
     build:
-      context: ./build/package
-      dockerfile: Dockerfile.local
+      context: .
+      dockerfile: build/package/Dockerfile.local
     volumes:
       - .:/workspace
       - db_data:/workspace/db/data

@@ -1,0 +1,35 @@
+# devcontainer setting directory
+.devcontainer/
+
+# github setting directory
+.github/
+
+# vscode setting directory
+.vscode/
+
+# swagger ui directory
+api/
+
+# database directory
+db/
+
+# document directory
+docs/
+
+# scripts directory
+scripts/
+
+# temporary build files
+tmp/
+
+# air config file
+.air.toml
+
+# log file
+server.log
+
+# gitignore
+.gitignore
+
+# readme
+README.md

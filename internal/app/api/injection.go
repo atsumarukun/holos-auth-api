@@ -13,8 +13,9 @@ import (
 var (
 	authMiddleware middleware.AuthMiddleware
 
-	userHandler handler.UserHandler
-	authHandler handler.AuthHandler
+	userHandler  handler.UserHandler
+	agentHandler handler.AgentHandler
+	authHandler  handler.AuthHandler
 )
 
 func inject(db *sqlx.DB) {
@@ -22,14 +23,18 @@ func inject(db *sqlx.DB) {
 
 	userInfrastructure := infrastructure.NewUserInfrastructure(db)
 	userTokenInfrastructure := infrastructure.NewUserTokenInfrastructure(db)
+	agentInfrastructure := infrastructure.NewAgentInfrastructure(db)
 
 	userService := service.NewUserService(userInfrastructure)
+	agentService := service.NewAgentService(agentInfrastructure)
 
 	userUsecase := usecase.NewUserUsecase(transactionObject, userInfrastructure, userService)
+	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentInfrastructure, agentService)
 	authUsecase := usecase.NewAuthUsecase(transactionObject, userInfrastructure, userTokenInfrastructure)
 
 	authMiddleware = middleware.NewAuthMiddleware(authUsecase)
 
 	userHandler = handler.NewUserHandler(userUsecase)
+	agentHandler = handler.NewAgentHandler(agentUsecase)
 	authHandler = handler.NewAuthHandler(authUsecase)
 }

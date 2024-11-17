@@ -152,8 +152,20 @@ func TestUser_Delete(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET updated_at = ?, deleted_at = NOW(6) WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(user.UpdatedAt, user.ID).
+			mock.ExpectExec(regexp.QuoteMeta(
+				`UPDATE users
+				LEFT JOIN agents ON users.id = agents.user_id
+				SET
+					users.updated_at = users.updated_at,
+					users.deleted_at = NOW(6),
+					agents.updated_at = agents.updated_at,
+					agents.deleted_at = NOW(6)
+				WHERE
+					users.id = ?
+					AND users.deleted_at IS NULL
+					AND agents.deleted_at IS NULL;`,
+			)).
+				WithArgs(user.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
 				mock.ExpectCommit()

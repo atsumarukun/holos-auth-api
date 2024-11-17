@@ -51,7 +51,7 @@ func (ai *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) 
 	driver := getSqlxDriver(ctx, ai.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE agents SET updated_at = :updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE agents SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		agent,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())

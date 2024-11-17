@@ -13,6 +13,6 @@ type AgentRepository interface {
 	Create(context.Context, *entity.Agent) apierr.ApiError
 	Update(context.Context, *entity.Agent) apierr.ApiError
 	Delete(context.Context, *entity.Agent) apierr.ApiError
-	FindOneByID(context.Context, uuid.UUID) (*entity.Agent, apierr.ApiError)
+	FindOneByIDAndUserID(context.Context, uuid.UUID, uuid.UUID) (*entity.Agent, apierr.ApiError)
 	FindOneByUserIDAndName(context.Context, uuid.UUID, string) (*entity.Agent, apierr.ApiError)
 }

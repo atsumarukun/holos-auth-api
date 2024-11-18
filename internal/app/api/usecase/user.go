@@ -78,6 +78,12 @@ func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string
 			return err
 		}
 
+		if exists, err := uu.userService.Exists(ctx, user); err != nil {
+			return err
+		} else if exists {
+			return ErrUserAlreadyExists
+		}
+
 		return uu.userRepository.Update(ctx, user)
 	}); err != nil {
 		return nil, err

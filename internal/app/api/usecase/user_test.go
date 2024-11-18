@@ -71,19 +71,29 @@ func TestUser_UpdateName(t *testing.T) {
 		id          uuid.UUID
 		name        string
 		isReturnNil bool
+		exists      bool
 		expect      apierr.ApiError
 	}{
 		{
 			id:          uuid.New(),
-			name:        "exists",
+			name:        "success",
 			isReturnNil: false,
+			exists:      false,
 			expect:      nil,
 		},
 		{
 			id:          uuid.New(),
-			name:        "not_exists",
+			name:        "user_notfound",
 			isReturnNil: true,
+			exists:      false,
 			expect:      usecase.ErrUserNotFound,
+		},
+		{
+			id:          uuid.New(),
+			name:        "exists",
+			isReturnNil: false,
+			exists:      true,
+			expect:      usecase.ErrUserAlreadyExists,
 		},
 	}
 	for _, tt := range tests {
@@ -110,6 +120,7 @@ func TestUser_UpdateName(t *testing.T) {
 			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
+			us.EXPECT().Exists(gomock.Any(), user).Return(tt.exists, nil).AnyTimes()
 
 			uu := usecase.NewUserUsecase(to, ur, us)
 			dto, err := uu.UpdateName(ctx, tt.id, tt.name)

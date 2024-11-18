@@ -10,6 +10,14 @@ func getRoutes(r *gin.Engine) {
 		users.PUT("/password", authMiddleware.Authenticate, userHandler.UpdatePassword)
 	}
 
+	agents := r.Group("agents")
+	{
+		agents.Use(authMiddleware.Authenticate)
+		agents.POST("/", agentHandler.Create)
+		agents.PUT("/:id", agentHandler.Update)
+		agents.DELETE("/:id", agentHandler.Delete)
+	}
+
 	auth := r.Group("auth")
 	{
 		auth.GET("/user_id", authHandler.GetUserID)

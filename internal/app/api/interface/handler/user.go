@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
@@ -53,15 +54,10 @@ func (uh *userHandler) UpdateName(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
 		return
-	}
-
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
 	}
 
 	ctx := context.Background()
@@ -82,15 +78,10 @@ func (uh *userHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
 		return
-	}
-
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
 	}
 
 	ctx := context.Background()
@@ -111,15 +102,10 @@ func (uh *userHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
 		return
-	}
-
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
 	}
 
 	ctx := context.Background()

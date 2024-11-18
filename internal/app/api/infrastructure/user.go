@@ -51,7 +51,17 @@ func (ui *userInfrastructure) Delete(ctx context.Context, user *entity.User) api
 	driver := getSqlxDriver(ctx, ui.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE users SET updated_at = :updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE users
+		LEFT JOIN agents ON users.id = agents.user_id
+		SET
+			users.updated_at = users.updated_at,
+			users.deleted_at = NOW(6),
+			agents.updated_at = agents.updated_at,
+			agents.deleted_at = NOW(6)
+		WHERE
+			users.id = :id
+			AND users.deleted_at IS NULL
+			AND agents.deleted_at IS NULL;`,
 		user,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())

@@ -69,7 +69,7 @@ func (ui *userInfrastructure) Delete(ctx context.Context, user *entity.User) api
 	return nil
 }
 
-func (ui *userInfrastructure) FindOneByID(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
+func (ui *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
 	var user entity.User
 	driver := getSqlxDriver(ctx, ui.db)
 	if err := driver.QueryRowxContext(
@@ -91,7 +91,7 @@ func (ui *userInfrastructure) FindOneByName(ctx context.Context, name string) (*
 	driver := getSqlxDriver(ctx, ui.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? AND deleted_at IS NULL LIMIT 1;`,
+		`SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;`,
 		name,
 	).StructScan(&user); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

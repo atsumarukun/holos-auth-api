@@ -23,13 +23,13 @@ func TestUser_Create(t *testing.T) {
 		expect   apierr.ApiError
 	}{
 		{
-			name:     "exists",
+			name:     "not_exists",
 			password: "password",
 			exists:   false,
 			expect:   nil,
 		},
 		{
-			name:     "not_exists",
+			name:     "exists",
 			password: "password",
 			exists:   true,
 			expect:   usecase.ErrUserAlreadyExists,
@@ -71,19 +71,29 @@ func TestUser_UpdateName(t *testing.T) {
 		id          uuid.UUID
 		name        string
 		isReturnNil bool
+		exists      bool
 		expect      apierr.ApiError
 	}{
 		{
 			id:          uuid.New(),
-			name:        "exists",
+			name:        "success",
 			isReturnNil: false,
+			exists:      false,
 			expect:      nil,
 		},
 		{
 			id:          uuid.New(),
-			name:        "not_exists",
+			name:        "user_notfound",
 			isReturnNil: true,
+			exists:      false,
 			expect:      usecase.ErrUserNotFound,
+		},
+		{
+			id:          uuid.New(),
+			name:        "exists",
+			isReturnNil: false,
+			exists:      true,
+			expect:      usecase.ErrUserAlreadyExists,
 		},
 	}
 	for _, tt := range tests {
@@ -106,10 +116,11 @@ func TestUser_UpdateName(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
+			ur.EXPECT().FindOneByIDAndNotDeleted(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
+			us.EXPECT().Exists(gomock.Any(), user).Return(tt.exists, nil).AnyTimes()
 
 			uu := usecase.NewUserUsecase(to, ur, us)
 			dto, err := uu.UpdateName(ctx, tt.id, tt.name)
@@ -170,7 +181,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
+			ur.EXPECT().FindOneByIDAndNotDeleted(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)
@@ -234,7 +245,7 @@ func TestUser_Delete(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByID(ctx, tt.id).Return(res, nil)
+			ur.EXPECT().FindOneByIDAndNotDeleted(ctx, tt.id).Return(res, nil)
 			ur.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			us := mock_service.NewMockUserService(ctrl)

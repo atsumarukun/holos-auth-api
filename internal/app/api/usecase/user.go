@@ -66,7 +66,7 @@ func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string
 
 	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		user, err = uu.userRepository.FindOneByID(ctx, id)
+		user, err = uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -76,6 +76,12 @@ func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string
 
 		if err := user.SetName(name); err != nil {
 			return err
+		}
+
+		if exists, err := uu.userService.Exists(ctx, user); err != nil {
+			return err
+		} else if exists {
+			return ErrUserAlreadyExists
 		}
 
 		return uu.userRepository.Update(ctx, user)
@@ -91,7 +97,7 @@ func (uu *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, current
 
 	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		user, err = uu.userRepository.FindOneByID(ctx, id)
+		user, err = uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -117,7 +123,7 @@ func (uu *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, current
 
 func (uu *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) apierr.ApiError {
 	return uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := uu.userRepository.FindOneByID(ctx, id)
+		user, err := uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}

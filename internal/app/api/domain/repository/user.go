@@ -13,6 +13,6 @@ type UserRepository interface {
 	Create(context.Context, *entity.User) apierr.ApiError
 	Update(context.Context, *entity.User) apierr.ApiError
 	Delete(context.Context, *entity.User) apierr.ApiError
-	FindOneByID(context.Context, uuid.UUID) (*entity.User, apierr.ApiError)
+	FindOneByIDAndNotDeleted(context.Context, uuid.UUID) (*entity.User, apierr.ApiError)
 	FindOneByName(context.Context, string) (*entity.User, apierr.ApiError)
 }

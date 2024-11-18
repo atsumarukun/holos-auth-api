@@ -188,7 +188,7 @@ func TestUser_Delete(t *testing.T) {
 	}
 }
 
-func TestUser_FindOneByID(t *testing.T) {
+func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 	tests := []struct {
 		id            uuid.UUID
 		name          string
@@ -243,7 +243,7 @@ func TestUser_FindOneByID(t *testing.T) {
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ui.FindOneByID(ctx, tt.id)
+					result, err := ui.FindOneByIDAndNotDeleted(ctx, tt.id)
 					if err != nil {
 						return err
 					}
@@ -255,7 +255,7 @@ func TestUser_FindOneByID(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ui.FindOneByID(ctx, tt.id)
+				result, err := ui.FindOneByIDAndNotDeleted(ctx, tt.id)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -303,7 +303,7 @@ func TestUser_FindOneByName(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? AND deleted_at IS NULL LIMIT 1;")).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
 				WithArgs(tt.name).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).

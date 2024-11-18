@@ -12,5 +12,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o api
 
 FROM scratch as runner
 
+ENV GIN_MODE=release
 COPY --from=builder /workspace/cmd/api/api /opt/holos-auth-api/api
 CMD ["/opt/holos-auth-api/api"]

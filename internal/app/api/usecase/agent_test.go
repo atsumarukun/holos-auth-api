@@ -117,7 +117,7 @@ func TestAgent_Update(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserID(ctx, tt.id, tt.userID).Return(res, nil)
+			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			as := mock_service.NewMockAgentService(ctrl)
@@ -182,7 +182,7 @@ func TestAgent_Delete(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserID(ctx, tt.id, tt.userID).Return(res, nil)
+			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 			as := mock_service.NewMockAgentService(ctrl)

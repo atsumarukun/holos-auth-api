@@ -59,7 +59,7 @@ func (ai *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) 
 	return nil
 }
 
-func (ai *agentInfrastructure) FindOneByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
+func (ai *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
 	var agent entity.Agent
 	driver := getSqlxDriver(ctx, ai.db)
 	if err := driver.QueryRowxContext(

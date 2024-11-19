@@ -3,8 +3,8 @@ package usecase_test
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase"
-	"holos-auth-api/internal/pkg/apierr"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
 	"testing"

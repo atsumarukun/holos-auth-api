@@ -2,7 +2,7 @@ package parameter
 
 import (
 	"fmt"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

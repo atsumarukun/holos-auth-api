@@ -3,7 +3,7 @@ package entity
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
 	"time"
 

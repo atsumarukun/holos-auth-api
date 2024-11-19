@@ -2,7 +2,7 @@ package middleware_test
 
 import (
 	"holos-auth-api/internal/app/api/interface/middleware"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"

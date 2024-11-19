@@ -82,7 +82,7 @@ func (ai *agentInfrastructure) FindOneByUserIDAndName(ctx context.Context, userI
 	driver := getSqlxDriver(ctx, ai.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? AND deleted_at IS NULL LIMIT 1;`,
+		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? LIMIT 1;`,
 		userID,
 		name,
 	).StructScan(&agent); err != nil {

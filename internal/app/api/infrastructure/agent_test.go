@@ -303,7 +303,7 @@ func TestAgent_FindOneByUserIDAndName(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? AND deleted_at IS NULL LIMIT 1;")).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? LIMIT 1;")).
 				WithArgs(tt.userID, tt.name).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).

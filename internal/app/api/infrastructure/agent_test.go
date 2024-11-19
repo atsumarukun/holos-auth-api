@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
 	"regexp"

@@ -7,8 +7,8 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/domain/service"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase/dto"
-	"holos-auth-api/internal/pkg/apierr"
 	"net/http"
 
 	"github.com/google/uuid"

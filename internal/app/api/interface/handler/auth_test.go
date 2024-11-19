@@ -3,7 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"

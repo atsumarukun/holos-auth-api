@@ -4,7 +4,7 @@ package repository
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 
 	"github.com/google/uuid"
 )

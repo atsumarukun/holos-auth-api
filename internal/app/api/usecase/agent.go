@@ -65,7 +65,7 @@ func (au *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 
 	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		agent, err = au.agentRepository.FindOneByIDAndUserID(ctx, id, userID)
+		agent, err = au.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (au *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 
 func (au *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
 	return au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		agent, err := au.agentRepository.FindOneByIDAndUserID(ctx, id, userID)
+		agent, err := au.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
 		}

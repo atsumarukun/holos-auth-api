@@ -65,19 +65,19 @@ func (mr *MockAgentRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAgentRepository)(nil).Delete), arg0, arg1)
 }
 
-// FindOneByIDAndUserID mocks base method.
-func (m *MockAgentRepository) FindOneByIDAndUserID(arg0 context.Context, arg1, arg2 uuid.UUID) (*entity.Agent, apierr.ApiError) {
+// FindOneByIDAndUserIDAndNotDeleted mocks base method.
+func (m *MockAgentRepository) FindOneByIDAndUserIDAndNotDeleted(arg0 context.Context, arg1, arg2 uuid.UUID) (*entity.Agent, apierr.ApiError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindOneByIDAndUserID", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "FindOneByIDAndUserIDAndNotDeleted", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*entity.Agent)
 	ret1, _ := ret[1].(apierr.ApiError)
 	return ret0, ret1
 }
 
-// FindOneByIDAndUserID indicates an expected call of FindOneByIDAndUserID.
-func (mr *MockAgentRepositoryMockRecorder) FindOneByIDAndUserID(arg0, arg1, arg2 interface{}) *gomock.Call {
+// FindOneByIDAndUserIDAndNotDeleted indicates an expected call of FindOneByIDAndUserIDAndNotDeleted.
+func (mr *MockAgentRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserID", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByIDAndUserID), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserIDAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByIDAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
 // FindOneByUserIDAndName mocks base method.

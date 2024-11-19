@@ -176,7 +176,7 @@ func TestAgent_Delete(t *testing.T) {
 	}
 }
 
-func TestAgent_FindOneByIDAndUserID(t *testing.T) {
+func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 	tests := []struct {
 		id            uuid.UUID
 		userID        uuid.UUID
@@ -235,7 +235,7 @@ func TestAgent_FindOneByIDAndUserID(t *testing.T) {
 			if tt.isTransaction {
 				to := infrastructure.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ai.FindOneByIDAndUserID(ctx, tt.id, tt.userID)
+					result, err := ai.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -247,7 +247,7 @@ func TestAgent_FindOneByIDAndUserID(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ai.FindOneByIDAndUserID(ctx, tt.id, tt.userID)
+				result, err := ai.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -303,7 +303,7 @@ func TestAgent_FindOneByUserIDAndName(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? AND deleted_at IS NULL LIMIT 1;")).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? LIMIT 1;")).
 				WithArgs(tt.userID, tt.name).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).

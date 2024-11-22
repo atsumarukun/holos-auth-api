@@ -350,6 +350,10 @@ components:
           description: "ID"
           example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
           readOnly: true
+        name:
+          type: "string"
+          description: "ポリシー名"
+          example: "policy_name"
         service:
           type: "string"
           description: "サービス"
@@ -372,6 +376,7 @@ components:
           $ref: "#/components/schemas/updated_at"
       required:
         - "id"
+        - "name"
         - "service"
         - "path"
         - "allowed_method"

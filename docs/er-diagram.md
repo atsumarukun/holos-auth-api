@@ -21,7 +21,7 @@ user_tokens {
 agents {
   char(36) id PK
   char(36) user_id FK
-  varchar(24) name
+  varchar(255) name
   datetime(6) created_at
   datetime(6) updated_at
   datetime(6) deleted_at
@@ -30,6 +30,7 @@ agents {
 policies {
   char(36) id PK
   char(36) user_id FK
+  varchar(255) name
   enum service
   varchar(255) path
   json allowed_methods
@@ -83,6 +84,7 @@ users ||--o{ policies: ""
 | --- | --- | --- | --- | --- |
 | char(36) | id | PK | | ID |
 | char(36) | user_id | FK | | ユーザーID |
+| varchar(255) | name | | | ポリシー名 |
 | enum("STORAGE", "CONTENT") | service | | | サービス |
 | varchar(255) | path | | | パス |
 | json | allowed_methods | | | 許可メソッド |

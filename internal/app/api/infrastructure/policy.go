@@ -27,7 +27,7 @@ func (i *policyInfrastructure) Create(ctx context.Context, policy *entity.Policy
 	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`INSERT INTO policies (id, user_id, service, path, allowed_methods, created_at, updated_at) VALUES (:id, :user_id, :service, :path, :allowed_methods, :created_at, :updated_at);`,
+		`INSERT INTO policies (id, user_id, name, service, path, allowed_methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :allowed_methods, :created_at, :updated_at);`,
 		policy,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -39,7 +39,7 @@ func (i *policyInfrastructure) Update(ctx context.Context, policy *entity.Policy
 	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE policies SET user_id = :user_id, service = :service, path = :path, allowed_methods = :allowed_methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, allowed_methods = :allowed_methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		policy,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -64,7 +64,7 @@ func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Con
 	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT id, user_id, service, path, allowed_methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
+		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
 		id,
 		userID,
 	).StructScan(&policy); err != nil {

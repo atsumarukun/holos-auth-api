@@ -3,6 +3,7 @@ package entity
 import (
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
+	"regexp"
 	"slices"
 	"time"
 
@@ -15,6 +16,8 @@ var (
 )
 
 var (
+	ErrPolicyNameTooShort           = apierr.NewApiError(http.StatusBadRequest, "policy name must be 3 characters or more")
+	ErrPolicyNameTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy name must be 255 characters or less")
 	ErrInvalidPolicyService         = apierr.NewApiError(http.StatusBadRequest, "invalid policy service")
 	ErrRequiredPolicyPath           = apierr.NewApiError(http.StatusBadRequest, "policy path is required")
 	ErrPolicyPathTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy path must be 255 characters or less")
@@ -26,6 +29,7 @@ var (
 type Policy struct {
 	ID             uuid.UUID `db:"id"`
 	UserID         uuid.UUID `db:"user_id"`
+	Name           string    `db:"name"`
 	Service        string    `db:"service"`
 	Path           string    `db:"path"`
 	AllowedMethods []string  `db:"allowed_methods"`
@@ -33,7 +37,7 @@ type Policy struct {
 	UpdatedAt      time.Time `db:"updated_at"`
 }
 
-func NewPolicy(userID uuid.UUID, service string, path string, allowedMethods []string) (*Policy, apierr.ApiError) {
+func NewPolicy(userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*Policy, apierr.ApiError) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -44,6 +48,9 @@ func NewPolicy(userID uuid.UUID, service string, path string, allowedMethods []s
 		UserID: userID,
 	}
 
+	if err := policy.SetName(name); err != nil {
+		return nil, err
+	}
 	if err := policy.SetService(service); err != nil {
 		return nil, err
 	}
@@ -59,6 +66,25 @@ func NewPolicy(userID uuid.UUID, service string, path string, allowedMethods []s
 	policy.UpdatedAt = now
 
 	return policy, nil
+}
+
+func (p *Policy) SetName(name string) apierr.ApiError {
+	if len(name) < 3 {
+		return ErrPolicyNameTooShort
+	}
+	if 255 < len(name) {
+		return ErrPolicyNameTooLong
+	}
+	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
+	if err != nil {
+		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	if !matched {
+		return ErrInvalidAgentName
+	}
+	p.Name = name
+	p.UpdatedAt = time.Now()
+	return nil
 }
 
 func (p *Policy) SetService(service string) apierr.ApiError {

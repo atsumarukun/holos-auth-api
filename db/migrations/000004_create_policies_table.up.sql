@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `policies` (
   `id` CHAR(36) NOT NULL COMMENT "ID",
   `user_id` CHAR(36) NOT NULL COMMENT "ユーザーID",
+  `name` VARCHAR(255) NOT NULL COMMENT "ポリシー名",
   `service` ENUM ("STORAGE", "CONTENT") NOT NULL COMMENT "サービス",
   `path` VARCHAR(255) NOT NULL COMMENT "パス",
   `allowed_methods` JSON NOT NULL DEFAULT (JSON_ARRAY ()) COMMENT "許可メソッド",

@@ -28,7 +28,7 @@ type Policy struct {
 	UserID         uuid.UUID `db:"user_id"`
 	Service        string    `db:"service"`
 	Path           string    `db:"path"`
-	AllowedMethods []string  `db:"allowed_method"`
+	AllowedMethods []string  `db:"allowed_methods"`
 	CreatedAt      time.Time `db:"created_at"`
 	UpdatedAt      time.Time `db:"updated_at"`
 }

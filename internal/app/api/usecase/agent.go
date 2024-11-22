@@ -39,20 +39,20 @@ func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository
 	}
 }
 
-func (au *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
+func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
 	agent, err := entity.NewAgent(userID, name)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		if exists, err := au.agentService.Exists(ctx, agent); err != nil {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		if exists, err := u.agentService.Exists(ctx, agent); err != nil {
 			return err
 		} else if exists {
 			return ErrAgentAlreadyExists
 		}
 
-		return au.agentRepository.Create(ctx, agent)
+		return u.agentRepository.Create(ctx, agent)
 	}); err != nil {
 		return nil, err
 	}
@@ -60,12 +60,12 @@ func (au *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name strin
 	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (au *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
+func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
 	var agent *entity.Agent
 
-	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		agent, err = au.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+		agent, err = u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
 		}
@@ -77,13 +77,13 @@ func (au *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 			return err
 		}
 
-		if exists, err := au.agentService.Exists(ctx, agent); err != nil {
+		if exists, err := u.agentService.Exists(ctx, agent); err != nil {
 			return err
 		} else if exists {
 			return ErrAgentAlreadyExists
 		}
 
-		return au.agentRepository.Update(ctx, agent)
+		return u.agentRepository.Update(ctx, agent)
 	}); err != nil {
 		return nil, err
 	}
@@ -91,9 +91,9 @@ func (au *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (au *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
-	return au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		agent, err := au.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
 		}
@@ -101,6 +101,6 @@ func (au *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 			return ErrAgentNotFound
 		}
 
-		return au.agentRepository.Delete(ctx, agent)
+		return u.agentRepository.Delete(ctx, agent)
 	})
 }

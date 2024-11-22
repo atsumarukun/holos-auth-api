@@ -23,8 +23,8 @@ func NewAgentInfrastructure(db *sqlx.DB) repository.AgentRepository {
 	}
 }
 
-func (ai *agentInfrastructure) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ai.db)
+func (i *agentInfrastructure) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO agents (id, user_id, name, created_at, updated_at) VALUES (:id, :user_id, :name, :created_at, :updated_at);`,
@@ -35,8 +35,8 @@ func (ai *agentInfrastructure) Create(ctx context.Context, agent *entity.Agent) 
 	return nil
 }
 
-func (ai *agentInfrastructure) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ai.db)
+func (i *agentInfrastructure) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET user_id = :user_id, name = :name, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -47,8 +47,8 @@ func (ai *agentInfrastructure) Update(ctx context.Context, agent *entity.Agent) 
 	return nil
 }
 
-func (ai *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ai.db)
+func (i *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -59,9 +59,9 @@ func (ai *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) 
 	return nil
 }
 
-func (ai *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
+func (i *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
 	var agent entity.Agent
-	driver := getSqlxDriver(ctx, ai.db)
+	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
@@ -77,9 +77,9 @@ func (ai *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Con
 	return &agent, nil
 }
 
-func (ai *agentInfrastructure) FindOneByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (*entity.Agent, apierr.ApiError) {
+func (i *agentInfrastructure) FindOneByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (*entity.Agent, apierr.ApiError) {
 	var agent entity.Agent
-	driver := getSqlxDriver(ctx, ai.db)
+	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? LIMIT 1;`,

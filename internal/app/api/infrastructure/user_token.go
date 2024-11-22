@@ -22,8 +22,8 @@ func NewUserTokenInfrastructure(db *sqlx.DB) repository.UserTokenRepository {
 	}
 }
 
-func (uti *userTokenInfrastructure) Save(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
-	driver := getSqlxDriver(ctx, uti.db)
+func (i *userTokenInfrastructure) Save(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`REPLACE user_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at);`,
@@ -34,8 +34,8 @@ func (uti *userTokenInfrastructure) Save(ctx context.Context, userToken *entity.
 	return nil
 }
 
-func (uti *userTokenInfrastructure) Delete(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
-	driver := getSqlxDriver(ctx, uti.db)
+func (i *userTokenInfrastructure) Delete(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`DELETE FROM user_tokens WHERE user_id = :user_id;`,
@@ -46,9 +46,9 @@ func (uti *userTokenInfrastructure) Delete(ctx context.Context, userToken *entit
 	return nil
 }
 
-func (uti *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, apierr.ApiError) {
+func (i *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, apierr.ApiError) {
 	var userToken entity.UserToken
-	driver := getSqlxDriver(ctx, uti.db)
+	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;`,

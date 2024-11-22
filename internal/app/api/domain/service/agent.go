@@ -22,8 +22,8 @@ func NewAgentService(agentRepository repository.AgentRepository) AgentService {
 	}
 }
 
-func (as *agentService) Exists(ctx context.Context, agent *entity.Agent) (bool, apierr.ApiError) {
-	agent, err := as.agentRepository.FindOneByUserIDAndName(ctx, agent.UserID, agent.Name)
+func (s *agentService) Exists(ctx context.Context, agent *entity.Agent) (bool, apierr.ApiError) {
+	agent, err := s.agentRepository.FindOneByUserIDAndName(ctx, agent.UserID, agent.Name)
 	if err != nil {
 		return false, err
 	}

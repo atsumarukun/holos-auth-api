@@ -28,7 +28,7 @@ func NewAgentHandler(agentUsecase usecase.AgentUsecase) AgentHandler {
 	}
 }
 
-func (ah *agentHandler) Create(c *gin.Context) {
+func (h *agentHandler) Create(c *gin.Context) {
 	var req request.CreateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -43,7 +43,7 @@ func (ah *agentHandler) Create(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := ah.agentUsecase.Create(ctx, userID, req.Name)
+	dto, err := h.agentUsecase.Create(ctx, userID, req.Name)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -52,7 +52,7 @@ func (ah *agentHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (ah *agentHandler) Update(c *gin.Context) {
+func (h *agentHandler) Update(c *gin.Context) {
 	var req request.UpdateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -73,7 +73,7 @@ func (ah *agentHandler) Update(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := ah.agentUsecase.Update(ctx, id, userID, req.Name)
+	dto, err := h.agentUsecase.Update(ctx, id, userID, req.Name)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -82,7 +82,7 @@ func (ah *agentHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (ah *agentHandler) Delete(c *gin.Context) {
+func (h *agentHandler) Delete(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
 		c.String(err.Error())
@@ -97,7 +97,7 @@ func (ah *agentHandler) Delete(c *gin.Context) {
 
 	ctx := context.Background()
 
-	if err := ah.agentUsecase.Delete(ctx, id, userID); err != nil {
+	if err := h.agentUsecase.Delete(ctx, id, userID); err != nil {
 		c.String(err.Error())
 		return
 	}

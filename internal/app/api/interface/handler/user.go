@@ -29,7 +29,7 @@ func NewUserHandler(userUsecase usecase.UserUsecase) UserHandler {
 	}
 }
 
-func (uh *userHandler) Create(c *gin.Context) {
+func (h *userHandler) Create(c *gin.Context) {
 	var req request.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -38,7 +38,7 @@ func (uh *userHandler) Create(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
+	dto, err := h.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -47,7 +47,7 @@ func (uh *userHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (uh *userHandler) UpdateName(c *gin.Context) {
+func (h *userHandler) UpdateName(c *gin.Context) {
 	var req request.UpdateUserNameRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -62,7 +62,7 @@ func (uh *userHandler) UpdateName(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.UpdateName(ctx, id, req.Name)
+	dto, err := h.userUsecase.UpdateName(ctx, id, req.Name)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -71,7 +71,7 @@ func (uh *userHandler) UpdateName(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (uh *userHandler) UpdatePassword(c *gin.Context) {
+func (h *userHandler) UpdatePassword(c *gin.Context) {
 	var req request.UpdateUserPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -86,7 +86,7 @@ func (uh *userHandler) UpdatePassword(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := uh.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
+	dto, err := h.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -95,7 +95,7 @@ func (uh *userHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (uh *userHandler) Delete(c *gin.Context) {
+func (h *userHandler) Delete(c *gin.Context) {
 	var req request.DeleteUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -110,7 +110,7 @@ func (uh *userHandler) Delete(c *gin.Context) {
 
 	ctx := context.Background()
 
-	if err := uh.userUsecase.Delete(ctx, id, req.Password); err != nil {
+	if err := h.userUsecase.Delete(ctx, id, req.Password); err != nil {
 		c.String(err.Error())
 		return
 	}

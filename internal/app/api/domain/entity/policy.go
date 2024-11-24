@@ -18,6 +18,7 @@ var (
 var (
 	ErrPolicyNameTooShort           = apierr.NewApiError(http.StatusBadRequest, "policy name must be 3 characters or more")
 	ErrPolicyNameTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy name must be 255 characters or less")
+	ErrInvalidPolicyName            = apierr.NewApiError(http.StatusBadRequest, "invalid policy name")
 	ErrInvalidPolicyService         = apierr.NewApiError(http.StatusBadRequest, "invalid policy service")
 	ErrRequiredPolicyPath           = apierr.NewApiError(http.StatusBadRequest, "policy path is required")
 	ErrPolicyPathTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy path must be 255 characters or less")
@@ -93,7 +94,7 @@ func (p *Policy) SetName(name string) apierr.ApiError {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 	if !matched {
-		return ErrInvalidAgentName
+		return ErrInvalidPolicyName
 	}
 	p.Name = name
 	p.UpdatedAt = time.Now()
@@ -138,8 +139,9 @@ func (p *Policy) SetAllowedMethods(allowedMethods []string) apierr.ApiError {
 			return ErrInvalidPolicyAllowedMethods
 		}
 	}
+	slices.Sort(allowedMethods)
 
-	p.AllowedMethods = allowedMethods
+	p.AllowedMethods = slices.Compact(allowedMethods)
 	p.UpdatedAt = time.Now()
 	return nil
 }

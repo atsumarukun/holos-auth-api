@@ -27,14 +27,14 @@ var (
 )
 
 type Policy struct {
-	ID             uuid.UUID `db:"id"`
-	UserID         uuid.UUID `db:"user_id"`
-	Name           string    `db:"name"`
-	Service        string    `db:"service"`
-	Path           string    `db:"path"`
-	AllowedMethods []string  `db:"allowed_methods"`
-	CreatedAt      time.Time `db:"created_at"`
-	UpdatedAt      time.Time `db:"updated_at"`
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Name           string
+	Service        string
+	Path           string
+	AllowedMethods []string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func NewPolicy(userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*Policy, apierr.ApiError) {
@@ -66,6 +66,19 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, allow
 	policy.UpdatedAt = now
 
 	return policy, nil
+}
+
+func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, allowedMethods []string, createdAt time.Time, updatedAt time.Time) *Policy {
+	return &Policy{
+		ID:             id,
+		UserID:         userID,
+		Name:           name,
+		Service:        service,
+		Path:           path,
+		AllowedMethods: allowedMethods,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	}
 }
 
 func (p *Policy) SetName(name string) apierr.ApiError {

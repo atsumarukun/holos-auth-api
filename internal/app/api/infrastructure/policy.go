@@ -3,9 +3,11 @@ package infrastructure
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
+	"holos-auth-api/internal/app/api/infrastructure/model"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
 
@@ -25,10 +27,14 @@ func NewPolicyInfrastructure(db *sqlx.DB) repository.PolicyRepository {
 
 func (i *policyInfrastructure) Create(ctx context.Context, policy *entity.Policy) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	policyModel, err := i.convertToModel(policy)
+	if err != nil {
+		return err
+	}
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO policies (id, user_id, name, service, path, allowed_methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :allowed_methods, :created_at, :updated_at);`,
-		policy,
+		policyModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -37,10 +43,14 @@ func (i *policyInfrastructure) Create(ctx context.Context, policy *entity.Policy
 
 func (i *policyInfrastructure) Update(ctx context.Context, policy *entity.Policy) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	policyModel, err := i.convertToModel(policy)
+	if err != nil {
+		return err
+	}
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, allowed_methods = :allowed_methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
-		policy,
+		policyModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -49,10 +59,14 @@ func (i *policyInfrastructure) Update(ctx context.Context, policy *entity.Policy
 
 func (i *policyInfrastructure) Delete(ctx context.Context, policy *entity.Policy) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	policyModel, err := i.convertToModel(policy)
+	if err != nil {
+		return err
+	}
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE policies SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
-		policy,
+		policyModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -60,7 +74,7 @@ func (i *policyInfrastructure) Delete(ctx context.Context, policy *entity.Policy
 }
 
 func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, apierr.ApiError) {
-	var policy entity.Policy
+	var policy model.PolicyModel
 	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -74,5 +88,21 @@ func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Con
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return &policy, nil
+	return i.convertToEntity(&policy)
+}
+
+func (i *policyInfrastructure) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
+	allowedMethods, err := json.Marshal(policy.AllowedMethods)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(allowedMethods), policy.CreatedAt, policy.UpdatedAt), nil
+}
+
+func (i *policyInfrastructure) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
+	var allowedMethods []string
+	if err := json.Unmarshal([]byte(policy.AllowedMethods), &allowedMethods); err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, allowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
 }

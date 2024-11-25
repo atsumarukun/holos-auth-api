@@ -16,21 +16,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestAgent_Create(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestPolicy_Create(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
 		requestJSON          string
-		resultDTO            *dto.AgentDTO
+		resultDTO            *dto.PolicyDTO
 		resultError          apierr.ApiError
 		expect               int
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name"}`,
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusOK,
 		},
@@ -38,22 +37,22 @@ func TestAgent_Create(t *testing.T) {
 			name:                 "invalid_request",
 			isSetUserIDToContext: true,
 			requestJSON:          "",
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusBadRequest,
 		},
 		{
 			name:                 "context_does_not_have_user_id",
 			isSetUserIDToContext: false,
-			requestJSON:          `{"name": "name"}`,
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusInternalServerError,
 		},
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name"}`,
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			resultDTO:            nil,
 			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
@@ -61,7 +60,7 @@ func TestAgent_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("POST", "/agent", bytes.NewBuffer([]byte(tt.requestJSON)))
+			req, err := http.NewRequest("POST", "/policy", bytes.NewBuffer([]byte(tt.requestJSON)))
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -76,11 +75,11 @@ func TestAgent_Create(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAgentUsecase(ctrl)
-			au.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
+			pu.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
 
-			ah := handler.NewAgentHandler(au)
-			ah.Create(ctx)
+			ph := handler.NewPolicyHandler(pu)
+			ph.Create(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)
@@ -89,21 +88,20 @@ func TestAgent_Create(t *testing.T) {
 	}
 }
 
-func TestAgent_Update(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestPolicy_Update(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
 		requestJSON          string
-		resultDTO            *dto.AgentDTO
+		resultDTO            *dto.PolicyDTO
 		resultError          apierr.ApiError
 		expect               int
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name"}`,
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusOK,
 		},
@@ -111,22 +109,22 @@ func TestAgent_Update(t *testing.T) {
 			name:                 "invalid_request",
 			isSetUserIDToContext: true,
 			requestJSON:          "",
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusBadRequest,
 		},
 		{
 			name:                 "context_does_not_have_user_id",
 			isSetUserIDToContext: false,
-			requestJSON:          `{"name": "name"}`,
-			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusInternalServerError,
 		},
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name"}`,
+			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			resultDTO:            nil,
 			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
@@ -134,7 +132,7 @@ func TestAgent_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("PUT", "/agent/:id", bytes.NewBuffer([]byte(tt.requestJSON)))
+			req, err := http.NewRequest("PUT", "/policy/:id", bytes.NewBuffer([]byte(tt.requestJSON)))
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -150,11 +148,11 @@ func TestAgent_Update(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAgentUsecase(ctrl)
-			au.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
+			pu.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
 
-			ah := handler.NewAgentHandler(au)
-			ah.Update(ctx)
+			ph := handler.NewPolicyHandler(pu)
+			ph.Update(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)
@@ -163,37 +161,39 @@ func TestAgent_Update(t *testing.T) {
 	}
 }
 
-func TestAgent_Delete(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestPolicy_Delete(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultDTO            *dto.AgentDTO
+		resultDTO            *dto.PolicyDTO
 		resultError          apierr.ApiError
 		expect               int
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusOK,
 		},
 		{
 			name:                 "context_does_not_have_user_id",
 			isSetUserIDToContext: false,
+			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusInternalServerError,
 		},
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
+			resultDTO:            nil,
 			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("DELETE", "/agents/:id", nil)
+			req, err := http.NewRequest("DELETE", "/policy/:id", nil)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -209,11 +209,11 @@ func TestAgent_Delete(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAgentUsecase(ctrl)
-			au.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultError).AnyTimes()
+			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
+			pu.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultError).AnyTimes()
 
-			ah := handler.NewAgentHandler(au)
-			ah.Delete(ctx)
+			ph := handler.NewPolicyHandler(pu)
+			ph.Delete(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)

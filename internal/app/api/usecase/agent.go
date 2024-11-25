@@ -6,7 +6,6 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/domain/service"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
@@ -28,14 +27,12 @@ type AgentUsecase interface {
 type agentUsecase struct {
 	transactionObject domain.TransactionObject
 	agentRepository   repository.AgentRepository
-	agentService      service.AgentService
 }
 
-func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository repository.AgentRepository, agentService service.AgentService) AgentUsecase {
+func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository repository.AgentRepository) AgentUsecase {
 	return &agentUsecase{
 		transactionObject: transactionObject,
 		agentRepository:   agentRepository,
-		agentService:      agentService,
 	}
 }
 
@@ -45,15 +42,7 @@ func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string
 		return nil, err
 	}
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		if exists, err := u.agentService.Exists(ctx, agent); err != nil {
-			return err
-		} else if exists {
-			return ErrAgentAlreadyExists
-		}
-
-		return u.agentRepository.Create(ctx, agent)
-	}); err != nil {
+	if err := u.agentRepository.Create(ctx, agent); err != nil {
 		return nil, err
 	}
 
@@ -75,12 +64,6 @@ func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUI
 
 		if err := agent.SetName(name); err != nil {
 			return err
-		}
-
-		if exists, err := u.agentService.Exists(ctx, agent); err != nil {
-			return err
-		} else if exists {
-			return ErrAgentAlreadyExists
 		}
 
 		return u.agentRepository.Update(ctx, agent)

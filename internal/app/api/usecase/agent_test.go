@@ -7,7 +7,6 @@ import (
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
-	mock_service "holos-auth-api/test/mock/domain/service"
 	"reflect"
 	"testing"
 
@@ -18,18 +17,11 @@ import (
 func TestAgent_Create(t *testing.T) {
 	tests := []struct {
 		name   string
-		exists bool
 		expect apierr.ApiError
 	}{
 		{
 			name:   "exists",
-			exists: false,
 			expect: nil,
-		},
-		{
-			name:   "not_exists",
-			exists: true,
-			expect: usecase.ErrAgentAlreadyExists,
 		},
 	}
 	for _, tt := range tests {
@@ -44,10 +36,7 @@ func TestAgent_Create(t *testing.T) {
 			ar := mock_repository.NewMockAgentRepository(ctrl)
 			ar.EXPECT().Create(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			as := mock_service.NewMockAgentService(ctrl)
-			as.EXPECT().Exists(ctx, gomock.Any()).Return(tt.exists, nil)
-
-			au := usecase.NewAgentUsecase(to, ar, as)
+			au := usecase.NewAgentUsecase(to, ar)
 			dto, err := au.Create(ctx, uuid.New(), tt.name)
 			if err != tt.expect {
 				if err == nil {
@@ -69,7 +58,6 @@ func TestAgent_Update(t *testing.T) {
 		userID      uuid.UUID
 		name        string
 		isReturnNil bool
-		exists      bool
 		expect      apierr.ApiError
 	}{
 		{
@@ -77,7 +65,6 @@ func TestAgent_Update(t *testing.T) {
 			userID:      uuid.New(),
 			name:        "success",
 			isReturnNil: false,
-			exists:      false,
 			expect:      nil,
 		},
 		{
@@ -85,16 +72,7 @@ func TestAgent_Update(t *testing.T) {
 			userID:      uuid.New(),
 			name:        "not_found",
 			isReturnNil: true,
-			exists:      false,
 			expect:      usecase.ErrAgentNotFound,
-		},
-		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "already_exists",
-			isReturnNil: false,
-			exists:      true,
-			expect:      usecase.ErrAgentAlreadyExists,
 		},
 	}
 	for _, tt := range tests {
@@ -120,10 +98,7 @@ func TestAgent_Update(t *testing.T) {
 			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			as := mock_service.NewMockAgentService(ctrl)
-			as.EXPECT().Exists(ctx, gomock.Any()).Return(tt.exists, nil).AnyTimes()
-
-			au := usecase.NewAgentUsecase(to, ar, as)
+			au := usecase.NewAgentUsecase(to, ar)
 			dto, err := au.Update(ctx, tt.id, tt.userID, tt.name)
 			if err != tt.expect {
 				if err == nil {
@@ -185,9 +160,7 @@ func TestAgent_Delete(t *testing.T) {
 			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			as := mock_service.NewMockAgentService(ctrl)
-
-			au := usecase.NewAgentUsecase(to, ar, as)
+			au := usecase.NewAgentUsecase(to, ar)
 			err = au.Delete(ctx, tt.id, tt.userID)
 			if err != tt.expect {
 				if err == nil {

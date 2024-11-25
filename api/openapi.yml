@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 
 info:
-  title: "holos auth-api"
+  title: "holos: 認証認可 API"
   version: "1.0.0"
 
 servers:
@@ -156,6 +156,67 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /policies:
+    post:
+      summary: "ポリシー作成"
+      tags:
+        - "policies"
+      requestBody:
+        $ref: "#/components/requestBodies/create_policy"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_policy"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /policies/{id}:
+    put:
+      summary: "ポリシー更新"
+      tags:
+        - "policies"
+      requestBody:
+        $ref: "#/components/requestBodies/update_policy"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/update_policy"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    delete:
+      summary: "ポリシー削除"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
   /auth/user_id:
     get:
       summary: "ユーザーID取得"
@@ -181,7 +242,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/auth_signin"
       responses:
-        200:
+        201:
           description: "成功"
           $ref: "#/components/responses/auth_signin"
         401:
@@ -281,6 +342,46 @@ components:
         - "name"
         - "created_at"
         - "updated_at"
+    policy:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+          readOnly: true
+        name:
+          type: "string"
+          description: "ポリシー名"
+          example: "policy_name"
+        service:
+          type: "string"
+          description: "サービス"
+          example: "STORAGE"
+        path:
+          type: "string"
+          description: "パス"
+          example: "/files/:id"
+        allowed_methods:
+          type: "array"
+          items:
+            type: "string"
+          example:
+            - "GET"
+            - "POST"
+            - "PUT"
+        created_at:
+          $ref: "#/components/schemas/created_at"
+        updated_at:
+          $ref: "#/components/schemas/updated_at"
+      required:
+        - "id"
+        - "name"
+        - "service"
+        - "path"
+        - "allowed_method"
+        - "created_at"
+        - "updated_at"
 
   requestBodies:
     create_user:
@@ -352,6 +453,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/agent"
+    create_policy:
+      description: "ポリシー作成"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    update_policy:
+      description: "ポリシー更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
     auth_signin:
       description: "サインイン"
       required: true
@@ -411,6 +526,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/agent"
+    create_policy:
+      description: "ポリシー作成"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    update_policy:
+      description: "ポリシー更新"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
     get_user_id:
       description: "ユーザーID取得"
       content:

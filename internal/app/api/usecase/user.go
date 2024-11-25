@@ -40,20 +40,20 @@ func NewUserUsecase(transactionObject domain.TransactionObject, userRepository r
 	}
 }
 
-func (uu *userUsecase) Create(ctx context.Context, name string, password string, confirmPassword string) (*dto.UserDTO, apierr.ApiError) {
+func (u *userUsecase) Create(ctx context.Context, name string, password string, confirmPassword string) (*dto.UserDTO, apierr.ApiError) {
 	user, err := entity.NewUser(name, password, confirmPassword)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		if exists, err := uu.userService.Exists(ctx, user); err != nil {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		if exists, err := u.userService.Exists(ctx, user); err != nil {
 			return err
 		} else if exists {
 			return ErrUserAlreadyExists
 		}
 
-		return uu.userRepository.Create(ctx, user)
+		return u.userRepository.Create(ctx, user)
 	}); err != nil {
 		return nil, err
 	}
@@ -61,12 +61,12 @@ func (uu *userUsecase) Create(ctx context.Context, name string, password string,
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string) (*dto.UserDTO, apierr.ApiError) {
+func (u *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string) (*dto.UserDTO, apierr.ApiError) {
 	var user *entity.User
 
-	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		user, err = uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
+		user, err = u.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -78,13 +78,13 @@ func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string
 			return err
 		}
 
-		if exists, err := uu.userService.Exists(ctx, user); err != nil {
+		if exists, err := u.userService.Exists(ctx, user); err != nil {
 			return err
 		} else if exists {
 			return ErrUserAlreadyExists
 		}
 
-		return uu.userRepository.Update(ctx, user)
+		return u.userRepository.Update(ctx, user)
 	}); err != nil {
 		return nil, err
 	}
@@ -92,12 +92,12 @@ func (uu *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, apierr.ApiError) {
+func (u *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, apierr.ApiError) {
 	var user *entity.User
 
-	if err := uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 		var err apierr.ApiError
-		user, err = uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
+		user, err = u.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func (uu *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, current
 			return err
 		}
 
-		return uu.userRepository.Update(ctx, user)
+		return u.userRepository.Update(ctx, user)
 	}); err != nil {
 		return nil, err
 	}
@@ -121,9 +121,9 @@ func (uu *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, current
 	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
 }
 
-func (uu *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) apierr.ApiError {
-	return uu.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := uu.userRepository.FindOneByIDAndNotDeleted(ctx, id)
+func (u *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) apierr.ApiError {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		user, err := u.userRepository.FindOneByIDAndNotDeleted(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -135,6 +135,6 @@ func (uu *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string
 			return err
 		}
 
-		return uu.userRepository.Delete(ctx, user)
+		return u.userRepository.Delete(ctx, user)
 	})
 }

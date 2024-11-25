@@ -6,8 +6,8 @@ package mock_usecase
 
 import (
 	context "context"
-	dto "holos-auth-api/internal/app/api/usecase/dto"
 	apierr "holos-auth-api/internal/app/api/pkg/apierr"
+	dto "holos-auth-api/internal/app/api/usecase/dto"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

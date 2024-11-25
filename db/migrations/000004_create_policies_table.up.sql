@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS `policies` (
+  `id` CHAR(36) NOT NULL COMMENT "ID",
+  `user_id` CHAR(36) NOT NULL COMMENT "ユーザーID",
+  `name` VARCHAR(255) NOT NULL COMMENT "ポリシー名",
+  `service` ENUM ("STORAGE", "CONTENT") NOT NULL COMMENT "サービス",
+  `path` VARCHAR(255) NOT NULL COMMENT "パス",
+  `allowed_methods` JSON NOT NULL DEFAULT (JSON_ARRAY ()) COMMENT "許可メソッド",
+  `created_at` DATETIME (6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT "作成日時",
+  `updated_at` DATETIME (6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT "更新日時",
+  `deleted_at` DATETIME (6) COMMENT "削除日時",
+  PRIMARY KEY (`id`),
+  CONSTRAINT fk_policies_user_id FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+)

@@ -12,24 +12,24 @@ import (
 	"github.com/google/uuid"
 )
 
-type AgentHandler interface {
+type PolicyHandler interface {
 	Create(*gin.Context)
 	Update(*gin.Context)
 	Delete(*gin.Context)
 }
 
-type agentHandler struct {
-	agentUsecase usecase.AgentUsecase
+type policyHandler struct {
+	policyUsecase usecase.PolicyUsecase
 }
 
-func NewAgentHandler(agentUsecase usecase.AgentUsecase) AgentHandler {
-	return &agentHandler{
-		agentUsecase: agentUsecase,
+func NewPolicyHandler(policyUsecase usecase.PolicyUsecase) PolicyHandler {
+	return &policyHandler{
+		policyUsecase: policyUsecase,
 	}
 }
 
-func (h *agentHandler) Create(c *gin.Context) {
-	var req request.CreateAgentRequest
+func (h *policyHandler) Create(c *gin.Context) {
+	var req request.CreatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -43,17 +43,17 @@ func (h *agentHandler) Create(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := h.agentUsecase.Create(ctx, userID, req.Name)
+	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
 	if err != nil {
 		c.String(err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (h *agentHandler) Update(c *gin.Context) {
-	var req request.UpdateAgentRequest
+func (h *policyHandler) Update(c *gin.Context) {
+	var req request.UpdatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -73,16 +73,16 @@ func (h *agentHandler) Update(c *gin.Context) {
 
 	ctx := context.Background()
 
-	dto, err := h.agentUsecase.Update(ctx, id, userID, req.Name)
+	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
 	if err != nil {
 		c.String(err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusOK, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
 }
 
-func (h *agentHandler) Delete(c *gin.Context) {
+func (h *policyHandler) Delete(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
 		c.String(err.Error())
@@ -97,7 +97,7 @@ func (h *agentHandler) Delete(c *gin.Context) {
 
 	ctx := context.Background()
 
-	if err := h.agentUsecase.Delete(ctx, id, userID); err != nil {
+	if err := h.policyUsecase.Delete(ctx, id, userID); err != nil {
 		c.String(err.Error())
 		return
 	}

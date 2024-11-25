@@ -23,8 +23,8 @@ func NewUserInfrastructure(db *sqlx.DB) repository.UserRepository {
 	}
 }
 
-func (ui *userInfrastructure) Create(ctx context.Context, user *entity.User) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ui.db)
+func (i *userInfrastructure) Create(ctx context.Context, user *entity.User) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO users (id, name, password, created_at, updated_at) VALUES (:id, :name, :password, :created_at, :updated_at);`,
@@ -35,8 +35,8 @@ func (ui *userInfrastructure) Create(ctx context.Context, user *entity.User) api
 	return nil
 }
 
-func (ui *userInfrastructure) Update(ctx context.Context, user *entity.User) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ui.db)
+func (i *userInfrastructure) Update(ctx context.Context, user *entity.User) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users SET name = :name, password = :password, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -47,8 +47,8 @@ func (ui *userInfrastructure) Update(ctx context.Context, user *entity.User) api
 	return nil
 }
 
-func (ui *userInfrastructure) Delete(ctx context.Context, user *entity.User) apierr.ApiError {
-	driver := getSqlxDriver(ctx, ui.db)
+func (i *userInfrastructure) Delete(ctx context.Context, user *entity.User) apierr.ApiError {
+	driver := getSqlxDriver(ctx, i.db)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users
@@ -69,9 +69,9 @@ func (ui *userInfrastructure) Delete(ctx context.Context, user *entity.User) api
 	return nil
 }
 
-func (ui *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
+func (i *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
 	var user entity.User
-	driver := getSqlxDriver(ctx, ui.db)
+	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;`,
@@ -86,9 +86,9 @@ func (ui *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id u
 	return &user, nil
 }
 
-func (ui *userInfrastructure) FindOneByName(ctx context.Context, name string) (*entity.User, apierr.ApiError) {
+func (i *userInfrastructure) FindOneByName(ctx context.Context, name string) (*entity.User, apierr.ApiError) {
 	var user entity.User
-	driver := getSqlxDriver(ctx, ui.db)
+	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;`,

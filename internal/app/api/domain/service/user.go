@@ -22,8 +22,8 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 	}
 }
 
-func (us *userService) Exists(ctx context.Context, user *entity.User) (bool, apierr.ApiError) {
-	user, err := us.userRepository.FindOneByName(ctx, user.Name)
+func (s *userService) Exists(ctx context.Context, user *entity.User) (bool, apierr.ApiError) {
+	user, err := s.userRepository.FindOneByName(ctx, user.Name)
 	if err != nil {
 		return false, err
 	}

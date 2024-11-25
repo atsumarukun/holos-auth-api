@@ -18,10 +18,18 @@ func getRoutes(r *gin.Engine) {
 		agents.DELETE("/:id", agentHandler.Delete)
 	}
 
+	policies := r.Group("policies")
+	{
+		policies.Use(authMiddleware.Authenticate)
+		policies.POST("/", policyHandler.Create)
+		policies.PUT("/:id", policyHandler.Update)
+		policies.DELETE("/:id", policyHandler.Delete)
+	}
+
 	auth := r.Group("auth")
 	{
 		auth.GET("/user_id", authHandler.GetUserID)
 		auth.POST("/signin", authHandler.Signin)
-		auth.DELETE("signout", authHandler.Signout)
+		auth.DELETE("/signout", authHandler.Signout)
 	}
 }

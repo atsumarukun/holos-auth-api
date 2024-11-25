@@ -16,6 +16,6 @@ func NewApiError(code int, message string) ApiError {
 	}
 }
 
-func (ae *apiError) Error() (int, string) {
-	return ae.code, ae.message
+func (e *apiError) Error() (int, string) {
+	return e.code, e.message
 }

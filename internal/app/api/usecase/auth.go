@@ -34,11 +34,11 @@ func NewAuthUsecase(transactionObject domain.TransactionObject, userRepository r
 	}
 }
 
-func (au *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
+func (u *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
 	var userToken *entity.UserToken
 
-	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := au.userRepository.FindOneByName(ctx, userName)
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		user, err := u.userRepository.FindOneByName(ctx, userName)
 		if err != nil {
 			return err
 		}
@@ -55,16 +55,16 @@ func (au *authUsecase) Signin(ctx context.Context, userName string, password str
 			return err
 		}
 
-		return au.userTokenRepository.Save(ctx, userToken)
+		return u.userTokenRepository.Save(ctx, userToken)
 	}); err != nil {
 		return "", err
 	}
 	return userToken.Token, nil
 }
 
-func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
-	return au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+func (u *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 		if err != nil {
 			return err
 		}
@@ -72,12 +72,12 @@ func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiErro
 			return ErrAuthenticationFailed
 		}
 
-		return au.userTokenRepository.Delete(ctx, userToken)
+		return u.userTokenRepository.Delete(ctx, userToken)
 	})
 }
 
-func (au *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, apierr.ApiError) {
-	userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+func (u *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, apierr.ApiError) {
+	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 	if err != nil {
 		return uuid.Nil, err
 	}

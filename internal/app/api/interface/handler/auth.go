@@ -26,7 +26,7 @@ func NewAuthHandler(authUsecase usecase.AuthUsecase) AuthHandler {
 	}
 }
 
-func (ah *authHandler) Signin(c *gin.Context) {
+func (h *authHandler) Signin(c *gin.Context) {
 	var req request.SigninRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -35,16 +35,16 @@ func (ah *authHandler) Signin(c *gin.Context) {
 
 	ctx := context.Background()
 
-	token, err := ah.authUsecase.Signin(ctx, req.UserName, req.Password)
+	token, err := h.authUsecase.Signin(ctx, req.UserName, req.Password)
 	if err != nil {
 		c.String(err.Error())
 		return
 	}
 
-	c.String(http.StatusOK, token)
+	c.String(http.StatusCreated, token)
 }
 
-func (ah *authHandler) Signout(c *gin.Context) {
+func (h *authHandler) Signout(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
 		c.String(http.StatusUnauthorized, "unauthorized")
@@ -53,7 +53,7 @@ func (ah *authHandler) Signout(c *gin.Context) {
 
 	ctx := context.Background()
 
-	if err := ah.authUsecase.Signout(ctx, bearerToken[1]); err != nil {
+	if err := h.authUsecase.Signout(ctx, bearerToken[1]); err != nil {
 		c.String(err.Error())
 		return
 	}
@@ -61,7 +61,7 @@ func (ah *authHandler) Signout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (ah *authHandler) GetUserID(c *gin.Context) {
+func (h *authHandler) GetUserID(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
 		c.String(http.StatusUnauthorized, "unauthorized")
@@ -70,7 +70,7 @@ func (ah *authHandler) GetUserID(c *gin.Context) {
 
 	ctx := context.Background()
 
-	userID, err := ah.authUsecase.GetUserID(ctx, bearerToken[1])
+	userID, err := h.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {
 		c.String(err.Error())
 		return

@@ -41,7 +41,7 @@ func (h *authHandler) Signin(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, token)
+	c.String(http.StatusCreated, token)
 }
 
 func (h *authHandler) Signout(c *gin.Context) {

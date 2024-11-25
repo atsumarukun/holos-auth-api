@@ -44,7 +44,7 @@ func (h *userHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
 func (h *userHandler) UpdateName(c *gin.Context) {

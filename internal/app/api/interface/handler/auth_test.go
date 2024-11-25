@@ -28,7 +28,7 @@ func TestAuth_Signin(t *testing.T) {
 			requestJSON:  `{"user_name": "user_name", "password": "password"}`,
 			resultString: "token",
 			resultError:  nil,
-			expect:       http.StatusOK,
+			expect:       http.StatusCreated,
 		},
 		{
 			name:         "invalid_request",

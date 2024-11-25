@@ -32,7 +32,7 @@ func TestAgent_Create(t *testing.T) {
 			requestJSON:          `{"name": "name"}`,
 			resultDTO:            dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now()),
 			resultError:          nil,
-			expect:               http.StatusOK,
+			expect:               http.StatusCreated,
 		},
 		{
 			name:                 "invalid_request",

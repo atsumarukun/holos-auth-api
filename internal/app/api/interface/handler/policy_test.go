@@ -31,7 +31,7 @@ func TestPolicy_Create(t *testing.T) {
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
-			expect:               http.StatusOK,
+			expect:               http.StatusCreated,
 		},
 		{
 			name:                 "invalid_request",

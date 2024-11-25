@@ -242,7 +242,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/auth_signin"
       responses:
-        200:
+        201:
           description: "成功"
           $ref: "#/components/responses/auth_signin"
         401:

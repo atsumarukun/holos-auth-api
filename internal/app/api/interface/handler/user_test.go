@@ -30,7 +30,7 @@ func TestUser_Create(t *testing.T) {
 			requestJSON: `{"name": "name", "password": "password", "confirm_password": "password"}`,
 			resultDTO:   dto.NewUserDTO(uuid.New(), "name", "password", time.Now(), time.Now()),
 			resultError: nil,
-			expect:      http.StatusOK,
+			expect:      http.StatusCreated,
 		},
 		{
 			name:        "invalid_request",

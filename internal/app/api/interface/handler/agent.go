@@ -49,7 +49,7 @@ func (h *agentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
 }
 
 func (h *agentHandler) Update(c *gin.Context) {

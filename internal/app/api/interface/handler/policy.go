@@ -49,7 +49,7 @@ func (h *policyHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
 }
 
 func (h *policyHandler) Update(c *gin.Context) {

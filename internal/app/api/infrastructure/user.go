@@ -6,6 +6,7 @@ import (
 	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
+	"holos-auth-api/internal/app/api/infrastructure/model"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
 
@@ -25,10 +26,11 @@ func NewUserInfrastructure(db *sqlx.DB) repository.UserRepository {
 
 func (i *userInfrastructure) Create(ctx context.Context, user *entity.User) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	userModel := i.convertToModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO users (id, name, password, created_at, updated_at) VALUES (:id, :name, :password, :created_at, :updated_at);`,
-		user,
+		userModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -37,10 +39,11 @@ func (i *userInfrastructure) Create(ctx context.Context, user *entity.User) apie
 
 func (i *userInfrastructure) Update(ctx context.Context, user *entity.User) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	userModel := i.convertToModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users SET name = :name, password = :password, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
-		user,
+		userModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -49,6 +52,7 @@ func (i *userInfrastructure) Update(ctx context.Context, user *entity.User) apie
 
 func (i *userInfrastructure) Delete(ctx context.Context, user *entity.User) apierr.ApiError {
 	driver := getSqlxDriver(ctx, i.db)
+	userModel := i.convertToModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users
@@ -62,7 +66,7 @@ func (i *userInfrastructure) Delete(ctx context.Context, user *entity.User) apie
 			users.id = :id
 			AND users.deleted_at IS NULL
 			AND agents.deleted_at IS NULL;`,
-		user,
+		userModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
@@ -70,7 +74,7 @@ func (i *userInfrastructure) Delete(ctx context.Context, user *entity.User) apie
 }
 
 func (i *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
-	var user entity.User
+	var user model.UserModel
 	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -83,11 +87,11 @@ func (i *userInfrastructure) FindOneByIDAndNotDeleted(ctx context.Context, id uu
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return &user, nil
+	return i.convertToEntity(&user), nil
 }
 
 func (i *userInfrastructure) FindOneByName(ctx context.Context, name string) (*entity.User, apierr.ApiError) {
-	var user entity.User
+	var user model.UserModel
 	driver := getSqlxDriver(ctx, i.db)
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -100,5 +104,13 @@ func (i *userInfrastructure) FindOneByName(ctx context.Context, name string) (*e
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return &user, nil
+	return i.convertToEntity(&user), nil
+}
+
+func (i *userInfrastructure) convertToModel(user *entity.User) *model.UserModel {
+	return model.NewUserModel(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
+}
+
+func (i *userInfrastructure) convertToEntity(user *model.UserModel) *entity.User {
+	return entity.RestoreUser(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
 }

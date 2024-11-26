@@ -81,24 +81,6 @@ func (i *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Cont
 	return i.convertToEntity(&agent), nil
 }
 
-func (i *agentInfrastructure) FindOneByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (*entity.Agent, apierr.ApiError) {
-	var agent model.AgentModel
-	driver := getSqlxDriver(ctx, i.db)
-	if err := driver.QueryRowxContext(
-		ctx,
-		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND name = ? LIMIT 1;`,
-		userID,
-		name,
-	).StructScan(&agent); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		} else {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
-		}
-	}
-	return i.convertToEntity(&agent), nil
-}
-
 func (i *agentInfrastructure) convertToModel(agent *entity.Agent) *model.AgentModel {
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }

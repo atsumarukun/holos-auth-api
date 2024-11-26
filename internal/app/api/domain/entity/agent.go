@@ -16,11 +16,11 @@ var (
 )
 
 type Agent struct {
-	ID        uuid.UUID `db:"id"`
-	UserID    uuid.UUID `db:"user_id"`
-	Name      string    `db:"name"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
@@ -43,6 +43,16 @@ func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
 	agent.UpdatedAt = now
 
 	return agent, nil
+}
+
+func RestoreAgent(id uuid.UUID, userID uuid.UUID, name string, createdAt time.Time, updatedAt time.Time) *Agent {
+	return &Agent{
+		ID:        id,
+		UserID:    userID,
+		Name:      name,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
 }
 
 func (a *Agent) SetName(name string) apierr.ApiError {

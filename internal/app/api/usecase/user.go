@@ -58,7 +58,7 @@ func (u *userUsecase) Create(ctx context.Context, name string, password string, 
 		return nil, err
 	}
 
-	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
+	return u.convertToDTO(user), nil
 }
 
 func (u *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string) (*dto.UserDTO, apierr.ApiError) {
@@ -89,7 +89,7 @@ func (u *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string)
 		return nil, err
 	}
 
-	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
+	return u.convertToDTO(user), nil
 }
 
 func (u *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, apierr.ApiError) {
@@ -118,7 +118,7 @@ func (u *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentP
 		return nil, err
 	}
 
-	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt), nil
+	return u.convertToDTO(user), nil
 }
 
 func (u *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) apierr.ApiError {
@@ -137,4 +137,8 @@ func (u *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string)
 
 		return u.userRepository.Delete(ctx, user)
 	})
+}
+
+func (u *userUsecase) convertToDTO(user *entity.User) *dto.UserDTO {
+	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
 }

@@ -23,11 +23,11 @@ var (
 )
 
 type User struct {
-	ID        uuid.UUID `db:"id"`
-	Name      string    `db:"name"`
-	Password  string    `db:"password"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID
+	Name      string
+	Password  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewUser(name string, password string, confirmPassword string) (*User, apierr.ApiError) {
@@ -53,6 +53,16 @@ func NewUser(name string, password string, confirmPassword string) (*User, apier
 	user.UpdatedAt = now
 
 	return user, nil
+}
+
+func RestoreUser(id uuid.UUID, name string, password string, createdAt time.Time, updatedAt time.Time) *User {
+	return &User{
+		ID:        id,
+		Name:      name,
+		Password:  password,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
 }
 
 func (u *User) SetName(name string) apierr.ApiError {

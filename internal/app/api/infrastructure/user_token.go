@@ -66,10 +66,10 @@ func (i *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Contex
 	return i.convertToEntity(&userToken), nil
 }
 
-func (i userTokenInfrastructure) convertToModel(userToken *entity.UserToken) *model.UserTokenModel {
+func (i *userTokenInfrastructure) convertToModel(userToken *entity.UserToken) *model.UserTokenModel {
 	return model.NewUserTokenModel(userToken.UserID, userToken.Token, userToken.ExpiresAt)
 }
 
-func (i userTokenInfrastructure) convertToEntity(userToken *model.UserTokenModel) *entity.UserToken {
+func (i *userTokenInfrastructure) convertToEntity(userToken *model.UserTokenModel) *entity.UserToken {
 	return entity.RestoreUserToken(userToken.UserID, userToken.Token, userToken.ExpiresAt)
 }

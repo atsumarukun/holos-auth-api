@@ -80,21 +80,6 @@ func (mr *MockAgentRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserIDAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByIDAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
-// FindOneByUserIDAndName mocks base method.
-func (m *MockAgentRepository) FindOneByUserIDAndName(arg0 context.Context, arg1 uuid.UUID, arg2 string) (*entity.Agent, apierr.ApiError) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindOneByUserIDAndName", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*entity.Agent)
-	ret1, _ := ret[1].(apierr.ApiError)
-	return ret0, ret1
-}
-
-// FindOneByUserIDAndName indicates an expected call of FindOneByUserIDAndName.
-func (mr *MockAgentRepositoryMockRecorder) FindOneByUserIDAndName(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByUserIDAndName", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByUserIDAndName), arg0, arg1, arg2)
-}
-
 // Update mocks base method.
 func (m *MockAgentRepository) Update(arg0 context.Context, arg1 *entity.Agent) apierr.ApiError {
 	m.ctrl.T.Helper()

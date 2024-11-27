@@ -88,10 +88,22 @@ paths:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
   /agents:
+    get:
+      summary: "エージェント一覧取得"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_agents"
     post:
       summary: "エージェント作成"
       tags:
         - "agents"
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/create_agent"
       responses:
@@ -161,6 +173,8 @@ paths:
       summary: "ポリシー作成"
       tags:
         - "policies"
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/create_policy"
       responses:
@@ -178,6 +192,8 @@ paths:
       summary: "ポリシー更新"
       tags:
         - "policies"
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/update_policy"
       responses:
@@ -514,6 +530,14 @@ components:
                 properties:
                   id:
                     writeOnly: true
+    get_agents:
+      description: "エージェント一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
     create_agent:
       description: "エージェント作成"
       content:

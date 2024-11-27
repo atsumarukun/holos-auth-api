@@ -94,11 +94,11 @@ func (i *agentInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, use
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var agent *model.AgentModel
+		var agent model.AgentModel
 		if err := rows.StructScan(&agent); err != nil {
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
-		agents = append(agents, agent)
+		agents = append(agents, &agent)
 	}
 	return i.convertToEntities(agents), nil
 }

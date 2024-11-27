@@ -81,10 +81,40 @@ func (i *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Cont
 	return i.convertToEntity(&agent), nil
 }
 
+func (i *agentInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+	var agents []*model.AgentModel
+	driver := getSqlxDriver(ctx, i.db)
+	rows, err := driver.QueryxContext(
+		ctx,
+		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND deleted_at IS NULL;`,
+		userID,
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var agent *model.AgentModel
+		if err := rows.StructScan(&agent); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		agents = append(agents, agent)
+	}
+	return i.convertToEntities(agents), nil
+}
+
 func (i *agentInfrastructure) convertToModel(agent *entity.Agent) *model.AgentModel {
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }
 
 func (i *agentInfrastructure) convertToEntity(agent *model.AgentModel) *entity.Agent {
 	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
+}
+
+func (i *agentInfrastructure) convertToEntities(agents []*model.AgentModel) []*entity.Agent {
+	entities := make([]*entity.Agent, len(agents))
+	for idx, agent := range agents {
+		entities[idx] = i.convertToEntity(agent)
+	}
+	return entities
 }

@@ -66,6 +66,21 @@ func (mr *MockAgentUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAgentUsecase)(nil).Delete), arg0, arg1, arg2)
 }
 
+// Gets mocks base method.
+func (m *MockAgentUsecase) Gets(arg0 context.Context, arg1 uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Gets", arg0, arg1)
+	ret0, _ := ret[0].([]*dto.AgentDTO)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// Gets indicates an expected call of Gets.
+func (mr *MockAgentUsecaseMockRecorder) Gets(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Gets", reflect.TypeOf((*MockAgentUsecase)(nil).Gets), arg0, arg1)
+}
+
 // Update mocks base method.
 func (m *MockAgentUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, arg3 string) (*dto.AgentDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()

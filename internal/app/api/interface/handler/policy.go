@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
@@ -43,7 +42,7 @@ func (h *policyHandler) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
 	if err != nil {
@@ -73,7 +72,7 @@ func (h *policyHandler) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
 	if err != nil {
@@ -97,7 +96,7 @@ func (h *policyHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := h.policyUsecase.Delete(ctx, id, userID); err != nil {
 		c.String(err.Error())
@@ -114,7 +113,7 @@ func (h *policyHandler) Gets(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dtos, err := h.policyUsecase.Gets(ctx, userID)
 	if err != nil {

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/usecase"
 	"net/http"
@@ -33,7 +32,7 @@ func (h *authHandler) Signin(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	token, err := h.authUsecase.Signin(ctx, req.UserName, req.Password)
 	if err != nil {
@@ -51,7 +50,7 @@ func (h *authHandler) Signout(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := h.authUsecase.Signout(ctx, bearerToken[1]); err != nil {
 		c.String(err.Error())
@@ -68,7 +67,7 @@ func (h *authHandler) GetUserID(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	userID, err := h.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {

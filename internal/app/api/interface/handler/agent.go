@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
@@ -43,7 +42,7 @@ func (h *agentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dto, err := h.agentUsecase.Create(ctx, userID, req.Name)
 	if err != nil {
@@ -73,7 +72,7 @@ func (h *agentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dto, err := h.agentUsecase.Update(ctx, id, userID, req.Name)
 	if err != nil {
@@ -97,7 +96,7 @@ func (h *agentHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := h.agentUsecase.Delete(ctx, id, userID); err != nil {
 		c.String(err.Error())
@@ -114,7 +113,7 @@ func (h *agentHandler) Gets(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	dtos, err := h.agentUsecase.Gets(ctx, userID)
 	if err != nil {

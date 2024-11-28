@@ -98,6 +98,12 @@ paths:
         200:
           description: "成功"
           $ref: "#/components/responses/get_agents"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
     post:
       summary: "エージェント作成"
       tags:
@@ -169,6 +175,22 @@ paths:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
   /policies:
+    get:
+      summary: "ポリシー一覧取得"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
     post:
       summary: "ポリシー作成"
       tags:
@@ -550,6 +572,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/agent"
+    get_policies:
+      description: "ポリシー一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
     create_policy:
       description: "ポリシー作成"
       content:

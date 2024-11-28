@@ -22,6 +22,7 @@ func getRoutes(r *gin.Engine) {
 	policies := r.Group("policies")
 	{
 		policies.Use(authMiddleware.Authenticate)
+		policies.GET("/", policyHandler.Gets)
 		policies.POST("/", policyHandler.Create)
 		policies.PUT("/:id", policyHandler.Update)
 		policies.DELETE("/:id", policyHandler.Delete)

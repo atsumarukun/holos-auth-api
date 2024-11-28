@@ -165,28 +165,24 @@ func TestPolicy_Delete(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultDTO            *dto.PolicyDTO
 		resultError          apierr.ApiError
 		expect               int
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
-			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusOK,
 		},
 		{
 			name:                 "context_does_not_have_user_id",
 			isSetUserIDToContext: false,
-			resultDTO:            dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now()),
 			resultError:          nil,
 			expect:               http.StatusInternalServerError,
 		},
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
-			resultDTO:            nil,
 			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
@@ -214,6 +210,66 @@ func TestPolicy_Delete(t *testing.T) {
 
 			ph := handler.NewPolicyHandler(pu)
 			ph.Delete(ctx)
+
+			if w.Code != tt.expect {
+				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			}
+		})
+	}
+}
+
+func TestPolicy_Gets(t *testing.T) {
+	tests := []struct {
+		name                 string
+		isSetUserIDToContext bool
+		resultDTO            []*dto.PolicyDTO
+		resultError          apierr.ApiError
+		expect               int
+	}{
+		{
+			name:                 "success",
+			isSetUserIDToContext: true,
+			resultDTO:            []*dto.PolicyDTO{dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now())},
+			resultError:          nil,
+			expect:               http.StatusOK,
+		},
+		{
+			name:                 "context_does_not_have_user_id",
+			isSetUserIDToContext: false,
+			resultDTO:            []*dto.PolicyDTO{dto.NewPolicyDTO(uuid.New(), uuid.New(), "name", "STORAGE", "/", []string{"GET"}, time.Now(), time.Now())},
+			resultError:          nil,
+			expect:               http.StatusInternalServerError,
+		},
+		{
+			name:                 "result_error",
+			isSetUserIDToContext: true,
+			resultDTO:            nil,
+			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:               http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "/policy", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", uuid.New())
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
+			pu.EXPECT().Gets(gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+
+			ph := handler.NewPolicyHandler(pu)
+			ph.Gets(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)

@@ -91,6 +91,28 @@ func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Con
 	return i.convertToEntity(&policy)
 }
 
+func (i *policyInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+	var policies []*model.PolicyModel
+	driver := getSqlxDriver(ctx, i.db)
+	rows, err := driver.QueryxContext(
+		ctx,
+		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
+		userID,
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var policy model.PolicyModel
+		if err := rows.StructScan(&policy); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		policies = append(policies, &policy)
+	}
+	return i.convertToEntities(policies)
+}
+
 func (i *policyInfrastructure) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
 	allowedMethods, err := json.Marshal(policy.AllowedMethods)
 	if err != nil {
@@ -105,4 +127,16 @@ func (i *policyInfrastructure) convertToEntity(policy *model.PolicyModel) (*enti
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, allowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
+}
+
+func (i *policyInfrastructure) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {
+	entities := make([]*entity.Policy, len(policies))
+	var err apierr.ApiError
+	for idx, policy := range policies {
+		entities[idx], err = i.convertToEntity(policy)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return entities, nil
 }

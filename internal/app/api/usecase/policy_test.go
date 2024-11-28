@@ -170,3 +170,61 @@ func TestPolicy_Delete(t *testing.T) {
 		})
 	}
 }
+
+func TestPolicy_Gets(t *testing.T) {
+	tests := []struct {
+		id          uuid.UUID
+		userID      uuid.UUID
+		name        string
+		isReturnNil bool
+		expect      apierr.ApiError
+	}{
+		{
+			id:          uuid.New(),
+			userID:      uuid.New(),
+			name:        "success",
+			isReturnNil: false,
+			expect:      nil,
+		},
+		{
+			id:          uuid.New(),
+			userID:      uuid.New(),
+			name:        "not_found",
+			isReturnNil: true,
+			expect:      nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			res := []*entity.Policy{policy}
+			if tt.isReturnNil {
+				res = nil
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := context.Background()
+
+			to := test.NewTestTransactionObject()
+
+			pr := mock_repository.NewMockPolicyRepository(ctrl)
+			pr.EXPECT().FindByUserIDAndNotDeleted(ctx, tt.userID).Return(res, nil)
+
+			pu := usecase.NewPolicyUsecase(to, pr)
+			_, err = pu.Gets(ctx, tt.userID)
+			if err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}

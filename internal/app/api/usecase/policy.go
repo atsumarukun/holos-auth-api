@@ -21,6 +21,7 @@ type PolicyUsecase interface {
 	Create(context.Context, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, apierr.ApiError)
 	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, apierr.ApiError)
 	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
+	Gets(context.Context, uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
 }
 
 type policyUsecase struct {
@@ -45,7 +46,7 @@ func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name strin
 		return nil, err
 	}
 
-	return dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
+	return u.convertToDTO(policy), nil
 }
 
 func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*dto.PolicyDTO, apierr.ApiError) {
@@ -79,7 +80,7 @@ func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 		return nil, err
 	}
 
-	return dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
+	return u.convertToDTO(policy), nil
 }
 
 func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
@@ -94,4 +95,25 @@ func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 
 		return u.policyRepository.Delete(ctx, policy)
 	})
+}
+
+func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+	policies, err := u.policyRepository.FindByUserIDAndNotDeleted(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.convertToDTOs(policies), nil
+}
+
+func (u *policyUsecase) convertToDTO(policy *entity.Policy) *dto.PolicyDTO {
+	return dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt)
+}
+
+func (u *policyUsecase) convertToDTOs(policies []*entity.Policy) []*dto.PolicyDTO {
+	dtos := make([]*dto.PolicyDTO, len(policies))
+	for i, policy := range policies {
+		dtos[i] = u.convertToDTO(policy)
+	}
+	return dtos
 }

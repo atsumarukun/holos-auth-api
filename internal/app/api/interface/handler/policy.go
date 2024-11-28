@@ -6,6 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
+	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type PolicyHandler interface {
 	Create(*gin.Context)
 	Update(*gin.Context)
 	Delete(*gin.Context)
+	Gets(*gin.Context)
 }
 
 type policyHandler struct {
@@ -49,7 +51,7 @@ func (h *policyHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, h.convertToResponse(dto))
 }
 
 func (h *policyHandler) Update(c *gin.Context) {
@@ -79,7 +81,7 @@ func (h *policyHandler) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.AllowedMethods, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusOK, h.convertToResponse(dto))
 }
 
 func (h *policyHandler) Delete(c *gin.Context) {
@@ -103,4 +105,34 @@ func (h *policyHandler) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *policyHandler) Gets(c *gin.Context) {
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	ctx := context.Background()
+
+	dtos, err := h.policyUsecase.Gets(ctx, userID)
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, h.convertToResponses(dtos))
+}
+
+func (h *policyHandler) convertToResponse(policy *dto.PolicyDTO) *response.PolicyResponse {
+	return response.NewPolicyResponse(policy.ID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt)
+}
+
+func (h *policyHandler) convertToResponses(policies []*dto.PolicyDTO) []*response.PolicyResponse {
+	responses := make([]*response.PolicyResponse, len(policies))
+	for i, policy := range policies {
+		responses[i] = h.convertToResponse(policy)
+	}
+	return responses
 }

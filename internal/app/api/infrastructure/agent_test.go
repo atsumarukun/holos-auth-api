@@ -258,3 +258,78 @@ func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_FindByUserIDAndNotDeleted(t *testing.T) {
+	tests := []struct {
+		id            uuid.UUID
+		userID        uuid.UUID
+		name          string
+		isTransaction bool
+		resultIsNil   bool
+		resultError   error
+	}{
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "without_transaction",
+			isTransaction: false,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "with_transaction",
+			isTransaction: true,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND deleted_at IS NULL;")).
+				WithArgs(tt.userID).
+				WillReturnRows(
+					sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, time.Now(), time.Now()),
+				).
+				WillReturnError(tt.resultError)
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			ai := infrastructure.NewAgentInfrastructure(db)
+			if tt.isTransaction {
+				to := infrastructure.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					result, err := ai.FindByUserIDAndNotDeleted(ctx, tt.userID)
+					if err != nil {
+						return err
+					}
+					if (result == nil) != tt.resultIsNil {
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+					}
+					return nil
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				result, err := ai.FindByUserIDAndNotDeleted(ctx, tt.userID)
+				if err != nil {
+					t.Error(err.Error())
+				}
+				if (result == nil) != tt.resultIsNil {
+					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+				}
+			}
+		})
+	}
+}

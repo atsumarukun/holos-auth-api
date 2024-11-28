@@ -6,6 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
+	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type AgentHandler interface {
 	Create(*gin.Context)
 	Update(*gin.Context)
 	Delete(*gin.Context)
+	Gets(*gin.Context)
 }
 
 type agentHandler struct {
@@ -49,7 +51,7 @@ func (h *agentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, h.convertToResponse(dto))
 }
 
 func (h *agentHandler) Update(c *gin.Context) {
@@ -79,7 +81,7 @@ func (h *agentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusOK, h.convertToResponse(dto))
 }
 
 func (h *agentHandler) Delete(c *gin.Context) {
@@ -103,4 +105,34 @@ func (h *agentHandler) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *agentHandler) Gets(c *gin.Context) {
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	ctx := context.Background()
+
+	dtos, err := h.agentUsecase.Gets(ctx, userID)
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, h.convertToResponses(dtos))
+}
+
+func (h *agentHandler) convertToResponse(agent *dto.AgentDTO) *response.AgentResponse {
+	return response.NewAgentResponse(agent.ID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
+}
+
+func (h *agentHandler) convertToResponses(agents []*dto.AgentDTO) []*response.AgentResponse {
+	responses := make([]*response.AgentResponse, len(agents))
+	for i, agent := range agents {
+		responses[i] = h.convertToResponse(agent)
+	}
+	return responses
 }

@@ -54,8 +54,9 @@ func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context
 }
 
 type sqlxDriver interface {
-	NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error)
-	QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row
+	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error)
+	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
 }
 
 func getSqlxDriver(ctx context.Context, db *sqlx.DB) sqlxDriver {

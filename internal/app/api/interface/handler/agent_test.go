@@ -168,7 +168,6 @@ func TestAgent_Delete(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultDTO            *dto.AgentDTO
 		resultError          apierr.ApiError
 		expect               int
 	}{
@@ -214,6 +213,66 @@ func TestAgent_Delete(t *testing.T) {
 
 			ah := handler.NewAgentHandler(au)
 			ah.Delete(ctx)
+
+			if w.Code != tt.expect {
+				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			}
+		})
+	}
+}
+
+func TestAgent_Gets(t *testing.T) {
+	tests := []struct {
+		name                 string
+		isSetUserIDToContext bool
+		resultDTO            []*dto.AgentDTO
+		resultError          apierr.ApiError
+		expect               int
+	}{
+		{
+			name:                 "success",
+			isSetUserIDToContext: true,
+			resultDTO:            []*dto.AgentDTO{dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now())},
+			resultError:          nil,
+			expect:               http.StatusOK,
+		},
+		{
+			name:                 "context_does_not_have_user_id",
+			isSetUserIDToContext: false,
+			resultDTO:            []*dto.AgentDTO{dto.NewAgentDTO(uuid.New(), uuid.New(), "name", time.Now(), time.Now())},
+			resultError:          nil,
+			expect:               http.StatusInternalServerError,
+		},
+		{
+			name:                 "result_error",
+			isSetUserIDToContext: true,
+			resultDTO:            nil,
+			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			expect:               http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "/agents", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", uuid.New())
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			au := mock_usecase.NewMockAgentUsecase(ctrl)
+			au.EXPECT().Gets(gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+
+			ah := handler.NewAgentHandler(au)
+			ah.Gets(ctx)
 
 			if w.Code != tt.expect {
 				t.Errorf("expect %d but got %d", tt.expect, w.Code)

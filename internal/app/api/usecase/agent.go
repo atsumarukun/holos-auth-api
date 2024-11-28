@@ -22,6 +22,7 @@ type AgentUsecase interface {
 	Create(context.Context, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
 	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
 	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
+	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
 }
 
 type agentUsecase struct {
@@ -86,4 +87,25 @@ func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUI
 
 		return u.agentRepository.Delete(ctx, agent)
 	})
+}
+
+func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+	agents, err := u.agentRepository.FindByUserIDAndNotDeleted(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.convertToDTOs(agents), nil
+}
+
+func (u *agentUsecase) convertToDTO(agent *entity.Agent) *dto.AgentDTO {
+	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
+}
+
+func (u *agentUsecase) convertToDTOs(agents []*entity.Agent) []*dto.AgentDTO {
+	dtos := make([]*dto.AgentDTO, len(agents))
+	for i, agent := range agents {
+		dtos[i] = u.convertToDTO(agent)
+	}
+	return dtos
 }

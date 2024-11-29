@@ -2,7 +2,7 @@ package api
 
 import (
 	"holos-auth-api/internal/app/api/domain/service"
-	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
+	dbrepository "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/interface/middleware"
 	"holos-auth-api/internal/app/api/usecase"
@@ -20,19 +20,19 @@ var (
 )
 
 func inject(db *sqlx.DB) {
-	transactionObject := infrastructure.NewSqlxTransactionObject(db)
+	transactionObject := dbrepository.NewSqlxTransactionObject(db)
 
-	userInfrastructure := infrastructure.NewUserInfrastructure(db)
-	userTokenInfrastructure := infrastructure.NewUserTokenInfrastructure(db)
-	agentInfrastructure := infrastructure.NewAgentInfrastructure(db)
-	policyInfrastructure := infrastructure.NewPolicyInfrastructure(db)
+	userDBRepository := dbrepository.NewUserDBRepository(db)
+	userTokenDBRepository := dbrepository.NewUserTokenDBRepository(db)
+	agentDBRepository := dbrepository.NewAgentDBRepository(db)
+	policyDBRepository := dbrepository.NewPolicyDBRepository(db)
 
-	userService := service.NewUserService(userInfrastructure)
+	userService := service.NewUserService(userDBRepository)
 
-	userUsecase := usecase.NewUserUsecase(transactionObject, userInfrastructure, userService)
-	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentInfrastructure)
-	policyUsecase := usecase.NewPolicyUsecase(transactionObject, policyInfrastructure)
-	authUsecase := usecase.NewAuthUsecase(transactionObject, userInfrastructure, userTokenInfrastructure)
+	userUsecase := usecase.NewUserUsecase(transactionObject, userDBRepository, userService)
+	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentDBRepository)
+	policyUsecase := usecase.NewPolicyUsecase(transactionObject, policyDBRepository)
+	authUsecase := usecase.NewAuthUsecase(transactionObject, userDBRepository, userTokenDBRepository)
 
 	authMiddleware = middleware.NewAuthMiddleware(authUsecase)
 

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
+	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,16 +53,16 @@ func TestAgent_Create(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ai := infrastructure.NewAgentInfrastructure(db)
+			ar := dbRepository.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ai.Create(ctx, agent)
+					return ar.Create(ctx, agent)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ai.Create(ctx, agent); err != nil {
+				if err := ar.Create(ctx, agent); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -106,16 +106,16 @@ func TestAgent_Update(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ai := infrastructure.NewAgentInfrastructure(db)
+			ar := dbRepository.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ai.Update(ctx, agent)
+					return ar.Update(ctx, agent)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ai.Update(ctx, agent); err != nil {
+				if err := ar.Update(ctx, agent); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -159,16 +159,16 @@ func TestAgent_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ai := infrastructure.NewAgentInfrastructure(db)
+			ar := dbRepository.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ai.Delete(ctx, agent)
+					return ar.Delete(ctx, agent)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ai.Delete(ctx, agent); err != nil {
+				if err := ar.Delete(ctx, agent); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -231,11 +231,11 @@ func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ai := infrastructure.NewAgentInfrastructure(db)
+			ar := dbRepository.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ai.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
+					result, err := ar.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -247,7 +247,7 @@ func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ai.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
+				result, err := ar.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -306,11 +306,11 @@ func TestAgent_FindByUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ai := infrastructure.NewAgentInfrastructure(db)
+			ar := dbRepository.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ai.FindByUserIDAndNotDeleted(ctx, tt.userID)
+					result, err := ar.FindByUserIDAndNotDeleted(ctx, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -322,7 +322,7 @@ func TestAgent_FindByUserIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ai.FindByUserIDAndNotDeleted(ctx, tt.userID)
+				result, err := ar.FindByUserIDAndNotDeleted(ctx, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}

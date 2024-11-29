@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
+	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,16 +53,16 @@ func TestUser_Create(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserInfrastructure(db)
+			ur := dbRepository.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ui.Create(ctx, user)
+					return ur.Create(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ui.Create(ctx, user); err != nil {
+				if err := ur.Create(ctx, user); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -106,16 +106,16 @@ func TestUser_Update(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserInfrastructure(db)
+			ur := dbRepository.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ui.Update(ctx, user)
+					return ur.Update(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ui.Update(ctx, user); err != nil {
+				if err := ur.Update(ctx, user); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -171,16 +171,16 @@ func TestUser_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserInfrastructure(db)
+			ur := dbRepository.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ui.Delete(ctx, user)
+					return ur.Delete(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ui.Delete(ctx, user); err != nil {
+				if err := ur.Delete(ctx, user); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -239,11 +239,11 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserInfrastructure(db)
+			ur := dbRepository.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ui.FindOneByIDAndNotDeleted(ctx, tt.id)
+					result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
 					if err != nil {
 						return err
 					}
@@ -255,7 +255,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ui.FindOneByIDAndNotDeleted(ctx, tt.id)
+				result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -314,11 +314,11 @@ func TestUser_FindOneByName(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserInfrastructure(db)
+			ur := dbRepository.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ui.FindOneByName(ctx, tt.name)
+					result, err := ur.FindOneByName(ctx, tt.name)
 					if err != nil {
 						return err
 					}
@@ -330,7 +330,7 @@ func TestUser_FindOneByName(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ui.FindOneByName(ctx, tt.name)
+				result, err := ur.FindOneByName(ctx, tt.name)
 				if err != nil {
 					t.Error(err.Error())
 				}

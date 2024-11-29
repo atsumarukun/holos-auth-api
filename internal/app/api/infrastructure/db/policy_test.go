@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
+	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,16 +53,16 @@ func TestPolicy_Create(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			pi := infrastructure.NewPolicyInfrastructure(db)
+			pr := dbRepository.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return pi.Create(ctx, policy)
+					return pr.Create(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := pi.Create(ctx, policy); err != nil {
+				if err := pr.Create(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -106,16 +106,16 @@ func TestPolicy_Update(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			pi := infrastructure.NewPolicyInfrastructure(db)
+			pr := dbRepository.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return pi.Update(ctx, policy)
+					return pr.Update(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := pi.Update(ctx, policy); err != nil {
+				if err := pr.Update(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -159,16 +159,16 @@ func TestPolicy_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			pi := infrastructure.NewPolicyInfrastructure(db)
+			pr := dbRepository.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return pi.Delete(ctx, policy)
+					return pr.Delete(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := pi.Delete(ctx, policy); err != nil {
+				if err := pr.Delete(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -231,11 +231,11 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			pi := infrastructure.NewPolicyInfrastructure(db)
+			pr := dbRepository.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := pi.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
+					result, err := pr.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -247,7 +247,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := pi.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
+				result, err := pr.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -306,11 +306,11 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			pi := infrastructure.NewPolicyInfrastructure(db)
+			pr := dbRepository.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := pi.FindByUserIDAndNotDeleted(ctx, tt.userID)
+					result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -322,7 +322,7 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := pi.FindByUserIDAndNotDeleted(ctx, tt.userID)
+				result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}

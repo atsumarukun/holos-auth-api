@@ -13,19 +13,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type userTokenInfrastructure struct {
+type userTokenDBRepository struct {
 	db *sqlx.DB
 }
 
-func NewUserTokenInfrastructure(db *sqlx.DB) repository.UserTokenRepository {
-	return &userTokenInfrastructure{
+func NewUserTokenDBRepository(db *sqlx.DB) repository.UserTokenRepository {
+	return &userTokenDBRepository{
 		db: db,
 	}
 }
 
-func (i *userTokenInfrastructure) Save(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	userTokenModel := i.convertToModel(userToken)
+func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	userTokenModel := r.convertToModel(userToken)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`REPLACE user_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at);`,
@@ -36,9 +36,9 @@ func (i *userTokenInfrastructure) Save(ctx context.Context, userToken *entity.Us
 	return nil
 }
 
-func (i *userTokenInfrastructure) Delete(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	userTokenModel := i.convertToModel(userToken)
+func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	userTokenModel := r.convertToModel(userToken)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`DELETE FROM user_tokens WHERE user_id = :user_id;`,
@@ -49,9 +49,9 @@ func (i *userTokenInfrastructure) Delete(ctx context.Context, userToken *entity.
 	return nil
 }
 
-func (i *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, apierr.ApiError) {
+func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, apierr.ApiError) {
 	var userToken model.UserTokenModel
-	driver := getSqlxDriver(ctx, i.db)
+	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;`,
@@ -63,13 +63,13 @@ func (i *userTokenInfrastructure) FindOneByTokenAndNotExpired(ctx context.Contex
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return i.convertToEntity(&userToken), nil
+	return r.convertToEntity(&userToken), nil
 }
 
-func (i *userTokenInfrastructure) convertToModel(userToken *entity.UserToken) *model.UserTokenModel {
+func (r *userTokenDBRepository) convertToModel(userToken *entity.UserToken) *model.UserTokenModel {
 	return model.NewUserTokenModel(userToken.UserID, userToken.Token, userToken.ExpiresAt)
 }
 
-func (i *userTokenInfrastructure) convertToEntity(userToken *model.UserTokenModel) *entity.UserToken {
+func (r *userTokenDBRepository) convertToEntity(userToken *model.UserTokenModel) *entity.UserToken {
 	return entity.RestoreUserToken(userToken.UserID, userToken.Token, userToken.ExpiresAt)
 }

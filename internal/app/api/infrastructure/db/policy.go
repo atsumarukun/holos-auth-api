@@ -15,19 +15,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type policyInfrastructure struct {
+type policyDBRepository struct {
 	db *sqlx.DB
 }
 
-func NewPolicyInfrastructure(db *sqlx.DB) repository.PolicyRepository {
-	return &policyInfrastructure{
+func NewPolicyDBRepository(db *sqlx.DB) repository.PolicyRepository {
+	return &policyDBRepository{
 		db: db,
 	}
 }
 
-func (i *policyInfrastructure) Create(ctx context.Context, policy *entity.Policy) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	policyModel, err := i.convertToModel(policy)
+func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	policyModel, err := r.convertToModel(policy)
 	if err != nil {
 		return err
 	}
@@ -41,9 +41,9 @@ func (i *policyInfrastructure) Create(ctx context.Context, policy *entity.Policy
 	return nil
 }
 
-func (i *policyInfrastructure) Update(ctx context.Context, policy *entity.Policy) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	policyModel, err := i.convertToModel(policy)
+func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	policyModel, err := r.convertToModel(policy)
 	if err != nil {
 		return err
 	}
@@ -57,9 +57,9 @@ func (i *policyInfrastructure) Update(ctx context.Context, policy *entity.Policy
 	return nil
 }
 
-func (i *policyInfrastructure) Delete(ctx context.Context, policy *entity.Policy) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	policyModel, err := i.convertToModel(policy)
+func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	policyModel, err := r.convertToModel(policy)
 	if err != nil {
 		return err
 	}
@@ -73,9 +73,9 @@ func (i *policyInfrastructure) Delete(ctx context.Context, policy *entity.Policy
 	return nil
 }
 
-func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, apierr.ApiError) {
 	var policy model.PolicyModel
-	driver := getSqlxDriver(ctx, i.db)
+	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
@@ -88,12 +88,12 @@ func (i *policyInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Con
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return i.convertToEntity(&policy)
+	return r.convertToEntity(&policy)
 }
 
-func (i *policyInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
 	var policies []*model.PolicyModel
-	driver := getSqlxDriver(ctx, i.db)
+	driver := getSqlxDriver(ctx, r.db)
 	rows, err := driver.QueryxContext(
 		ctx,
 		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
@@ -110,10 +110,10 @@ func (i *policyInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, us
 		}
 		policies = append(policies, &policy)
 	}
-	return i.convertToEntities(policies)
+	return r.convertToEntities(policies)
 }
 
-func (i *policyInfrastructure) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
+func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
 	allowedMethods, err := json.Marshal(policy.AllowedMethods)
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -121,7 +121,7 @@ func (i *policyInfrastructure) convertToModel(policy *entity.Policy) (*model.Pol
 	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(allowedMethods), policy.CreatedAt, policy.UpdatedAt), nil
 }
 
-func (i *policyInfrastructure) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
 	var allowedMethods []string
 	if err := json.Unmarshal([]byte(policy.AllowedMethods), &allowedMethods); err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -129,11 +129,11 @@ func (i *policyInfrastructure) convertToEntity(policy *model.PolicyModel) (*enti
 	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, allowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
 }
 
-func (i *policyInfrastructure) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {
 	entities := make([]*entity.Policy, len(policies))
 	var err apierr.ApiError
-	for idx, policy := range policies {
-		entities[idx], err = i.convertToEntity(policy)
+	for i, policy := range policies {
+		entities[i], err = r.convertToEntity(policy)
 		if err != nil {
 			return nil, err
 		}

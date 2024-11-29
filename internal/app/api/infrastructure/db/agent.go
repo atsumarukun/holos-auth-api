@@ -14,19 +14,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type agentInfrastructure struct {
+type agentDBRepository struct {
 	db *sqlx.DB
 }
 
-func NewAgentInfrastructure(db *sqlx.DB) repository.AgentRepository {
-	return &agentInfrastructure{
+func NewAgentDBRepository(db *sqlx.DB) repository.AgentRepository {
+	return &agentDBRepository{
 		db: db,
 	}
 }
 
-func (i *agentInfrastructure) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	agentModel := i.convertToModel(agent)
+func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO agents (id, user_id, name, created_at, updated_at) VALUES (:id, :user_id, :name, :created_at, :updated_at);`,
@@ -37,9 +37,9 @@ func (i *agentInfrastructure) Create(ctx context.Context, agent *entity.Agent) a
 	return nil
 }
 
-func (i *agentInfrastructure) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	agentModel := i.convertToModel(agent)
+func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET user_id = :user_id, name = :name, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -50,9 +50,9 @@ func (i *agentInfrastructure) Update(ctx context.Context, agent *entity.Agent) a
 	return nil
 }
 
-func (i *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
-	driver := getSqlxDriver(ctx, i.db)
-	agentModel := i.convertToModel(agent)
+func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -63,9 +63,9 @@ func (i *agentInfrastructure) Delete(ctx context.Context, agent *entity.Agent) a
 	return nil
 }
 
-func (i *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
 	var agent model.AgentModel
-	driver := getSqlxDriver(ctx, i.db)
+	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
@@ -78,12 +78,12 @@ func (i *agentInfrastructure) FindOneByIDAndUserIDAndNotDeleted(ctx context.Cont
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return i.convertToEntity(&agent), nil
+	return r.convertToEntity(&agent), nil
 }
 
-func (i *agentInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
 	var agents []*model.AgentModel
-	driver := getSqlxDriver(ctx, i.db)
+	driver := getSqlxDriver(ctx, r.db)
 	rows, err := driver.QueryxContext(
 		ctx,
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND deleted_at IS NULL;`,
@@ -100,21 +100,21 @@ func (i *agentInfrastructure) FindByUserIDAndNotDeleted(ctx context.Context, use
 		}
 		agents = append(agents, &agent)
 	}
-	return i.convertToEntities(agents), nil
+	return r.convertToEntities(agents), nil
 }
 
-func (i *agentInfrastructure) convertToModel(agent *entity.Agent) *model.AgentModel {
+func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentModel {
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }
 
-func (i *agentInfrastructure) convertToEntity(agent *model.AgentModel) *entity.Agent {
+func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) *entity.Agent {
 	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }
 
-func (i *agentInfrastructure) convertToEntities(agents []*model.AgentModel) []*entity.Agent {
+func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) []*entity.Agent {
 	entities := make([]*entity.Agent, len(agents))
-	for idx, agent := range agents {
-		entities[idx] = i.convertToEntity(agent)
+	for i, agent := range agents {
+		entities[i] = r.convertToEntity(agent)
 	}
 	return entities
 }

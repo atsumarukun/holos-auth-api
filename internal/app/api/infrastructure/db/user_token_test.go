@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/infrastructure"
+	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,16 +53,16 @@ func TestUserToken_Save(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserTokenInfrastructure(db)
+			ur := dbRepository.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ui.Save(ctx, userToken)
+					return ur.Save(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ui.Save(ctx, userToken); err != nil {
+				if err := ur.Save(ctx, userToken); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -106,16 +106,16 @@ func TestUserToken_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserTokenInfrastructure(db)
+			ur := dbRepository.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ui.Delete(ctx, userToken)
+					return ur.Delete(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ui.Delete(ctx, userToken); err != nil {
+				if err := ur.Delete(ctx, userToken); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -170,11 +170,11 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ui := infrastructure.NewUserTokenInfrastructure(db)
+			ur := dbRepository.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := infrastructure.NewSqlxTransactionObject(db)
+				to := dbRepository.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ui.FindOneByTokenAndNotExpired(ctx, tt.token)
+					result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
 					if err != nil {
 						return err
 					}
@@ -186,7 +186,7 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ui.FindOneByTokenAndNotExpired(ctx, tt.token)
+				result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
 				if err != nil {
 					t.Error(err.Error())
 				}

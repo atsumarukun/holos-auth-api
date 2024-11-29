@@ -2,7 +2,7 @@ package api
 
 import (
 	"holos-auth-api/internal/app/api/domain/service"
-	"holos-auth-api/internal/app/api/infrastructure"
+	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/interface/middleware"
 	"holos-auth-api/internal/app/api/usecase"

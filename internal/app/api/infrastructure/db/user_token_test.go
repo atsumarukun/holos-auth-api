@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/infrastructure"
+	infrastructure "holos-auth-api/internal/app/api/infrastructure/db"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"

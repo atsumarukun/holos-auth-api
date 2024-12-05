@@ -113,6 +113,41 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 	return r.convertToEntities(policies)
 }
 
+func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+	var policies []*model.PolicyModel
+	driver := getSqlxDriver(ctx, r.db)
+
+	query, args, err := sqlx.Named(
+		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
+		map[string]interface{}{
+			"ids":     ids,
+			"user_id": userID,
+		},
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	query, args, err = sqlx.In(query, args...)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	query = driver.Rebind(query)
+
+	rows, err := driver.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var policy model.PolicyModel
+		if err := rows.StructScan(&policy); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		policies = append(policies, &policy)
+	}
+	return r.convertToEntities(policies)
+}
+
 func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
 	Methods, err := json.Marshal(policy.Methods)
 	if err != nil {

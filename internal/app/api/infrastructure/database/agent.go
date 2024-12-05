@@ -103,6 +103,40 @@ func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userI
 	return r.convertToEntities(agents), nil
 }
 
+func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+	var agents []*model.AgentModel
+	driver := getSqlxDriver(ctx, r.db)
+
+	query, args, err := sqlx.Named(
+		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
+		map[string]interface{}{
+			"ids":     ids,
+			"user_id": userID,
+		},
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	query, args, err = sqlx.In(query, args...)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+
+	rows, err := driver.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var agent model.AgentModel
+		if err := rows.StructScan(&agent); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		agents = append(agents, &agent)
+	}
+	return r.convertToEntities(agents), nil
+}
+
 func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentModel {
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }

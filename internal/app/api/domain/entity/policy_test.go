@@ -29,8 +29,8 @@ func TestNewPolicy(t *testing.T) {
 	if policy.Path == "" {
 		t.Error("path: expect string but got empty")
 	}
-	if len(policy.AllowedMethods) == 0 {
-		t.Error("allowed_methods: expect array but got empty")
+	if len(policy.Methods) == 0 {
+		t.Error("methods: expect array but got empty")
 	}
 	if policy.CreatedAt.IsZero() {
 		t.Error("created_at: expect time but got empty")
@@ -192,36 +192,36 @@ func TestPolicy_SetPath(t *testing.T) {
 	}
 }
 
-func TestPolicy_SetAllowedMethods(t *testing.T) {
+func TestPolicy_SetMethods(t *testing.T) {
 	tests := []struct {
-		name           string
-		allowedMethods []string
-		expect         apierr.ApiError
+		name    string
+		Methods []string
+		expect  apierr.ApiError
 	}{
 		{
-			name:           "valid",
-			allowedMethods: []string{"GET", "POST"},
-			expect:         nil,
+			name:    "valid",
+			Methods: []string{"GET", "POST"},
+			expect:  nil,
 		},
 		{
-			name:           "required",
-			allowedMethods: []string{},
-			expect:         entity.ErrRequiredPolicyAllowedMethods,
+			name:    "required",
+			Methods: []string{},
+			expect:  entity.ErrRequiredPolicyMethods,
 		},
 		{
-			name:           "lower_case",
-			allowedMethods: []string{"get", "post"},
-			expect:         entity.ErrInvalidPolicyAllowedMethods,
+			name:    "lower_case",
+			Methods: []string{"get", "post"},
+			expect:  entity.ErrInvalidPolicyMethods,
 		},
 		{
-			name:           "invalid",
-			allowedMethods: []string{"INVALID"},
-			expect:         entity.ErrInvalidPolicyAllowedMethods,
+			name:    "invalid",
+			Methods: []string{"INVALID"},
+			expect:  entity.ErrInvalidPolicyMethods,
 		},
 		{
-			name:           "duplication",
-			allowedMethods: []string{"GET", "POST", "GET"},
-			expect:         nil,
+			name:    "duplication",
+			Methods: []string{"GET", "POST", "GET"},
+			expect:  nil,
 		},
 	}
 	for _, tt := range tests {
@@ -230,7 +230,7 @@ func TestPolicy_SetAllowedMethods(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if err := policy.SetAllowedMethods(tt.allowedMethods); err != tt.expect {
+			if err := policy.SetMethods(tt.Methods); err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
 				} else {

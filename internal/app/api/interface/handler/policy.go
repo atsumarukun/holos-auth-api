@@ -44,7 +44,7 @@ func (h *policyHandler) Create(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
+	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.Methods)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -74,7 +74,7 @@ func (h *policyHandler) Update(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.AllowedMethods)
+	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.Methods)
 	if err != nil {
 		c.String(err.Error())
 		return
@@ -125,7 +125,7 @@ func (h *policyHandler) Gets(c *gin.Context) {
 }
 
 func (h *policyHandler) convertToResponse(policy *dto.PolicyDTO) *response.PolicyResponse {
-	return response.NewPolicyResponse(policy.ID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt)
+	return response.NewPolicyResponse(policy.ID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
 }
 
 func (h *policyHandler) convertToResponses(policies []*dto.PolicyDTO) []*response.PolicyResponse {

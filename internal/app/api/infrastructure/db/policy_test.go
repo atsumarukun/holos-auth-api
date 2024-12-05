@@ -46,7 +46,7 @@ func TestPolicy_Create(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, allowed_methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
+			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
 				WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.CreatedAt, policy.UpdatedAt).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
@@ -99,7 +99,7 @@ func TestPolicy_Update(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, allowed_methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+			mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
 				WithArgs(policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.UpdatedAt, policy.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
@@ -220,10 +220,10 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;")).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;")).
 				WithArgs(tt.id, tt.userID).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "allowed_methods", "created_at", "updated_at"}).
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
 						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
@@ -295,10 +295,10 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
 				WithArgs(tt.userID).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "allowed_methods", "created_at", "updated_at"}).
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
 						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)

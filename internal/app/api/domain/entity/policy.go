@@ -11,34 +11,29 @@ import (
 )
 
 var (
-	services = []string{"STORAGE", "CONTENT"}
-	methods  = []string{"GET", "POST", "PUT", "DELETE"}
-)
-
-var (
-	ErrPolicyNameTooShort           = apierr.NewApiError(http.StatusBadRequest, "policy name must be 3 characters or more")
-	ErrPolicyNameTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy name must be 255 characters or less")
-	ErrInvalidPolicyName            = apierr.NewApiError(http.StatusBadRequest, "invalid policy name")
-	ErrInvalidPolicyService         = apierr.NewApiError(http.StatusBadRequest, "invalid policy service")
-	ErrRequiredPolicyPath           = apierr.NewApiError(http.StatusBadRequest, "policy path is required")
-	ErrPolicyPathTooLong            = apierr.NewApiError(http.StatusBadRequest, "policy path must be 255 characters or less")
-	ErrInvalidPolicyPath            = apierr.NewApiError(http.StatusBadRequest, "invalid policy path")
-	ErrRequiredPolicyAllowedMethods = apierr.NewApiError(http.StatusBadRequest, "policy allowed methods is required")
-	ErrInvalidPolicyAllowedMethods  = apierr.NewApiError(http.StatusBadRequest, "invalid policy allowed methods")
+	ErrPolicyNameTooShort    = apierr.NewApiError(http.StatusBadRequest, "policy name must be 3 characters or more")
+	ErrPolicyNameTooLong     = apierr.NewApiError(http.StatusBadRequest, "policy name must be 255 characters or less")
+	ErrInvalidPolicyName     = apierr.NewApiError(http.StatusBadRequest, "invalid policy name")
+	ErrInvalidPolicyService  = apierr.NewApiError(http.StatusBadRequest, "invalid policy service")
+	ErrRequiredPolicyPath    = apierr.NewApiError(http.StatusBadRequest, "policy path is required")
+	ErrPolicyPathTooLong     = apierr.NewApiError(http.StatusBadRequest, "policy path must be 255 characters or less")
+	ErrInvalidPolicyPath     = apierr.NewApiError(http.StatusBadRequest, "invalid policy path")
+	ErrRequiredPolicyMethods = apierr.NewApiError(http.StatusBadRequest, "policy methods is required")
+	ErrInvalidPolicyMethods  = apierr.NewApiError(http.StatusBadRequest, "invalid policy methods")
 )
 
 type Policy struct {
-	ID             uuid.UUID
-	UserID         uuid.UUID
-	Name           string
-	Service        string
-	Path           string
-	AllowedMethods []string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	Service   string
+	Path      string
+	Methods   []string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func NewPolicy(userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*Policy, apierr.ApiError) {
+func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, apierr.ApiError) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -58,7 +53,7 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, allow
 	if err := policy.SetPath(path); err != nil {
 		return nil, err
 	}
-	if err := policy.SetAllowedMethods(allowedMethods); err != nil {
+	if err := policy.SetMethods(methods); err != nil {
 		return nil, err
 	}
 
@@ -69,16 +64,16 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, allow
 	return policy, nil
 }
 
-func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, allowedMethods []string, createdAt time.Time, updatedAt time.Time) *Policy {
+func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, Methods []string, createdAt time.Time, updatedAt time.Time) *Policy {
 	return &Policy{
-		ID:             id,
-		UserID:         userID,
-		Name:           name,
-		Service:        service,
-		Path:           path,
-		AllowedMethods: allowedMethods,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
+		ID:        id,
+		UserID:    userID,
+		Name:      name,
+		Service:   service,
+		Path:      path,
+		Methods:   Methods,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 	}
 }
 
@@ -102,7 +97,7 @@ func (p *Policy) SetName(name string) apierr.ApiError {
 }
 
 func (p *Policy) SetService(service string) apierr.ApiError {
-	if !slices.Contains(services, service) {
+	if !slices.Contains([]string{"STORAGE", "CONTENT"}, service) {
 		return ErrInvalidPolicyService
 	}
 
@@ -130,18 +125,18 @@ func (p *Policy) SetPath(path string) apierr.ApiError {
 	return nil
 }
 
-func (p *Policy) SetAllowedMethods(allowedMethods []string) apierr.ApiError {
-	if len(allowedMethods) == 0 {
-		return ErrRequiredPolicyAllowedMethods
+func (p *Policy) SetMethods(methods []string) apierr.ApiError {
+	if len(methods) == 0 {
+		return ErrRequiredPolicyMethods
 	}
-	for _, v := range allowedMethods {
-		if !slices.Contains(methods, v) {
-			return ErrInvalidPolicyAllowedMethods
+	for _, v := range methods {
+		if !slices.Contains([]string{"GET", "POST", "PUT", "DELETE"}, v) {
+			return ErrInvalidPolicyMethods
 		}
 	}
-	slices.Sort(allowedMethods)
+	slices.Sort(methods)
 
-	p.AllowedMethods = slices.Compact(allowedMethods)
+	p.Methods = slices.Compact(methods)
 	p.UpdatedAt = time.Now()
 	return nil
 }

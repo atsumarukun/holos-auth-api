@@ -33,7 +33,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 	}
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`INSERT INTO policies (id, user_id, name, service, path, allowed_methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :allowed_methods, :created_at, :updated_at);`,
+		`INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :methods, :created_at, :updated_at);`,
 		policyModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -49,7 +49,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 	}
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, allowed_methods = :allowed_methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, methods = :methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		policyModel,
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -78,7 +78,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
+		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
 		id,
 		userID,
 	).StructScan(&policy); err != nil {
@@ -96,7 +96,7 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 	driver := getSqlxDriver(ctx, r.db)
 	rows, err := driver.QueryxContext(
 		ctx,
-		`SELECT id, user_id, name, service, path, allowed_methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
+		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
 		userID,
 	)
 	if err != nil {
@@ -114,19 +114,19 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 }
 
 func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
-	allowedMethods, err := json.Marshal(policy.AllowedMethods)
+	Methods, err := json.Marshal(policy.Methods)
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
-	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(allowedMethods), policy.CreatedAt, policy.UpdatedAt), nil
+	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(Methods), policy.CreatedAt, policy.UpdatedAt), nil
 }
 
 func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
-	var allowedMethods []string
-	if err := json.Unmarshal([]byte(policy.AllowedMethods), &allowedMethods); err != nil {
+	var Methods []string
+	if err := json.Unmarshal([]byte(policy.Methods), &Methods); err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
-	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, allowedMethods, policy.CreatedAt, policy.UpdatedAt), nil
+	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, Methods, policy.CreatedAt, policy.UpdatedAt), nil
 }
 
 func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {

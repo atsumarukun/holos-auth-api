@@ -400,8 +400,9 @@ components:
           type: "string"
           description: "パス"
           example: "/files/:id"
-        allowed_methods:
+        methods:
           type: "array"
+          description: "メソッド"
           items:
             type: "string"
           example:
@@ -417,7 +418,7 @@ components:
         - "name"
         - "service"
         - "path"
-        - "allowed_method"
+        - "method"
         - "created_at"
         - "updated_at"
 

@@ -36,8 +36,8 @@ func NewPolicyUsecase(transactionObject domain.TransactionObject, policyReposito
 	}
 }
 
-func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*dto.PolicyDTO, apierr.ApiError) {
-	policy, err := entity.NewPolicy(userID, name, service, path, allowedMethods)
+func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, apierr.ApiError) {
+	policy, err := entity.NewPolicy(userID, name, service, path, methods)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name strin
 	return u.convertToDTO(policy), nil
 }
 
-func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, allowedMethods []string) (*dto.PolicyDTO, apierr.ApiError) {
+func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, apierr.ApiError) {
 	var policy *entity.Policy
 
 	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
@@ -71,7 +71,7 @@ func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 		if err := policy.SetPath(path); err != nil {
 			return err
 		}
-		if err := policy.SetAllowedMethods(allowedMethods); err != nil {
+		if err := policy.SetMethods(methods); err != nil {
 			return err
 		}
 
@@ -107,7 +107,7 @@ func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Poli
 }
 
 func (u *policyUsecase) convertToDTO(policy *entity.Policy) *dto.PolicyDTO {
-	return dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.AllowedMethods, policy.CreatedAt, policy.UpdatedAt)
+	return dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
 }
 
 func (u *policyUsecase) convertToDTOs(policies []*entity.Policy) []*dto.PolicyDTO {

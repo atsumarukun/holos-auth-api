@@ -3,6 +3,7 @@ package database_test
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
@@ -323,6 +324,90 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 				}
 			} else {
 				result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
+				if err != nil {
+					t.Error(err.Error())
+				}
+				if (result == nil) != tt.resultIsNil {
+					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+				}
+			}
+		})
+	}
+}
+
+func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
+	tests := []struct {
+		id            uuid.UUID
+		ids           []uuid.UUID
+		userID        uuid.UUID
+		name          string
+		isTransaction bool
+		resultIsNil   bool
+		resultError   error
+	}{
+		{
+			id:            uuid.New(),
+			ids:           []uuid.UUID{uuid.New()},
+			userID:        uuid.New(),
+			name:          "without_transaction",
+			isTransaction: false,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			ids:           []uuid.UUID{uuid.New()},
+			userID:        uuid.New(),
+			name:          "with_transaction",
+			isTransaction: true,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			args := make([]driver.Value, len(tt.ids)+1)
+			for i, id := range tt.ids {
+				args[i] = id
+			}
+			args[len(args)-1] = tt.userID
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
+				WithArgs(args...).
+				WillReturnRows(
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
+				).
+				WillReturnError(tt.resultError)
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			pr := database.NewPolicyDBRepository(db)
+			if tt.isTransaction {
+				to := database.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					result, err := pr.FindByIDsAndUserIDAndNotDeleted(ctx, tt.ids, tt.userID)
+					if err != nil {
+						return err
+					}
+					if (result == nil) != tt.resultIsNil {
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+					}
+					return nil
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				result, err := pr.FindByIDsAndUserIDAndNotDeleted(ctx, tt.ids, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}

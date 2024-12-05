@@ -174,6 +174,59 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /agents/{id}/policies:
+    get:
+      summary: "エージェントのポリシー一覧取得"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_agent_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    put:
+      summary: "エージェントのポリシー更新"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      requestBody:
+        $ref: "#/components/requestBodies/update_agent_policies"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_agent_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
   /policies:
     get:
       summary: "ポリシー一覧取得"
@@ -219,7 +272,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/update_policy"
       responses:
-        201:
+        200:
           description: "成功"
           $ref: "#/components/responses/update_policy"
         401:
@@ -246,6 +299,47 @@ paths:
       responses:
         204:
           description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /policies/{id}/agents:
+    get:
+      summary: "ポリシーのエージェント一覧取得"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_policy_agents"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    put:
+      summary: "ポリシーのエージェント更新"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/update_policy_agents"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_policy_agents"
         401:
           description: "認証エラー"
           $ref: "#/components/responses/401"
@@ -492,6 +586,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/agent"
+    update_agent_policies:
+      description: "エージェントのポリシー更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              policy_ids:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/policy/properties/id"
     create_policy:
       description: "ポリシー作成"
       required: true
@@ -506,6 +612,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/policy"
+    update_policy_agents:
+      description: "ポリシーのエージェント更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              agent_ids:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/agent/properties/id"
     auth_signin:
       description: "サインイン"
       required: true
@@ -573,6 +691,22 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/agent"
+    get_agent_policies:
+      description: "エージェントのポリシー一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
+    update_agent_policies:
+      description: "エージェントのポリシー更新"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
     get_policies:
       description: "ポリシー一覧取得"
       content:
@@ -593,6 +727,22 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/policy"
+    get_policy_agents:
+      description: "ポリシーのエージェント一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
+    update_policy_agents:
+      description: "ポリシーのエージェント更新"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
     get_user_id:
       description: "ユーザーID取得"
       content:

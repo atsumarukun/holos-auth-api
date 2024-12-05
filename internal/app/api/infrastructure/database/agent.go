@@ -121,6 +121,7 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
+	query = driver.Rebind(query)
 
 	rows, err := driver.QueryxContext(ctx, query, args...)
 	if err != nil {

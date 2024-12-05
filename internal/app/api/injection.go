@@ -2,7 +2,7 @@ package api
 
 import (
 	"holos-auth-api/internal/app/api/domain/service"
-	dbrepository "holos-auth-api/internal/app/api/infrastructure/db"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/interface/middleware"
 	"holos-auth-api/internal/app/api/usecase"
@@ -20,12 +20,12 @@ var (
 )
 
 func inject(db *sqlx.DB) {
-	transactionObject := dbrepository.NewSqlxTransactionObject(db)
+	transactionObject := database.NewSqlxTransactionObject(db)
 
-	userDBRepository := dbrepository.NewUserDBRepository(db)
-	userTokenDBRepository := dbrepository.NewUserTokenDBRepository(db)
-	agentDBRepository := dbrepository.NewAgentDBRepository(db)
-	policyDBRepository := dbrepository.NewPolicyDBRepository(db)
+	userDBRepository := database.NewUserDBRepository(db)
+	userTokenDBRepository := database.NewUserTokenDBRepository(db)
+	agentDBRepository := database.NewAgentDBRepository(db)
+	policyDBRepository := database.NewPolicyDBRepository(db)
 
 	userService := service.NewUserService(userDBRepository)
 

@@ -1,11 +1,11 @@
-package infrastructure_test
+package database_test
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestUser_Create(t *testing.T) {
+func TestPolicy_Create(t *testing.T) {
 	tests := []struct {
 		name          string
 		isTransaction bool
@@ -33,7 +33,7 @@ func TestUser_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -46,23 +46,23 @@ func TestUser_Create(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users (id, name, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?);")).
-				WithArgs(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt).
+			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
+				WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.CreatedAt, policy.UpdatedAt).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ur.Create(ctx, user)
+					return pr.Create(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ur.Create(ctx, user); err != nil {
+				if err := pr.Create(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -70,7 +70,7 @@ func TestUser_Create(t *testing.T) {
 	}
 }
 
-func TestUser_Update(t *testing.T) {
+func TestPolicy_Update(t *testing.T) {
 	tests := []struct {
 		name          string
 		isTransaction bool
@@ -86,7 +86,7 @@ func TestUser_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -99,23 +99,23 @@ func TestUser_Update(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET name = ?, password = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(user.Name, user.Password, user.UpdatedAt, user.ID).
+			mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+				WithArgs(policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.UpdatedAt, policy.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ur.Update(ctx, user)
+					return pr.Update(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ur.Update(ctx, user); err != nil {
+				if err := pr.Update(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -123,7 +123,7 @@ func TestUser_Update(t *testing.T) {
 	}
 }
 
-func TestUser_Delete(t *testing.T) {
+func TestPolicy_Delete(t *testing.T) {
 	tests := []struct {
 		name          string
 		isTransaction bool
@@ -139,7 +139,7 @@ func TestUser_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -152,35 +152,23 @@ func TestUser_Delete(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectExec(regexp.QuoteMeta(
-				`UPDATE users
-				LEFT JOIN agents ON users.id = agents.user_id
-				SET
-					users.updated_at = users.updated_at,
-					users.deleted_at = NOW(6),
-					agents.updated_at = agents.updated_at,
-					agents.deleted_at = NOW(6)
-				WHERE
-					users.id = ?
-					AND users.deleted_at IS NULL
-					AND agents.deleted_at IS NULL;`,
-			)).
-				WithArgs(user.ID).
+			mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+				WithArgs(policy.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					return ur.Delete(ctx, user)
+					return pr.Delete(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
 				}
 			} else {
-				if err := ur.Delete(ctx, user); err != nil {
+				if err := pr.Delete(ctx, policy); err != nil {
 					t.Error(err.Error())
 				}
 			}
@@ -188,9 +176,10 @@ func TestUser_Delete(t *testing.T) {
 	}
 }
 
-func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
+func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 	tests := []struct {
 		id            uuid.UUID
+		userID        uuid.UUID
 		name          string
 		isTransaction bool
 		resultIsNil   bool
@@ -198,6 +187,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 	}{
 		{
 			id:            uuid.New(),
+			userID:        uuid.New(),
 			name:          "without_transaction",
 			isTransaction: false,
 			resultIsNil:   false,
@@ -205,6 +195,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 		},
 		{
 			id:            uuid.New(),
+			userID:        uuid.New(),
 			name:          "with_transaction",
 			isTransaction: true,
 			resultIsNil:   false,
@@ -212,7 +203,8 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 		},
 		{
 			id:            uuid.New(),
-			name:          "user_not_found",
+			userID:        uuid.New(),
+			name:          "agent_not_found",
 			isTransaction: false,
 			resultIsNil:   true,
 			resultError:   sql.ErrNoRows,
@@ -228,22 +220,22 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(tt.id).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;")).
+				WithArgs(tt.id, tt.userID).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
-						AddRow(tt.id, tt.name, "password", time.Now(), time.Now()),
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
 			if tt.isTransaction {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
+					result, err := pr.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -255,7 +247,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
+				result, err := pr.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}
@@ -267,30 +259,30 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 	}
 }
 
-func TestUser_FindOneByName(t *testing.T) {
+func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 	tests := []struct {
+		id            uuid.UUID
+		userID        uuid.UUID
 		name          string
 		isTransaction bool
 		resultIsNil   bool
 		resultError   error
 	}{
 		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
 			name:          "without_transaction",
 			isTransaction: false,
 			resultIsNil:   false,
 			resultError:   nil,
 		},
 		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
 			name:          "with_transaction",
 			isTransaction: true,
 			resultIsNil:   false,
 			resultError:   nil,
-		},
-		{
-			name:          "user_not_found",
-			isTransaction: false,
-			resultIsNil:   true,
-			resultError:   sql.ErrNoRows,
 		},
 	}
 	for _, tt := range tests {
@@ -303,22 +295,22 @@ func TestUser_FindOneByName(t *testing.T) {
 			if tt.isTransaction {
 				mock.ExpectBegin()
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
-				WithArgs(tt.name).
+			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
+				WithArgs(tt.userID).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
-						AddRow(uuid.New(), tt.name, "password", time.Now(), time.Now()),
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
 			if tt.isTransaction {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-					result, err := ur.FindOneByName(ctx, tt.name)
+					result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
 					if err != nil {
 						return err
 					}
@@ -330,7 +322,7 @@ func TestUser_FindOneByName(t *testing.T) {
 					t.Error(err.Error())
 				}
 			} else {
-				result, err := ur.FindOneByName(ctx, tt.name)
+				result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
 				if err != nil {
 					t.Error(err.Error())
 				}

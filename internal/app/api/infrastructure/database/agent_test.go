@@ -1,11 +1,11 @@
-package infrastructure_test
+package database_test
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,9 +53,9 @@ func TestAgent_Create(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ar := dbRepository.NewAgentDBRepository(db)
+			ar := database.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ar.Create(ctx, agent)
 				}); err != nil {
@@ -106,9 +106,9 @@ func TestAgent_Update(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ar := dbRepository.NewAgentDBRepository(db)
+			ar := database.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ar.Update(ctx, agent)
 				}); err != nil {
@@ -159,9 +159,9 @@ func TestAgent_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ar := dbRepository.NewAgentDBRepository(db)
+			ar := database.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ar.Delete(ctx, agent)
 				}); err != nil {
@@ -231,9 +231,9 @@ func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ar := dbRepository.NewAgentDBRepository(db)
+			ar := database.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ar.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
@@ -306,9 +306,9 @@ func TestAgent_FindByUserIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ar := dbRepository.NewAgentDBRepository(db)
+			ar := database.NewAgentDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ar.FindByUserIDAndNotDeleted(ctx, tt.userID)
 					if err != nil {

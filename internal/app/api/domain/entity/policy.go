@@ -23,14 +23,15 @@ var (
 )
 
 type Policy struct {
-	ID        uuid.UUID
-	UserID    uuid.UUID
-	Name      string
-	Service   string
-	Path      string
-	Methods   []string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Name        string
+	Service     string
+	Path        string
+	Methods     []string
+	Permissions []*Permission
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, apierr.ApiError) {
@@ -40,8 +41,9 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, metho
 	}
 
 	policy := &Policy{
-		ID:     id,
-		UserID: userID,
+		ID:          id,
+		UserID:      userID,
+		Permissions: []*Permission{},
 	}
 
 	if err := policy.SetName(name); err != nil {
@@ -138,5 +140,17 @@ func (p *Policy) SetMethods(methods []string) apierr.ApiError {
 
 	p.Methods = slices.Compact(methods)
 	p.UpdatedAt = time.Now()
+	return nil
+}
+
+func (p *Policy) SetPermissions(agents []*Agent, effect string) apierr.ApiError {
+	var err apierr.ApiError
+	p.Permissions = make([]*Permission, len(agents))
+	for i, agent := range agents {
+		p.Permissions[i], err = NewPermission(agent.ID, p.ID, effect)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

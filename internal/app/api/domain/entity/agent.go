@@ -16,11 +16,12 @@ var (
 )
 
 type Agent struct {
-	ID        uuid.UUID
-	UserID    uuid.UUID
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Name        string
+	Permissions []*Permission
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
@@ -30,8 +31,9 @@ func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
 	}
 
 	agent := &Agent{
-		ID:     id,
-		UserID: userID,
+		ID:          id,
+		UserID:      userID,
+		Permissions: []*Permission{},
 	}
 
 	if err := agent.SetName(name); err != nil {
@@ -71,5 +73,17 @@ func (a *Agent) SetName(name string) apierr.ApiError {
 	}
 	a.Name = name
 	a.UpdatedAt = time.Now()
+	return nil
+}
+
+func (a *Agent) SetPermissions(policies []*Policy, effect string) apierr.ApiError {
+	var err apierr.ApiError
+	a.Permissions = make([]*Permission, len(policies))
+	for i, policy := range policies {
+		a.Permissions[i], err = NewPermission(a.ID, policy.ID, effect)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

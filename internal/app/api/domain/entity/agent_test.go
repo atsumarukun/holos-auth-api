@@ -84,3 +84,46 @@ func TestAgent_SetName(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_SetPermissions(t *testing.T) {
+	tests := []struct {
+		name   string
+		effect string
+		expect apierr.ApiError
+	}{
+		{
+			name:   "allow",
+			effect: "ALLOW",
+			expect: nil,
+		},
+		{
+			name:   "deny",
+			effect: "DENY",
+			expect: nil,
+		},
+		{
+			name:   "invalid",
+			effect: "INVALID",
+			expect: entity.ErrInvalidPermissionEffect,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(t.Name(), func(t *testing.T) {
+			agent, err := entity.NewAgent(uuid.New(), "name")
+			if err != nil {
+				t.Error(err.Error())
+			}
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+			if err != nil {
+				t.Error(err.Error())
+			}
+			if err := agent.SetPermissions([]*entity.Policy{policy}, tt.effect); err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}

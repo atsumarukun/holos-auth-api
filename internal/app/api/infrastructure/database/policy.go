@@ -148,6 +148,45 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	return r.convertToEntities(policies)
 }
 
+func (r *policyDBRepository) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+	var agents []*model.AgentModel
+	driver := getSqlxDriver(ctx, r.db)
+	rows, err := driver.QueryxContext(
+		ctx,
+		`SELECT
+			agents.id,
+			agents.user_id,
+			agents.name,
+			agents.created_at,
+			agents.updated_at
+		FROM
+			agents
+			LEFT JOIN permissions ON agents.id = permissions.agent_id
+		WHERE
+			agents.user_id = ?
+			AND permissions.policy_id = ?
+			AND agents.deleted_at IS NULL;`,
+		userID,
+		id,
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var agent model.AgentModel
+		if err := rows.StructScan(&agent); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		agents = append(agents, &agent)
+	}
+	entities := make([]*entity.Agent, len(agents))
+	for i, agent := range agents {
+		entities[i] = entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
+	}
+	return entities, nil
+}
+
 func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
 	Methods, err := json.Marshal(policy.Methods)
 	if err != nil {
@@ -157,11 +196,11 @@ func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.Polic
 }
 
 func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
-	var Methods []string
-	if err := json.Unmarshal([]byte(policy.Methods), &Methods); err != nil {
+	var methods []string
+	if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
-	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, Methods, policy.CreatedAt, policy.UpdatedAt), nil
+	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, methods, policy.CreatedAt, policy.UpdatedAt), nil
 }
 
 func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {

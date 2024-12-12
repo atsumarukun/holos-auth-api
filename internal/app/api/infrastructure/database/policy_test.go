@@ -418,3 +418,92 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 		})
 	}
 }
+
+func TestPolicy_GetAgents(t *testing.T) {
+	tests := []struct {
+		id            uuid.UUID
+		userID        uuid.UUID
+		name          string
+		isTransaction bool
+		resultIsNil   bool
+		resultError   error
+	}{
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "without_transaction",
+			isTransaction: false,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "with_transaction",
+			isTransaction: true,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectQuery(regexp.QuoteMeta(
+				`SELECT
+					agents.id,
+					agents.user_id,
+					agents.name,
+					agents.created_at,
+					agents.updated_at
+				FROM
+					agents
+					LEFT JOIN permissions ON agents.id = permissions.agent_id
+				WHERE
+					agents.user_id = ?
+					AND permissions.policy_id = ?
+					AND agents.deleted_at IS NULL;`,
+			)).
+				WithArgs(tt.userID, tt.id).
+				WillReturnRows(
+					sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, time.Now(), time.Now()),
+				).
+				WillReturnError(tt.resultError)
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			pr := database.NewPolicyDBRepository(db)
+			if tt.isTransaction {
+				to := database.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					result, err := pr.GetAgents(ctx, tt.id, tt.userID)
+					if err != nil {
+						return err
+					}
+					if (result == nil) != tt.resultIsNil {
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+					}
+					return nil
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				result, err := pr.GetAgents(ctx, tt.id, tt.userID)
+				if err != nil {
+					t.Error(err.Error())
+				}
+				if (result == nil) != tt.resultIsNil {
+					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+				}
+			}
+		})
+	}
+}

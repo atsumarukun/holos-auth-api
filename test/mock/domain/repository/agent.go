@@ -110,6 +110,21 @@ func (mr *MockAgentRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserIDAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByIDAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
+// GetPolicies mocks base method.
+func (m *MockAgentRepository) GetPolicies(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPolicies", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*entity.Policy)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// GetPolicies indicates an expected call of GetPolicies.
+func (mr *MockAgentRepositoryMockRecorder) GetPolicies(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPolicies", reflect.TypeOf((*MockAgentRepository)(nil).GetPolicies), arg0, arg1, arg2)
+}
+
 // Update mocks base method.
 func (m *MockAgentRepository) Update(arg0 context.Context, arg1 *entity.Agent) apierr.ApiError {
 	m.ctrl.T.Helper()

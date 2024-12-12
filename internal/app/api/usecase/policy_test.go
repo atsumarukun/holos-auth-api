@@ -228,3 +228,61 @@ func TestPolicy_Gets(t *testing.T) {
 		})
 	}
 }
+
+func TestPolicy_GetAgents(t *testing.T) {
+	tests := []struct {
+		id          uuid.UUID
+		userID      uuid.UUID
+		name        string
+		isReturnNil bool
+		expect      apierr.ApiError
+	}{
+		{
+			id:          uuid.New(),
+			userID:      uuid.New(),
+			name:        "success",
+			isReturnNil: false,
+			expect:      nil,
+		},
+		{
+			id:          uuid.New(),
+			userID:      uuid.New(),
+			name:        "not_found",
+			isReturnNil: true,
+			expect:      nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agent, err := entity.NewAgent(uuid.New(), "name")
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			res := []*entity.Agent{agent}
+			if tt.isReturnNil {
+				res = nil
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := context.Background()
+
+			to := test.NewTestTransactionObject()
+
+			pr := mock_repository.NewMockPolicyRepository(ctrl)
+			pr.EXPECT().GetAgents(ctx, tt.id, tt.userID).Return(res, nil)
+
+			pu := usecase.NewPolicyUsecase(to, pr)
+			_, err = pu.GetAgents(ctx, tt.id, tt.userID)
+			if err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}

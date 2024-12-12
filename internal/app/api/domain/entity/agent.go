@@ -76,14 +76,9 @@ func (a *Agent) SetName(name string) apierr.ApiError {
 	return nil
 }
 
-func (a *Agent) SetPermissions(policies []*Policy, effect string) apierr.ApiError {
-	var err apierr.ApiError
+func (a *Agent) SetPermissions(policies []*Policy) {
 	a.Permissions = make([]*Permission, len(policies))
 	for i, policy := range policies {
-		a.Permissions[i], err = NewPermission(a.ID, policy.ID, effect)
-		if err != nil {
-			return err
-		}
+		a.Permissions[i] = NewPermission(a.ID, policy.ID)
 	}
-	return nil
 }

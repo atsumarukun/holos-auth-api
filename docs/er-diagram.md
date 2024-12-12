@@ -42,10 +42,6 @@ policies {
 permissions {
   char(36) agent_id PK, FK
   char(36) policy_id PK, FK
-  enum effect
-  datetime(6) created_at
-  datetime(6) updated_at
-  datetime(6) deleted_at
 }
 
 users ||--o| user_tokens: ""
@@ -109,7 +105,3 @@ policies ||--o{ permissions: ""
 | --- | --- | --- | :---: | --- |
 | char(36) | agent_id | PK, FK | | エージェントID |
 | char(36) | policy_id | PK, FK | | ポリシーID |
-| enum("ALLOW", "DENY") | effect | | | 効果 |
-| datetime(6) | created_at | | | 作成日 |
-| datetime(6) | updated_at | | | 更新日 |
-| datetime(6) | deleted_at | | * | 削除日 |

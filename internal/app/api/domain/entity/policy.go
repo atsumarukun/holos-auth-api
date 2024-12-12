@@ -143,14 +143,9 @@ func (p *Policy) SetMethods(methods []string) apierr.ApiError {
 	return nil
 }
 
-func (p *Policy) SetPermissions(agents []*Agent, effect string) apierr.ApiError {
-	var err apierr.ApiError
+func (p *Policy) SetPermissions(agents []*Agent) {
 	p.Permissions = make([]*Permission, len(agents))
 	for i, agent := range agents {
-		p.Permissions[i], err = NewPermission(agent.ID, p.ID, effect)
-		if err != nil {
-			return err
-		}
+		p.Permissions[i] = NewPermission(agent.ID, p.ID)
 	}
-	return nil
 }

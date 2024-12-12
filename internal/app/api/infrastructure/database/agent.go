@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
@@ -136,6 +137,52 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 		agents = append(agents, &agent)
 	}
 	return r.convertToEntities(agents), nil
+}
+
+func (r *agentDBRepository) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+	var policies []*model.PolicyModel
+	driver := getSqlxDriver(ctx, r.db)
+	rows, err := driver.QueryxContext(
+		ctx,
+		`SELECT
+			policies.id,
+			policies.user_id,
+			policies.name,
+			policies.service,
+			policies.path,
+			policies.methods,
+			policies.created_at,
+			policies.updated_at
+		FROM
+			policies
+			LEFT JOIN permissions ON policies.id = permissions.policy_id
+		WHERE
+			policies.user_id = ?
+			AND permissions.agent_id = ?
+			AND policies.deleted_at IS NULL;`,
+		userID,
+		id,
+	)
+	if err != nil {
+		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var policy model.PolicyModel
+		if err := rows.StructScan(&policy); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		policies = append(policies, &policy)
+	}
+	entities := make([]*entity.Policy, len(policies))
+	for i, policy := range policies {
+		var methods []string
+		if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
+			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		}
+		entities[i] = entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, methods, policy.CreatedAt, policy.UpdatedAt)
+	}
+	return entities, nil
 }
 
 func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentModel {

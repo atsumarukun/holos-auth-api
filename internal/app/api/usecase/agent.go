@@ -23,6 +23,7 @@ type AgentUsecase interface {
 	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
 	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
 	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
+	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
 }
 
 type agentUsecase struct {
@@ -96,6 +97,19 @@ func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Agent
 	}
 
 	return u.convertToDTOs(agents), nil
+}
+
+func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+	policies, err := u.agentRepository.GetPolicies(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	dtos := make([]*dto.PolicyDTO, len(policies))
+	for i, policy := range policies {
+		dtos[i] = dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
+	}
+	return dtos, nil
 }
 
 func (u *agentUsecase) convertToDTO(agent *entity.Agent) *dto.AgentDTO {

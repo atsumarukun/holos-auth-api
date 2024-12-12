@@ -418,3 +418,95 @@ func TestAgent_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_GetPolicies(t *testing.T) {
+	tests := []struct {
+		id            uuid.UUID
+		userID        uuid.UUID
+		name          string
+		isTransaction bool
+		resultIsNil   bool
+		resultError   error
+	}{
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "without_transaction",
+			isTransaction: false,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+		{
+			id:            uuid.New(),
+			userID:        uuid.New(),
+			name:          "with_transaction",
+			isTransaction: true,
+			resultIsNil:   false,
+			resultError:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectQuery(regexp.QuoteMeta(
+				`SELECT
+				policies.id,
+				policies.user_id,
+				policies.name,
+				policies.service,
+				policies.path,
+				policies.methods,
+				policies.created_at,
+				policies.updated_at
+			FROM
+				policies
+				LEFT JOIN permissions ON policies.id = permissions.policy_id
+			WHERE
+				policies.user_id = ?
+				AND permissions.agent_id = ?
+				AND policies.deleted_at IS NULL;`,
+			)).
+				WithArgs(tt.userID, tt.id).
+				WillReturnRows(
+					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
+				).
+				WillReturnError(tt.resultError)
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			ar := database.NewAgentDBRepository(db)
+			if tt.isTransaction {
+				to := database.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					result, err := ar.GetPolicies(ctx, tt.id, tt.userID)
+					if err != nil {
+						return err
+					}
+					if (result == nil) != tt.resultIsNil {
+						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+					}
+					return nil
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				result, err := ar.GetPolicies(ctx, tt.id, tt.userID)
+				if err != nil {
+					t.Error(err.Error())
+				}
+				if (result == nil) != tt.resultIsNil {
+					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
+				}
+			}
+		})
+	}
+}

@@ -229,6 +229,58 @@ func TestPolicy_Gets(t *testing.T) {
 	}
 }
 
+func TestPolicy_UpdateAgents(t *testing.T) {
+	tests := []struct {
+		id     uuid.UUID
+		userID uuid.UUID
+		name   string
+		expect apierr.ApiError
+	}{
+		{
+			id:     uuid.New(),
+			userID: uuid.New(),
+			name:   "success",
+			expect: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agent, err := entity.NewAgent(uuid.New(), "name")
+			if err != nil {
+				t.Error(err.Error())
+			}
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := context.Background()
+
+			to := test.NewTestTransactionObject()
+
+			pr := mock_repository.NewMockPolicyRepository(ctrl)
+			pr.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(policy, nil)
+			pr.EXPECT().UpdateAgents(ctx, gomock.Any(), gomock.Any()).Return(nil)
+
+			ar := mock_repository.NewMockAgentRepository(ctrl)
+			ar.EXPECT().FindByIDsAndUserIDAndNotDeleted(ctx, []uuid.UUID{agent.ID}, tt.userID)
+
+			pu := usecase.NewPolicyUsecase(to, pr, ar)
+			_, err = pu.UpdateAgents(ctx, tt.id, tt.userID, []uuid.UUID{agent.ID})
+			if err != tt.expect {
+				if err == nil {
+					t.Error("expect err but got nil")
+				} else {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}
+
 func TestPolicy_GetAgents(t *testing.T) {
 	tests := []struct {
 		id          uuid.UUID

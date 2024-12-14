@@ -142,10 +142,3 @@ func (p *Policy) SetMethods(methods []string) apierr.ApiError {
 	p.UpdatedAt = time.Now()
 	return nil
 }
-
-func (p *Policy) SetPermissions(agents []*Agent) {
-	p.Permissions = make([]*Permission, len(agents))
-	for i, agent := range agents {
-		p.Permissions[i] = NewPermission(agent.ID, p.ID)
-	}
-}

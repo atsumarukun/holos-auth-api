@@ -17,6 +17,7 @@ type PolicyHandler interface {
 	Update(*gin.Context)
 	Delete(*gin.Context)
 	Gets(*gin.Context)
+	UpdateAgents(*gin.Context)
 	GetAgents(*gin.Context)
 }
 
@@ -123,6 +124,40 @@ func (h *policyHandler) Gets(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, h.convertToResponses(dtos))
+}
+
+func (h *policyHandler) UpdateAgents(c *gin.Context) {
+	var req request.UpdatePolicyAgentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dtos, err := h.policyUsecase.UpdateAgents(ctx, id, userID, req.AgentIDs)
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	responses := make([]*response.AgentResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = response.NewAgentResponse(dto.ID, dto.Name, dto.CreatedAt, dto.UpdatedAt)
+	}
+	c.JSON(http.StatusOK, responses)
 }
 
 func (h *policyHandler) GetAgents(c *gin.Context) {

@@ -139,6 +139,35 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 	return r.convertToEntities(agents), nil
 }
 
+func (r *agentDBRepository) UpdatePolicies(ctx context.Context, id uuid.UUID, policies []*entity.Policy) apierr.ApiError {
+	driver := getSqlxDriver(ctx, r.db)
+
+	if _, err := driver.NamedExecContext(
+		ctx,
+		`DELETE FROM permissions WHERE agent_id = :agent_id;`,
+		map[string]interface{}{"agent_id": id},
+	); err != nil {
+		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+
+	args := make([]map[string]interface{}, len(policies))
+	for i, policy := range policies {
+		args[i] = map[string]interface{}{
+			"agent_id":  id,
+			"policy_id": policy.ID,
+		}
+	}
+	if _, err := driver.NamedExecContext(
+		ctx,
+		`INSERT INTO permissions (agent_id, policy_id) VALUES (:agent_id, :policy_id);`,
+		args,
+	); err != nil {
+		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
 func (r *agentDBRepository) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
 	var policies []*model.PolicyModel
 	driver := getSqlxDriver(ctx, r.db)

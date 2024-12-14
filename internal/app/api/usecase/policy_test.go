@@ -35,7 +35,7 @@ func TestPolicy_Create(t *testing.T) {
 		pr := mock_repository.NewMockPolicyRepository(ctrl)
 		pr.EXPECT().Create(ctx, gomock.Any()).Return(nil)
 
-		pu := usecase.NewPolicyUsecase(to, pr)
+		pu := usecase.NewPolicyUsecase(to, pr, nil)
 		dto, err := pu.Create(ctx, uuid.New(), "name", "STORAGE", "/", []string{"GET"})
 		if err != tt.expect {
 			if err == nil {
@@ -96,7 +96,7 @@ func TestPolicy_Update(t *testing.T) {
 			pr.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			pr.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			pu := usecase.NewPolicyUsecase(to, pr)
+			pu := usecase.NewPolicyUsecase(to, pr, nil)
 			dto, err := pu.Update(ctx, tt.id, tt.userID, tt.name, "STORAGE", "/", []string{"GET"})
 			if err != tt.expect {
 				if err == nil {
@@ -158,7 +158,7 @@ func TestPolicy_Delete(t *testing.T) {
 			pr.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			pr.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			pu := usecase.NewPolicyUsecase(to, pr)
+			pu := usecase.NewPolicyUsecase(to, pr, nil)
 			err = pu.Delete(ctx, tt.id, tt.userID)
 			if err != tt.expect {
 				if err == nil {
@@ -216,7 +216,7 @@ func TestPolicy_Gets(t *testing.T) {
 			pr := mock_repository.NewMockPolicyRepository(ctrl)
 			pr.EXPECT().FindByUserIDAndNotDeleted(ctx, tt.userID).Return(res, nil)
 
-			pu := usecase.NewPolicyUsecase(to, pr)
+			pu := usecase.NewPolicyUsecase(to, pr, nil)
 			_, err = pu.Gets(ctx, tt.userID)
 			if err != tt.expect {
 				if err == nil {
@@ -274,7 +274,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			pr := mock_repository.NewMockPolicyRepository(ctrl)
 			pr.EXPECT().GetAgents(ctx, tt.id, tt.userID).Return(res, nil)
 
-			pu := usecase.NewPolicyUsecase(to, pr)
+			pu := usecase.NewPolicyUsecase(to, pr, nil)
 			_, err = pu.GetAgents(ctx, tt.id, tt.userID)
 			if err != tt.expect {
 				if err == nil {

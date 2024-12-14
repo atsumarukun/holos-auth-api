@@ -75,10 +75,3 @@ func (a *Agent) SetName(name string) apierr.ApiError {
 	a.UpdatedAt = time.Now()
 	return nil
 }
-
-func (a *Agent) SetPermissions(policies []*Policy) {
-	a.Permissions = make([]*Permission, len(policies))
-	for i, policy := range policies {
-		a.Permissions[i] = NewPermission(a.ID, policy.ID)
-	}
-}

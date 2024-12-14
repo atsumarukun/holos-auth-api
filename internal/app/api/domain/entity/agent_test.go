@@ -84,28 +84,3 @@ func TestAgent_SetName(t *testing.T) {
 		})
 	}
 }
-
-func TestAgent_SetPermissions(t *testing.T) {
-	tests := []struct {
-		name   string
-		expect apierr.ApiError
-	}{
-		{
-			name:   "allow",
-			expect: nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
-			}
-			agent.SetPermissions([]*entity.Policy{policy})
-		})
-	}
-}

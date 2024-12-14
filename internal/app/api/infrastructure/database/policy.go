@@ -114,6 +114,10 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 }
 
 func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
 	var policies []*model.PolicyModel
 	driver := getSqlxDriver(ctx, r.db)
 

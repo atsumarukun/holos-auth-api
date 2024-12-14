@@ -150,6 +150,10 @@ func (r *agentDBRepository) UpdatePolicies(ctx context.Context, id uuid.UUID, po
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 
+	if len(policies) == 0 {
+		return nil
+	}
+
 	args := make([]map[string]interface{}, len(policies))
 	for i, policy := range policies {
 		args[i] = map[string]interface{}{

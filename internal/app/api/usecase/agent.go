@@ -23,18 +23,21 @@ type AgentUsecase interface {
 	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
 	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
 	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
+	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
 	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
 }
 
 type agentUsecase struct {
 	transactionObject domain.TransactionObject
 	agentRepository   repository.AgentRepository
+	policyrepository  repository.PolicyRepository
 }
 
-func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository repository.AgentRepository) AgentUsecase {
+func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository repository.AgentRepository, policyrepository repository.PolicyRepository) AgentUsecase {
 	return &agentUsecase{
 		transactionObject: transactionObject,
 		agentRepository:   agentRepository,
+		policyrepository:  policyrepository,
 	}
 }
 
@@ -97,6 +100,33 @@ func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Agent
 	}
 
 	return u.convertToDTOs(agents), nil
+}
+
+func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID, policyIDs []uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+	policies := make([]*entity.Policy, len(policyIDs))
+
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+		agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+		if err != nil {
+			return err
+		}
+
+		policies, err = u.policyrepository.FindByIDsAndUserIDAndNotDeleted(ctx, policyIDs, userID)
+		if err != nil {
+			return err
+		}
+
+		return u.agentRepository.UpdatePolicies(ctx, agent.ID, policies)
+	}); err != nil {
+		return nil, err
+	}
+
+	dtos := make([]*dto.PolicyDTO, len(policies))
+	for i, policy := range policies {
+		dtos[i] = dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
+	}
+
+	return dtos, nil
 }
 
 func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {

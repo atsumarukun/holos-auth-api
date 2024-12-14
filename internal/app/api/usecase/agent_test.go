@@ -36,7 +36,7 @@ func TestAgent_Create(t *testing.T) {
 			ar := mock_repository.NewMockAgentRepository(ctrl)
 			ar.EXPECT().Create(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			au := usecase.NewAgentUsecase(to, ar)
+			au := usecase.NewAgentUsecase(to, ar, nil)
 			dto, err := au.Create(ctx, uuid.New(), tt.name)
 			if err != tt.expect {
 				if err == nil {
@@ -98,7 +98,7 @@ func TestAgent_Update(t *testing.T) {
 			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			au := usecase.NewAgentUsecase(to, ar)
+			au := usecase.NewAgentUsecase(to, ar, nil)
 			dto, err := au.Update(ctx, tt.id, tt.userID, tt.name)
 			if err != tt.expect {
 				if err == nil {
@@ -160,7 +160,7 @@ func TestAgent_Delete(t *testing.T) {
 			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
 			ar.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
 
-			au := usecase.NewAgentUsecase(to, ar)
+			au := usecase.NewAgentUsecase(to, ar, nil)
 			if err := au.Delete(ctx, tt.id, tt.userID); err != tt.expect {
 				if err == nil {
 					t.Error("expect err but got nil")
@@ -217,7 +217,7 @@ func TestAgent_Gets(t *testing.T) {
 			ar := mock_repository.NewMockAgentRepository(ctrl)
 			ar.EXPECT().FindByUserIDAndNotDeleted(ctx, tt.userID).Return(res, nil)
 
-			au := usecase.NewAgentUsecase(to, ar)
+			au := usecase.NewAgentUsecase(to, ar, nil)
 			_, err = au.Gets(ctx, tt.userID)
 			if err != tt.expect {
 				if err == nil {
@@ -275,7 +275,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			ar := mock_repository.NewMockAgentRepository(ctrl)
 			ar.EXPECT().GetPolicies(ctx, tt.id, tt.userID).Return(res, nil)
 
-			au := usecase.NewAgentUsecase(to, ar)
+			au := usecase.NewAgentUsecase(to, ar, nil)
 			_, err = au.GetPolicies(ctx, tt.id, tt.userID)
 			if err != tt.expect {
 				if err == nil {

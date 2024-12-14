@@ -30,7 +30,7 @@ func inject(db *sqlx.DB) {
 	userService := service.NewUserService(userDBRepository)
 
 	userUsecase := usecase.NewUserUsecase(transactionObject, userDBRepository, userService)
-	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentDBRepository)
+	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentDBRepository, policyDBRepository)
 	policyUsecase := usecase.NewPolicyUsecase(transactionObject, policyDBRepository)
 	authUsecase := usecase.NewAuthUsecase(transactionObject, userDBRepository, userTokenDBRepository)
 

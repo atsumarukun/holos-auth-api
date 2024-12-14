@@ -110,3 +110,18 @@ func (mr *MockAgentUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3 interface{
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockAgentUsecase)(nil).Update), arg0, arg1, arg2, arg3)
 }
+
+// UpdatePolicies mocks base method.
+func (m *MockAgentUsecase) UpdatePolicies(arg0 context.Context, arg1, arg2 uuid.UUID, arg3 []uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePolicies", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*dto.PolicyDTO)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// UpdatePolicies indicates an expected call of UpdatePolicies.
+func (mr *MockAgentUsecaseMockRecorder) UpdatePolicies(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePolicies", reflect.TypeOf((*MockAgentUsecase)(nil).UpdatePolicies), arg0, arg1, arg2, arg3)
+}

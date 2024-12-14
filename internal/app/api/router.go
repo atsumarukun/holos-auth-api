@@ -29,6 +29,7 @@ func getRoutes(r *gin.Engine) {
 		policies.PUT("/:id", policyHandler.Update)
 		policies.DELETE("/:id", policyHandler.Delete)
 		policies.GET("/:id/agents", policyHandler.GetAgents)
+		policies.PUT("/:id/agents", policyHandler.UpdateAgents)
 	}
 
 	auth := r.Group("auth")

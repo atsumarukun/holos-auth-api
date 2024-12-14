@@ -326,7 +326,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("PUT", "/agent/:id/policies", bytes.NewBuffer([]byte(tt.requestJSON)))
+			req, err := http.NewRequest("PUT", "/agents/:id/policies", bytes.NewBuffer([]byte(tt.requestJSON)))
 			if err != nil {
 				t.Error(err.Error())
 			}

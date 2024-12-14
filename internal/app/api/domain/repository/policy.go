@@ -16,5 +16,6 @@ type PolicyRepository interface {
 	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Policy, apierr.ApiError)
 	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Policy, apierr.ApiError)
 	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Policy, apierr.ApiError)
+	UpdateAgents(context.Context, uuid.UUID, []*entity.Agent) apierr.ApiError
 	GetAgents(context.Context, uuid.UUID, uuid.UUID) ([]*entity.Agent, apierr.ApiError)
 }

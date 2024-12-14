@@ -138,3 +138,17 @@ func (mr *MockPolicyRepositoryMockRecorder) Update(arg0, arg1 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPolicyRepository)(nil).Update), arg0, arg1)
 }
+
+// UpdateAgents mocks base method.
+func (m *MockPolicyRepository) UpdateAgents(arg0 context.Context, arg1 uuid.UUID, arg2 []*entity.Agent) apierr.ApiError {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAgents", arg0, arg1, arg2)
+	ret0, _ := ret[0].(apierr.ApiError)
+	return ret0
+}
+
+// UpdateAgents indicates an expected call of UpdateAgents.
+func (mr *MockPolicyRepositoryMockRecorder) UpdateAgents(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAgents", reflect.TypeOf((*MockPolicyRepository)(nil).UpdateAgents), arg0, arg1, arg2)
+}

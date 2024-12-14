@@ -105,6 +105,10 @@ func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userI
 }
 
 func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
 	var agents []*model.AgentModel
 	driver := getSqlxDriver(ctx, r.db)
 

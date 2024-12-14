@@ -419,6 +419,66 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 	}
 }
 
+func TestPolicy_UpdateAgents(t *testing.T) {
+	tests := []struct {
+		name          string
+		isTransaction bool
+	}{
+		{
+			name:          "without_transaction",
+			isTransaction: false,
+		},
+		{
+			name:          "with_transaction",
+			isTransaction: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agent, err := entity.NewAgent(uuid.New(), "name")
+			if err != nil {
+				t.Error(err.Error())
+			}
+			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			ctx := context.Background()
+
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			if tt.isTransaction {
+				mock.ExpectBegin()
+			}
+			mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
+				WithArgs(policy.ID).
+				WillReturnResult(sqlmock.NewResult(1, 1))
+			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO permissions (agent_id, policy_id) VALUES (?, ?);")).
+				WithArgs(agent.ID, policy.ID).
+				WillReturnResult(sqlmock.NewResult(1, 1))
+			if tt.isTransaction {
+				mock.ExpectCommit()
+			}
+
+			pr := database.NewPolicyDBRepository(db)
+			if tt.isTransaction {
+				to := database.NewSqlxTransactionObject(db)
+				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+					return pr.UpdateAgents(ctx, policy.ID, []*entity.Agent{agent})
+				}); err != nil {
+					t.Error(err.Error())
+				}
+			} else {
+				if err := pr.UpdateAgents(ctx, policy.ID, []*entity.Agent{agent}); err != nil {
+					t.Error(err.Error())
+				}
+			}
+		})
+	}
+}
+
 func TestPolicy_GetAgents(t *testing.T) {
 	tests := []struct {
 		id            uuid.UUID

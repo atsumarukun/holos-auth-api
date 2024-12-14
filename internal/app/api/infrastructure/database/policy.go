@@ -152,7 +152,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	return r.convertToEntities(policies)
 }
 
-func (r *policyDBRepository) UpdateAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID, agents []*entity.Agent) apierr.ApiError {
+func (r *policyDBRepository) UpdateAgents(ctx context.Context, id uuid.UUID, agents []*entity.Agent) apierr.ApiError {
 	driver := getSqlxDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(

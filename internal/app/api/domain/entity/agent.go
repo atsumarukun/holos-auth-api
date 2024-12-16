@@ -16,12 +16,12 @@ var (
 )
 
 type Agent struct {
-	ID          uuid.UUID
-	UserID      uuid.UUID
-	Name        string
-	Permissions []*Permission
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	Policies  []uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
@@ -31,9 +31,9 @@ func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
 	}
 
 	agent := &Agent{
-		ID:          id,
-		UserID:      userID,
-		Permissions: []*Permission{},
+		ID:       id,
+		UserID:   userID,
+		Policies: []uuid.UUID{},
 	}
 
 	if err := agent.SetName(name); err != nil {
@@ -47,11 +47,12 @@ func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
 	return agent, nil
 }
 
-func RestoreAgent(id uuid.UUID, userID uuid.UUID, name string, createdAt time.Time, updatedAt time.Time) *Agent {
+func RestoreAgent(id uuid.UUID, userID uuid.UUID, name string, policies []uuid.UUID, createdAt time.Time, updatedAt time.Time) *Agent {
 	return &Agent{
 		ID:        id,
 		UserID:    userID,
 		Name:      name,
+		Policies:  policies,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}
@@ -74,4 +75,12 @@ func (a *Agent) SetName(name string) apierr.ApiError {
 	a.Name = name
 	a.UpdatedAt = time.Now()
 	return nil
+}
+
+func (a *Agent) SetPolicies(policies []*Policy) {
+	ids := make([]uuid.UUID, len(policies))
+	for i, policy := range policies {
+		ids[i] = policy.ID
+	}
+	a.Policies = ids
 }

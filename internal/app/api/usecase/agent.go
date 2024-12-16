@@ -110,13 +110,18 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 		if err != nil {
 			return err
 		}
+		if agent == nil {
+			return ErrAgentNotFound
+		}
 
 		policies, err = u.policyrepository.FindByIDsAndUserIDAndNotDeleted(ctx, policyIDs, userID)
 		if err != nil {
 			return err
 		}
 
-		return u.agentRepository.UpdatePolicies(ctx, agent.ID, policies)
+		agent.SetPolicies(policies)
+
+		return u.agentRepository.Update(ctx, agent)
 	}); err != nil {
 		return nil, err
 	}
@@ -130,7 +135,15 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 }
 
 func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
-	policies, err := u.agentRepository.GetPolicies(ctx, id, userID)
+	agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if agent == nil {
+		return nil, ErrAgentNotFound
+	}
+
+	policies, err := u.policyrepository.FindByIDsAndUserIDAndNotDeleted(ctx, agent.Policies, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -3,13 +3,13 @@ package database
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -27,6 +27,7 @@ func NewAgentDBRepository(db *sqlx.DB) repository.AgentRepository {
 
 func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
 	driver := getSqlxDriver(ctx, r.db)
+
 	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
@@ -35,11 +36,13 @@ func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) api
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
+
 	return nil
 }
 
 func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
 	driver := getSqlxDriver(ctx, r.db)
+
 	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
@@ -48,7 +51,8 @@ func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) api
 	); err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
-	return nil
+
+	return r.updatePolicies(ctx, agent.ID, agent.Policies)
 }
 
 func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
@@ -69,7 +73,23 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
 		ctx,
-		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1;`,
+		`SELECT
+			agents.id,
+			agents.user_id,
+			agents.name,
+			agents.created_at,
+			agents.updated_at,
+			GROUP_CONCAT(permissions.policy_id ORDER BY permissions.policy_id) as policies
+		FROM
+			agents
+			LEFT JOIN permissions ON agents.id = permissions.agent_id
+		WHERE
+			agents.id = ?
+			AND agents.user_id = ?
+			AND agents.deleted_at IS NULL
+		GROUP BY
+			agents.id
+		LIMIT 1;`,
 		id,
 		userID,
 	).StructScan(&agent); err != nil {
@@ -79,7 +99,7 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&agent), nil
+	return r.convertToEntity(&agent)
 }
 
 func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
@@ -101,7 +121,7 @@ func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userI
 		}
 		agents = append(agents, &agent)
 	}
-	return r.convertToEntities(agents), nil
+	return r.convertToEntities(agents)
 }
 
 func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
@@ -140,10 +160,10 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 		}
 		agents = append(agents, &agent)
 	}
-	return r.convertToEntities(agents), nil
+	return r.convertToEntities(agents)
 }
 
-func (r *agentDBRepository) UpdatePolicies(ctx context.Context, id uuid.UUID, policies []*entity.Policy) apierr.ApiError {
+func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, policieIDs []uuid.UUID) apierr.ApiError {
 	driver := getSqlxDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(
@@ -154,15 +174,15 @@ func (r *agentDBRepository) UpdatePolicies(ctx context.Context, id uuid.UUID, po
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 	}
 
-	if len(policies) == 0 {
+	if len(policieIDs) == 0 {
 		return nil
 	}
 
-	args := make([]map[string]interface{}, len(policies))
-	for i, policy := range policies {
+	args := make([]map[string]interface{}, len(policieIDs))
+	for i, policyID := range policieIDs {
 		args[i] = map[string]interface{}{
 			"agent_id":  id,
-			"policy_id": policy.ID,
+			"policy_id": policyID,
 		}
 	}
 	if _, err := driver.NamedExecContext(
@@ -176,64 +196,32 @@ func (r *agentDBRepository) UpdatePolicies(ctx context.Context, id uuid.UUID, po
 	return nil
 }
 
-func (r *agentDBRepository) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
-	var policies []*model.PolicyModel
-	driver := getSqlxDriver(ctx, r.db)
-	rows, err := driver.QueryxContext(
-		ctx,
-		`SELECT
-			policies.id,
-			policies.user_id,
-			policies.name,
-			policies.service,
-			policies.path,
-			policies.methods,
-			policies.created_at,
-			policies.updated_at
-		FROM
-			policies
-			LEFT JOIN permissions ON policies.id = permissions.policy_id
-		WHERE
-			policies.user_id = ?
-			AND permissions.agent_id = ?
-			AND policies.deleted_at IS NULL;`,
-		userID,
-		id,
-	)
-	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var policy model.PolicyModel
-		if err := rows.StructScan(&policy); err != nil {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
-		}
-		policies = append(policies, &policy)
-	}
-	entities := make([]*entity.Policy, len(policies))
-	for i, policy := range policies {
-		var methods []string
-		if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
-		}
-		entities[i] = entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, methods, policy.CreatedAt, policy.UpdatedAt)
-	}
-	return entities, nil
-}
-
 func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentModel {
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }
 
-func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) *entity.Agent {
-	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
+func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) (*entity.Agent, apierr.ApiError) {
+	var policies []uuid.UUID
+	if agent.Policies != nil {
+		for _, policyID := range strings.Split(*agent.Policies, ",") {
+			id, err := uuid.Parse(policyID)
+			if err != nil {
+				return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			}
+			policies = append(policies, id)
+		}
+	}
+	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, policies, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) []*entity.Agent {
+func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) ([]*entity.Agent, apierr.ApiError) {
 	entities := make([]*entity.Agent, len(agents))
 	for i, agent := range agents {
-		entities[i] = r.convertToEntity(agent)
+		var err apierr.ApiError
+		entities[i], err = r.convertToEntity(agent)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return entities
+	return entities, nil
 }

@@ -264,7 +264,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 
 			ar := mock_repository.NewMockAgentRepository(ctrl)
 			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(agent, nil)
-			ar.EXPECT().UpdatePolicies(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil)
 
 			pr := mock_repository.NewMockPolicyRepository(ctrl)
 			pr.EXPECT().FindByIDsAndUserIDAndNotDeleted(ctx, []uuid.UUID{policy.ID}, tt.userID)
@@ -307,6 +307,10 @@ func TestAgent_GetPolicies(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			agent, err := entity.NewAgent(uuid.New(), "name")
+			if err != nil {
+				t.Error(err.Error())
+			}
 			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
 			if err != nil {
 				t.Error(err.Error())
@@ -325,9 +329,12 @@ func TestAgent_GetPolicies(t *testing.T) {
 			to := test.NewTestTransactionObject()
 
 			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().GetPolicies(ctx, tt.id, tt.userID).Return(res, nil)
+			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(agent, nil)
 
-			au := usecase.NewAgentUsecase(to, ar, nil)
+			pr := mock_repository.NewMockPolicyRepository(ctrl)
+			pr.EXPECT().FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), tt.userID).Return(res, nil)
+
+			au := usecase.NewAgentUsecase(to, ar, pr)
 			_, err = au.GetPolicies(ctx, tt.id, tt.userID)
 			if err != tt.expect {
 				if err == nil {

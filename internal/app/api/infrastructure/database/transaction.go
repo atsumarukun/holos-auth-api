@@ -1,4 +1,4 @@
-package infrastructure
+package database
 
 import (
 	"context"
@@ -54,6 +54,7 @@ func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context
 }
 
 type sqlxDriver interface {
+	Rebind(string) string
 	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
 	QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error)
 	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row

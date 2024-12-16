@@ -15,4 +15,5 @@ type AgentRepository interface {
 	Delete(context.Context, *entity.Agent) apierr.ApiError
 	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Agent, apierr.ApiError)
 	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Agent, apierr.ApiError)
+	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Agent, apierr.ApiError)
 }

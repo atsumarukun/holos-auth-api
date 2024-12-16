@@ -1,11 +1,11 @@
-package infrastructure_test
+package database_test
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,9 +53,9 @@ func TestUserToken_Save(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserTokenDBRepository(db)
+			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ur.Save(ctx, userToken)
 				}); err != nil {
@@ -106,9 +106,9 @@ func TestUserToken_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserTokenDBRepository(db)
+			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ur.Delete(ctx, userToken)
 				}); err != nil {
@@ -170,9 +170,9 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserTokenDBRepository(db)
+			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
 					if err != nil {

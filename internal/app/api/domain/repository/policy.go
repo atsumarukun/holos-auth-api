@@ -15,4 +15,5 @@ type PolicyRepository interface {
 	Delete(context.Context, *entity.Policy) apierr.ApiError
 	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Policy, apierr.ApiError)
 	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Policy, apierr.ApiError)
+	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Policy, apierr.ApiError)
 }

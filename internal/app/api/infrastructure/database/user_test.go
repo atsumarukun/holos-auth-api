@@ -1,11 +1,11 @@
-package infrastructure_test
+package database_test
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
-	dbRepository "holos-auth-api/internal/app/api/infrastructure/db"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/test"
 	"net/http"
@@ -53,9 +53,9 @@ func TestUser_Create(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ur.Create(ctx, user)
 				}); err != nil {
@@ -106,9 +106,9 @@ func TestUser_Update(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ur.Update(ctx, user)
 				}); err != nil {
@@ -171,9 +171,9 @@ func TestUser_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					return ur.Delete(ctx, user)
 				}); err != nil {
@@ -239,9 +239,9 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
 					if err != nil {
@@ -314,9 +314,9 @@ func TestUser_FindOneByName(t *testing.T) {
 				mock.ExpectCommit()
 			}
 
-			ur := dbRepository.NewUserDBRepository(db)
+			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
-				to := dbRepository.NewSqlxTransactionObject(db)
+				to := database.NewSqlxTransactionObject(db)
 				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
 					result, err := ur.FindOneByName(ctx, tt.name)
 					if err != nil {

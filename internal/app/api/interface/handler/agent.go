@@ -17,6 +17,8 @@ type AgentHandler interface {
 	Update(*gin.Context)
 	Delete(*gin.Context)
 	Gets(*gin.Context)
+	UpdatePolicies(*gin.Context)
+	GetPolicies(*gin.Context)
 }
 
 type agentHandler struct {
@@ -122,6 +124,68 @@ func (h *agentHandler) Gets(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, h.convertToResponses(dtos))
+}
+
+func (h *agentHandler) UpdatePolicies(c *gin.Context) {
+	var req request.UpdateAgentPoliciesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dtos, err := h.agentUsecase.UpdatePolicies(ctx, id, userID, req.PolicyIDs)
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	responses := make([]*response.PolicyResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.Methods, dto.CreatedAt, dto.UpdatedAt)
+	}
+	c.JSON(http.StatusOK, responses)
+}
+
+func (h *agentHandler) GetPolicies(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dtos, err := h.agentUsecase.GetPolicies(ctx, id, userID)
+	if err != nil {
+		c.String(err.Error())
+		return
+	}
+
+	responses := make([]*response.PolicyResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.Methods, dto.CreatedAt, dto.UpdatedAt)
+	}
+	c.JSON(http.StatusOK, responses)
 }
 
 func (h *agentHandler) convertToResponse(agent *dto.AgentDTO) *response.AgentResponse {

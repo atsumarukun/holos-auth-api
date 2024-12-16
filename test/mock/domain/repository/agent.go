@@ -65,6 +65,21 @@ func (mr *MockAgentRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAgentRepository)(nil).Delete), arg0, arg1)
 }
 
+// FindByIDsAndUserIDAndNotDeleted mocks base method.
+func (m *MockAgentRepository) FindByIDsAndUserIDAndNotDeleted(arg0 context.Context, arg1 []uuid.UUID, arg2 uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByIDsAndUserIDAndNotDeleted", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*entity.Agent)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// FindByIDsAndUserIDAndNotDeleted indicates an expected call of FindByIDsAndUserIDAndNotDeleted.
+func (mr *MockAgentRepositoryMockRecorder) FindByIDsAndUserIDAndNotDeleted(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIDsAndUserIDAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindByIDsAndUserIDAndNotDeleted), arg0, arg1, arg2)
+}
+
 // FindByUserIDAndNotDeleted mocks base method.
 func (m *MockAgentRepository) FindByUserIDAndNotDeleted(arg0 context.Context, arg1 uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
 	m.ctrl.T.Helper()

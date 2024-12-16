@@ -66,6 +66,21 @@ func (mr *MockPolicyUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPolicyUsecase)(nil).Delete), arg0, arg1, arg2)
 }
 
+// GetAgents mocks base method.
+func (m *MockPolicyUsecase) GetAgents(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAgents", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*dto.AgentDTO)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// GetAgents indicates an expected call of GetAgents.
+func (mr *MockPolicyUsecaseMockRecorder) GetAgents(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgents", reflect.TypeOf((*MockPolicyUsecase)(nil).GetAgents), arg0, arg1, arg2)
+}
+
 // Gets mocks base method.
 func (m *MockPolicyUsecase) Gets(arg0 context.Context, arg1 uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
 	m.ctrl.T.Helper()
@@ -94,4 +109,19 @@ func (m *MockPolicyUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, a
 func (mr *MockPolicyUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPolicyUsecase)(nil).Update), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+}
+
+// UpdateAgents mocks base method.
+func (m *MockPolicyUsecase) UpdateAgents(arg0 context.Context, arg1, arg2 uuid.UUID, arg3 []uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAgents", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*dto.AgentDTO)
+	ret1, _ := ret[1].(apierr.ApiError)
+	return ret0, ret1
+}
+
+// UpdateAgents indicates an expected call of UpdateAgents.
+func (mr *MockPolicyUsecaseMockRecorder) UpdateAgents(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAgents", reflect.TypeOf((*MockPolicyUsecase)(nil).UpdateAgents), arg0, arg1, arg2, arg3)
 }

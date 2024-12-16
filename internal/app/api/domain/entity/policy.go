@@ -23,15 +23,15 @@ var (
 )
 
 type Policy struct {
-	ID          uuid.UUID
-	UserID      uuid.UUID
-	Name        string
-	Service     string
-	Path        string
-	Methods     []string
-	Permissions []*Permission
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	Service   string
+	Path      string
+	Methods   []string
+	Agents    []uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, apierr.ApiError) {
@@ -41,9 +41,9 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, metho
 	}
 
 	policy := &Policy{
-		ID:          id,
-		UserID:      userID,
-		Permissions: []*Permission{},
+		ID:     id,
+		UserID: userID,
+		Agents: []uuid.UUID{},
 	}
 
 	if err := policy.SetName(name); err != nil {
@@ -66,14 +66,15 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, metho
 	return policy, nil
 }
 
-func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, Methods []string, createdAt time.Time, updatedAt time.Time) *Policy {
+func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string, agents []uuid.UUID, createdAt time.Time, updatedAt time.Time) *Policy {
 	return &Policy{
 		ID:        id,
 		UserID:    userID,
 		Name:      name,
 		Service:   service,
 		Path:      path,
-		Methods:   Methods,
+		Methods:   methods,
+		Agents:    agents,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}
@@ -141,4 +142,12 @@ func (p *Policy) SetMethods(methods []string) apierr.ApiError {
 	p.Methods = slices.Compact(methods)
 	p.UpdatedAt = time.Now()
 	return nil
+}
+
+func (p *Policy) SetAgents(agents []*Agent) {
+	ids := make([]uuid.UUID, len(agents))
+	for i, agent := range agents {
+		ids[i] = agent.ID
+	}
+	p.Agents = ids
 }

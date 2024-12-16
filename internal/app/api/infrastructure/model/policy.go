@@ -13,6 +13,7 @@ type PolicyModel struct {
 	Service   string    `db:"service"`
 	Path      string    `db:"path"`
 	Methods   string    `db:"methods"`
+	Agents    *string   `db:"agents"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }

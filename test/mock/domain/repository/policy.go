@@ -110,21 +110,6 @@ func (mr *MockPolicyRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserIDAndNotDeleted", reflect.TypeOf((*MockPolicyRepository)(nil).FindOneByIDAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
-// GetAgents mocks base method.
-func (m *MockPolicyRepository) GetAgents(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAgents", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]*entity.Agent)
-	ret1, _ := ret[1].(apierr.ApiError)
-	return ret0, ret1
-}
-
-// GetAgents indicates an expected call of GetAgents.
-func (mr *MockPolicyRepositoryMockRecorder) GetAgents(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgents", reflect.TypeOf((*MockPolicyRepository)(nil).GetAgents), arg0, arg1, arg2)
-}
-
 // Update mocks base method.
 func (m *MockPolicyRepository) Update(arg0 context.Context, arg1 *entity.Policy) apierr.ApiError {
 	m.ctrl.T.Helper()
@@ -137,18 +122,4 @@ func (m *MockPolicyRepository) Update(arg0 context.Context, arg1 *entity.Policy)
 func (mr *MockPolicyRepositoryMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPolicyRepository)(nil).Update), arg0, arg1)
-}
-
-// UpdateAgents mocks base method.
-func (m *MockPolicyRepository) UpdateAgents(arg0 context.Context, arg1 uuid.UUID, arg2 []*entity.Agent) apierr.ApiError {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAgents", arg0, arg1, arg2)
-	ret0, _ := ret[0].(apierr.ApiError)
-	return ret0
-}
-
-// UpdateAgents indicates an expected call of UpdateAgents.
-func (mr *MockPolicyRepositoryMockRecorder) UpdateAgents(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAgents", reflect.TypeOf((*MockPolicyRepository)(nil).UpdateAgents), arg0, arg1, arg2)
 }

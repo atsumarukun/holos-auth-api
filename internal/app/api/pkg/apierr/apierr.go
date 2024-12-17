@@ -1,7 +1,9 @@
 package apierr
 
+import "fmt"
+
 type ApiError interface {
-	Error() (int, string)
+	Error() string
 	Code() int
 	Message() string
 }
@@ -18,8 +20,8 @@ func NewApiError(code int, message string) ApiError {
 	}
 }
 
-func (e *apiError) Error() (int, string) {
-	return e.code, e.message
+func (e *apiError) Error() string {
+	return fmt.Sprintf("code: %d, message: %s", e.code, e.message)
 }
 
 func (e *apiError) Code() int {

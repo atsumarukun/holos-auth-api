@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
@@ -55,7 +55,7 @@ func TestPolicy_Create(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -127,7 +127,7 @@ func TestPolicy_Update(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -184,7 +184,7 @@ func TestPolicy_Delete(t *testing.T) {
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -245,7 +245,7 @@ func TestPolicy_Gets(t *testing.T) {
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -317,7 +317,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          fmt.Sprintf(`{"agent_ids": ["%s"]}`, uuid.New()),
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -378,7 +378,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}

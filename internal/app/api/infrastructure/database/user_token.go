@@ -7,7 +7,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
@@ -31,7 +31,7 @@ func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.User
 		`REPLACE user_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at);`,
 		userTokenModel,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.Us
 		`DELETE FROM user_tokens WHERE user_id = :user_id;`,
 		userTokenModel,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	return nil
 }
@@ -60,7 +60,7 @@ func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context,
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		} else {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
 	return r.convertToEntity(&userToken), nil

@@ -6,13 +6,13 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
-var ErrAuthenticationFailed = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
+var ErrAuthenticationFailed = status.Error(http.StatusUnauthorized, "authentication failed")
 
 type AuthUsecase interface {
 	Signin(context.Context, string, string) (string, error)

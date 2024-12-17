@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"regexp"
 	"slices"
@@ -11,15 +11,15 @@ import (
 )
 
 var (
-	ErrPolicyNameTooShort    = apierr.NewApiError(http.StatusBadRequest, "policy name must be 3 characters or more")
-	ErrPolicyNameTooLong     = apierr.NewApiError(http.StatusBadRequest, "policy name must be 255 characters or less")
-	ErrInvalidPolicyName     = apierr.NewApiError(http.StatusBadRequest, "invalid policy name")
-	ErrInvalidPolicyService  = apierr.NewApiError(http.StatusBadRequest, "invalid policy service")
-	ErrRequiredPolicyPath    = apierr.NewApiError(http.StatusBadRequest, "policy path is required")
-	ErrPolicyPathTooLong     = apierr.NewApiError(http.StatusBadRequest, "policy path must be 255 characters or less")
-	ErrInvalidPolicyPath     = apierr.NewApiError(http.StatusBadRequest, "invalid policy path")
-	ErrRequiredPolicyMethods = apierr.NewApiError(http.StatusBadRequest, "policy methods is required")
-	ErrInvalidPolicyMethods  = apierr.NewApiError(http.StatusBadRequest, "invalid policy methods")
+	ErrPolicyNameTooShort    = status.Error(http.StatusBadRequest, "policy name must be 3 characters or more")
+	ErrPolicyNameTooLong     = status.Error(http.StatusBadRequest, "policy name must be 255 characters or less")
+	ErrInvalidPolicyName     = status.Error(http.StatusBadRequest, "invalid policy name")
+	ErrInvalidPolicyService  = status.Error(http.StatusBadRequest, "invalid policy service")
+	ErrRequiredPolicyPath    = status.Error(http.StatusBadRequest, "policy path is required")
+	ErrPolicyPathTooLong     = status.Error(http.StatusBadRequest, "policy path must be 255 characters or less")
+	ErrInvalidPolicyPath     = status.Error(http.StatusBadRequest, "invalid policy path")
+	ErrRequiredPolicyMethods = status.Error(http.StatusBadRequest, "policy methods is required")
+	ErrInvalidPolicyMethods  = status.Error(http.StatusBadRequest, "invalid policy methods")
 )
 
 type Policy struct {
@@ -37,7 +37,7 @@ type Policy struct {
 func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	policy := &Policy{
@@ -89,7 +89,7 @@ func (p *Policy) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	if !matched {
 		return ErrInvalidPolicyName

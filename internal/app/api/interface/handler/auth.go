@@ -2,7 +2,7 @@ package handler
 
 import (
 	"holos-auth-api/internal/app/api/interface/request"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase"
 	"net/http"
 	"strings"
@@ -37,7 +37,7 @@ func (h *authHandler) Signin(c *gin.Context) {
 
 	token, err := h.authUsecase.Signin(ctx, req.UserName, req.Password)
 	if err != nil {
-		e := apierr.FromError(err)
+		e := status.FromError(err)
 		c.String(e.Code(), e.Message())
 		return
 	}
@@ -55,7 +55,7 @@ func (h *authHandler) Signout(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	if err := h.authUsecase.Signout(ctx, bearerToken[1]); err != nil {
-		e := apierr.FromError(err)
+		e := status.FromError(err)
 		c.String(e.Code(), e.Message())
 		return
 	}
@@ -74,7 +74,7 @@ func (h *authHandler) GetUserID(c *gin.Context) {
 
 	userID, err := h.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {
-		e := apierr.FromError(err)
+		e := status.FromError(err)
 		c.String(e.Code(), e.Message())
 		return
 	}

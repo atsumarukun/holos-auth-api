@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"regexp"
 	"time"
@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ErrAgentNameTooShort = apierr.NewApiError(http.StatusBadRequest, "agent name must be 3 characters or more")
-	ErrAgentNameTooLong  = apierr.NewApiError(http.StatusBadRequest, "agent name must be 255 characters or less")
-	ErrInvalidAgentName  = apierr.NewApiError(http.StatusBadRequest, "invalid agent name")
+	ErrAgentNameTooShort = status.Error(http.StatusBadRequest, "agent name must be 3 characters or more")
+	ErrAgentNameTooLong  = status.Error(http.StatusBadRequest, "agent name must be 255 characters or less")
+	ErrInvalidAgentName  = status.Error(http.StatusBadRequest, "invalid agent name")
 )
 
 type Agent struct {
@@ -27,7 +27,7 @@ type Agent struct {
 func NewAgent(userID uuid.UUID, name string) (*Agent, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	agent := &Agent{
@@ -67,7 +67,7 @@ func (a *Agent) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	if !matched {
 		return ErrInvalidAgentName

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"holos-auth-api/internal/app/api/domain"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"log"
 	"net/http"
 
@@ -26,7 +26,7 @@ func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
 func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
 	tx, err := o.db.Beginx()
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	defer func() {

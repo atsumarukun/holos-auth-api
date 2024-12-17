@@ -8,7 +8,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"strings"
 
@@ -38,7 +38,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 		`INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :methods, :created_at, :updated_at);`,
 		policyModel,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, methods = :methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		policyModel,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	return r.updateAgents(ctx, policy.ID, policy.Agents)
@@ -73,7 +73,7 @@ func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) 
 		`UPDATE policies SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		policyModel,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	return nil
 }
@@ -109,7 +109,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		} else {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
 	return r.convertToEntity(&policy)
@@ -124,13 +124,13 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 		userID,
 	)
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var policy model.PolicyModel
 		if err := rows.StructScan(&policy); err != nil {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 		policies = append(policies, &policy)
 	}
@@ -153,23 +153,23 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 		},
 	)
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	query, args, err = sqlx.In(query, args...)
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	query = driver.Rebind(query)
 
 	rows, err := driver.QueryxContext(ctx, query, args...)
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var policy model.PolicyModel
 		if err := rows.StructScan(&policy); err != nil {
-			return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 		policies = append(policies, &policy)
 	}
@@ -184,7 +184,7 @@ func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, age
 		`DELETE FROM permissions WHERE policy_id = :policy_id;`,
 		map[string]interface{}{"policy_id": id},
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	if len(agentIDs) == 0 {
@@ -203,7 +203,7 @@ func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, age
 		`INSERT INTO permissions (agent_id, policy_id) VALUES (:agent_id, :policy_id);`,
 		args,
 	); err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	return nil
@@ -212,7 +212,7 @@ func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, age
 func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, error) {
 	Methods, err := json.Marshal(policy.Methods)
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(Methods), policy.CreatedAt, policy.UpdatedAt), nil
 }
@@ -220,14 +220,14 @@ func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.Polic
 func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, error) {
 	var methods []string
 	if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 	var agents []uuid.UUID
 	if policy.Agents != nil {
 		for _, agentID := range strings.Split(*policy.Agents, ",") {
 			id, err := uuid.Parse(agentID)
 			if err != nil {
-				return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+				return nil, status.Error(http.StatusInternalServerError, err.Error())
 			}
 			agents = append(agents, id)
 		}

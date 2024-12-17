@@ -6,7 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ErrPolicyNotFound = apierr.NewApiError(http.StatusNotFound, "policy not found")
+	ErrPolicyNotFound = status.Error(http.StatusNotFound, "policy not found")
 )
 
 type PolicyUsecase interface {

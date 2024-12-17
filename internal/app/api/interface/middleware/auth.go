@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase"
 	"net/http"
 	"strings"
@@ -36,7 +36,7 @@ func (m *authMiddleware) Authenticate(c *gin.Context) {
 
 	userID, err := m.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {
-		e := apierr.FromError(err)
+		e := status.FromError(err)
 		c.String(e.Code(), e.Message())
 		c.Abort()
 		return

@@ -2,7 +2,7 @@ package entity
 
 import (
 	"errors"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"regexp"
 	"time"
@@ -12,14 +12,14 @@ import (
 )
 
 var (
-	ErrUserNameTooShort         = apierr.NewApiError(http.StatusBadRequest, "user name must be 3 characters or more")
-	ErrUserNameTooLong          = apierr.NewApiError(http.StatusBadRequest, "user name must be 24 characters or less")
-	ErrInvalidUserName          = apierr.NewApiError(http.StatusBadRequest, "invalid user name")
-	ErrUserPasswordDoesNotMatch = apierr.NewApiError(http.StatusBadRequest, "password does not match")
-	ErrUserPasswordTooShort     = apierr.NewApiError(http.StatusBadRequest, "user password must be 8 characters or more")
-	ErrUserPasswordTooLong      = apierr.NewApiError(http.StatusBadRequest, "user password must be 72 characters or less")
-	ErrInvalidUserPassword      = apierr.NewApiError(http.StatusBadRequest, "invalid user password")
-	ErrAuthenticationFailed     = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
+	ErrUserNameTooShort         = status.Error(http.StatusBadRequest, "user name must be 3 characters or more")
+	ErrUserNameTooLong          = status.Error(http.StatusBadRequest, "user name must be 24 characters or less")
+	ErrInvalidUserName          = status.Error(http.StatusBadRequest, "invalid user name")
+	ErrUserPasswordDoesNotMatch = status.Error(http.StatusBadRequest, "password does not match")
+	ErrUserPasswordTooShort     = status.Error(http.StatusBadRequest, "user password must be 8 characters or more")
+	ErrUserPasswordTooLong      = status.Error(http.StatusBadRequest, "user password must be 72 characters or less")
+	ErrInvalidUserPassword      = status.Error(http.StatusBadRequest, "invalid user password")
+	ErrAuthenticationFailed     = status.Error(http.StatusUnauthorized, "authentication failed")
 )
 
 type User struct {
@@ -33,7 +33,7 @@ type User struct {
 func NewUser(name string, password string, confirmPassword string) (*User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 
 	user := &User{
@@ -74,7 +74,7 @@ func (u *User) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	if !matched {
 		return ErrInvalidUserName
@@ -96,14 +96,14 @@ func (u *User) SetPassword(password string, confirmPassword string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	if !matched {
 		return ErrInvalidUserPassword
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return status.Error(http.StatusInternalServerError, err.Error())
 	}
 	u.Password = string(hashed)
 	u.UpdatedAt = time.Now()
@@ -115,7 +115,7 @@ func (u *User) ComparePassword(password string) error {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return ErrAuthenticationFailed
 		} else {
-			return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+			return status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
 	return nil

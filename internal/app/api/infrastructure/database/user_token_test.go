@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/test"
 	"net/http"
 	"regexp"
@@ -179,7 +179,7 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {

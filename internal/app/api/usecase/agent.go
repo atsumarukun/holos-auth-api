@@ -6,7 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrAgentAlreadyExists = apierr.NewApiError(http.StatusBadRequest, "agent already exists")
-	ErrAgentNotFound      = apierr.NewApiError(http.StatusNotFound, "agent not found")
+	ErrAgentAlreadyExists = status.Error(http.StatusBadRequest, "agent already exists")
+	ErrAgentNotFound      = status.Error(http.StatusNotFound, "agent not found")
 )
 
 type AgentUsecase interface {

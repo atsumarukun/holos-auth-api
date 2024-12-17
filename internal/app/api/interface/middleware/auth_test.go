@@ -2,7 +2,7 @@ package middleware_test
 
 import (
 	"holos-auth-api/internal/app/api/interface/middleware"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"
@@ -47,7 +47,7 @@ func TestAuth_Authenticate(t *testing.T) {
 			id:                  uuid.Nil,
 			name:                "result_error",
 			authorizationHeader: "Bearer token",
-			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:         status.Error(http.StatusInternalServerError, "test error"),
 			expectCode:          http.StatusInternalServerError,
 		},
 	}

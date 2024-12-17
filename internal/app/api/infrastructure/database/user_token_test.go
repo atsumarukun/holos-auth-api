@@ -56,7 +56,7 @@ func TestUserToken_Save(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Save(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
@@ -109,7 +109,7 @@ func TestUserToken_Delete(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Delete(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
@@ -173,7 +173,7 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
 					if err != nil {
 						return err

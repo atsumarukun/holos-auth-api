@@ -23,7 +23,7 @@ func NewUserTokenDBRepository(db *sqlx.DB) repository.UserTokenRepository {
 	}
 }
 
-func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.UserToken) error {
 	driver := getSqlxDriver(ctx, r.db)
 	userTokenModel := r.convertToModel(userToken)
 	if _, err := driver.NamedExecContext(
@@ -36,7 +36,7 @@ func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.User
 	return nil
 }
 
-func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.UserToken) apierr.ApiError {
+func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.UserToken) error {
 	driver := getSqlxDriver(ctx, r.db)
 	userTokenModel := r.convertToModel(userToken)
 	if _, err := driver.NamedExecContext(
@@ -49,7 +49,7 @@ func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.Us
 	return nil
 }
 
-func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, apierr.ApiError) {
+func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, error) {
 	var userToken model.UserTokenModel
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(

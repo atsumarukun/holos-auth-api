@@ -15,9 +15,9 @@ import (
 var ErrAuthenticationFailed = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
 
 type AuthUsecase interface {
-	Signin(context.Context, string, string) (string, apierr.ApiError)
-	Signout(context.Context, string) apierr.ApiError
-	GetUserID(context.Context, string) (uuid.UUID, apierr.ApiError)
+	Signin(context.Context, string, string) (string, error)
+	Signout(context.Context, string) error
+	GetUserID(context.Context, string) (uuid.UUID, error)
 }
 
 type authUsecase struct {
@@ -34,10 +34,10 @@ func NewAuthUsecase(transactionObject domain.TransactionObject, userRepository r
 	}
 }
 
-func (u *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
+func (u *authUsecase) Signin(ctx context.Context, userName string, password string) (string, error) {
 	var userToken *entity.UserToken
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		user, err := u.userRepository.FindOneByName(ctx, userName)
 		if err != nil {
 			return err
@@ -62,8 +62,8 @@ func (u *authUsecase) Signin(ctx context.Context, userName string, password stri
 	return userToken.Token, nil
 }
 
-func (u *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
-	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+func (u *authUsecase) Signout(ctx context.Context, token string) error {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 		if err != nil {
 			return err
@@ -76,7 +76,7 @@ func (u *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError
 	})
 }
 
-func (u *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, apierr.ApiError) {
+func (u *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, error) {
 	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 	if err != nil {
 		return uuid.Nil, err

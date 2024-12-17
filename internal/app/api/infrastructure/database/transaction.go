@@ -23,7 +23,7 @@ func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
 	}
 }
 
-func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) apierr.ApiError) apierr.ApiError {
+func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
 	tx, err := o.db.Beginx()
 	if err != nil {
 		return apierr.NewApiError(http.StatusInternalServerError, err.Error())

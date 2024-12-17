@@ -7,7 +7,6 @@ package mock_repository
 import (
 	context "context"
 	entity "holos-auth-api/internal/app/api/domain/entity"
-	apierr "holos-auth-api/internal/app/api/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -38,10 +37,10 @@ func (m *MockPolicyRepository) EXPECT() *MockPolicyRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPolicyRepository) Create(arg0 context.Context, arg1 *entity.Policy) apierr.ApiError {
+func (m *MockPolicyRepository) Create(arg0 context.Context, arg1 *entity.Policy) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -52,10 +51,10 @@ func (mr *MockPolicyRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomo
 }
 
 // Delete mocks base method.
-func (m *MockPolicyRepository) Delete(arg0 context.Context, arg1 *entity.Policy) apierr.ApiError {
+func (m *MockPolicyRepository) Delete(arg0 context.Context, arg1 *entity.Policy) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -66,11 +65,11 @@ func (mr *MockPolicyRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomo
 }
 
 // FindByIDsAndUserIDAndNotDeleted mocks base method.
-func (m *MockPolicyRepository) FindByIDsAndUserIDAndNotDeleted(arg0 context.Context, arg1 []uuid.UUID, arg2 uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+func (m *MockPolicyRepository) FindByIDsAndUserIDAndNotDeleted(arg0 context.Context, arg1 []uuid.UUID, arg2 uuid.UUID) ([]*entity.Policy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByIDsAndUserIDAndNotDeleted", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*entity.Policy)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -81,11 +80,11 @@ func (mr *MockPolicyRepositoryMockRecorder) FindByIDsAndUserIDAndNotDeleted(arg0
 }
 
 // FindByUserIDAndNotDeleted mocks base method.
-func (m *MockPolicyRepository) FindByUserIDAndNotDeleted(arg0 context.Context, arg1 uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+func (m *MockPolicyRepository) FindByUserIDAndNotDeleted(arg0 context.Context, arg1 uuid.UUID) ([]*entity.Policy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByUserIDAndNotDeleted", arg0, arg1)
 	ret0, _ := ret[0].([]*entity.Policy)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -96,11 +95,11 @@ func (mr *MockPolicyRepositoryMockRecorder) FindByUserIDAndNotDeleted(arg0, arg1
 }
 
 // FindOneByIDAndUserIDAndNotDeleted mocks base method.
-func (m *MockPolicyRepository) FindOneByIDAndUserIDAndNotDeleted(arg0 context.Context, arg1, arg2 uuid.UUID) (*entity.Policy, apierr.ApiError) {
+func (m *MockPolicyRepository) FindOneByIDAndUserIDAndNotDeleted(arg0 context.Context, arg1, arg2 uuid.UUID) (*entity.Policy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOneByIDAndUserIDAndNotDeleted", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*entity.Policy)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -111,10 +110,10 @@ func (mr *MockPolicyRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(ar
 }
 
 // Update mocks base method.
-func (m *MockPolicyRepository) Update(arg0 context.Context, arg1 *entity.Policy) apierr.ApiError {
+func (m *MockPolicyRepository) Update(arg0 context.Context, arg1 *entity.Policy) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

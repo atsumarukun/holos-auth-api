@@ -24,7 +24,7 @@ type Agent struct {
 	UpdatedAt time.Time
 }
 
-func NewAgent(userID uuid.UUID, name string) (*Agent, apierr.ApiError) {
+func NewAgent(userID uuid.UUID, name string) (*Agent, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -58,7 +58,7 @@ func RestoreAgent(id uuid.UUID, userID uuid.UUID, name string, policies []uuid.U
 	}
 }
 
-func (a *Agent) SetName(name string) apierr.ApiError {
+func (a *Agent) SetName(name string) error {
 	if len(name) < 3 {
 		return ErrAgentNameTooShort
 	}

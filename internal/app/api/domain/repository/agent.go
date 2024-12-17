@@ -4,16 +4,15 @@ package repository
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 
 	"github.com/google/uuid"
 )
 
 type AgentRepository interface {
-	Create(context.Context, *entity.Agent) apierr.ApiError
-	Update(context.Context, *entity.Agent) apierr.ApiError
-	Delete(context.Context, *entity.Agent) apierr.ApiError
-	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Agent, apierr.ApiError)
-	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Agent, apierr.ApiError)
-	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Agent, apierr.ApiError)
+	Create(context.Context, *entity.Agent) error
+	Update(context.Context, *entity.Agent) error
+	Delete(context.Context, *entity.Agent) error
+	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Agent, error)
+	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Agent, error)
+	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Agent, error)
 }

@@ -4,6 +4,7 @@ import (
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
+	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
@@ -40,7 +41,8 @@ func (h *agentHandler) Create(c *gin.Context) {
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -48,7 +50,8 @@ func (h *agentHandler) Create(c *gin.Context) {
 
 	dto, err := h.agentUsecase.Create(ctx, userID, req.Name)
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -64,13 +67,15 @@ func (h *agentHandler) Update(c *gin.Context) {
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -78,7 +83,8 @@ func (h *agentHandler) Update(c *gin.Context) {
 
 	dto, err := h.agentUsecase.Update(ctx, id, userID, req.Name)
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -88,20 +94,23 @@ func (h *agentHandler) Update(c *gin.Context) {
 func (h *agentHandler) Delete(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	if err := h.agentUsecase.Delete(ctx, id, userID); err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -111,7 +120,8 @@ func (h *agentHandler) Delete(c *gin.Context) {
 func (h *agentHandler) Gets(c *gin.Context) {
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -119,7 +129,8 @@ func (h *agentHandler) Gets(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.Gets(ctx, userID)
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -135,13 +146,15 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -149,7 +162,8 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.UpdatePolicies(ctx, id, userID, req.PolicyIDs)
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -163,13 +177,15 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 func (h *agentHandler) GetPolicies(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 
@@ -177,7 +193,8 @@ func (h *agentHandler) GetPolicies(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.GetPolicies(ctx, id, userID)
 	if err != nil {
-		c.String(err.Code(), err.Message())
+		e := apierr.FromError(err)
+		c.String(e.Code(), e.Message())
 		return
 	}
 

@@ -19,7 +19,7 @@ func TestAuth_Authenticate(t *testing.T) {
 		id                  uuid.UUID
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
+		resultError         error
 		expectCode          int
 	}{
 		{

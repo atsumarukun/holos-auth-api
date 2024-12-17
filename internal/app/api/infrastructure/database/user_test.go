@@ -56,7 +56,7 @@ func TestUser_Create(t *testing.T) {
 			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Create(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -109,7 +109,7 @@ func TestUser_Update(t *testing.T) {
 			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Update(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -174,7 +174,7 @@ func TestUser_Delete(t *testing.T) {
 			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Delete(ctx, user)
 				}); err != nil {
 					t.Error(err.Error())
@@ -242,7 +242,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
 					if err != nil {
 						return err
@@ -317,7 +317,7 @@ func TestUser_FindOneByName(t *testing.T) {
 			ur := database.NewUserDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := ur.FindOneByName(ctx, tt.name)
 					if err != nil {
 						return err

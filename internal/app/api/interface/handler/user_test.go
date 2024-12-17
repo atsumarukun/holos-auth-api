@@ -22,7 +22,7 @@ func TestUser_Create(t *testing.T) {
 		name        string
 		requestJSON string
 		resultDTO   *dto.UserDTO
-		resultError apierr.ApiError
+		resultError error
 		expect      int
 	}{
 		{
@@ -81,7 +81,7 @@ func TestUser_UpdateName(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -154,7 +154,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -227,7 +227,7 @@ func TestUser_Delete(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{

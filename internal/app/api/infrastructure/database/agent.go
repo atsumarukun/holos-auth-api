@@ -25,7 +25,7 @@ func NewAgentDBRepository(db *sqlx.DB) repository.AgentRepository {
 	}
 }
 
-func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	agentModel := r.convertToModel(agent)
@@ -40,7 +40,7 @@ func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) api
 	return nil
 }
 
-func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	agentModel := r.convertToModel(agent)
@@ -55,7 +55,7 @@ func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) api
 	return r.updatePolicies(ctx, agent.ID, agent.Policies)
 }
 
-func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) apierr.ApiError {
+func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
 	agentModel := r.convertToModel(agent)
 	if _, err := driver.NamedExecContext(
@@ -68,7 +68,7 @@ func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) api
 	return nil
 }
 
-func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, error) {
 	var agent model.AgentModel
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
@@ -102,7 +102,7 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 	return r.convertToEntity(&agent)
 }
 
-func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
 	var agents []*model.AgentModel
 	driver := getSqlxDriver(ctx, r.db)
 	rows, err := driver.QueryxContext(
@@ -124,7 +124,7 @@ func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userI
 	return r.convertToEntities(agents)
 }
 
-func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -163,7 +163,7 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 	return r.convertToEntities(agents)
 }
 
-func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, policieIDs []uuid.UUID) apierr.ApiError {
+func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, policieIDs []uuid.UUID) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(
@@ -200,7 +200,7 @@ func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentMode
 	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
 }
 
-func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) (*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) (*entity.Agent, error) {
 	var policies []uuid.UUID
 	if agent.Policies != nil {
 		for _, policyID := range strings.Split(*agent.Policies, ",") {
@@ -214,10 +214,10 @@ func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) (*entity.Ag
 	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, policies, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) ([]*entity.Agent, apierr.ApiError) {
+func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) ([]*entity.Agent, error) {
 	entities := make([]*entity.Agent, len(agents))
 	for i, agent := range agents {
-		var err apierr.ApiError
+		var err error
 		entities[i], err = r.convertToEntity(agent)
 		if err != nil {
 			return nil, err

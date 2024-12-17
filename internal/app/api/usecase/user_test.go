@@ -3,7 +3,6 @@ package usecase_test
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
@@ -20,7 +19,7 @@ func TestUser_Create(t *testing.T) {
 		name     string
 		password string
 		exists   bool
-		expect   apierr.ApiError
+		expect   error
 	}{
 		{
 			name:     "not_exists",
@@ -72,7 +71,7 @@ func TestUser_UpdateName(t *testing.T) {
 		name        string
 		isReturnNil bool
 		exists      bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),
@@ -144,7 +143,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 		name        string
 		password    string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),
@@ -208,7 +207,7 @@ func TestUser_Delete(t *testing.T) {
 		name        string
 		password    string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),

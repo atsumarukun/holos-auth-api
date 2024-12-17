@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetPathParameter[T any](c *gin.Context, name string) (T, apierr.ApiError) {
+func GetPathParameter[T any](c *gin.Context, name string) (T, error) {
 	var zero T
 	param := c.Param(name)
 
@@ -25,7 +25,7 @@ func GetPathParameter[T any](c *gin.Context, name string) (T, apierr.ApiError) {
 	}
 }
 
-func GetContextParameter[T any](c *gin.Context, name string) (T, apierr.ApiError) {
+func GetContextParameter[T any](c *gin.Context, name string) (T, error) {
 	var zero T
 
 	param, exists := c.Get(name)

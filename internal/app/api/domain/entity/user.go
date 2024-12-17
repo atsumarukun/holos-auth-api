@@ -30,7 +30,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-func NewUser(name string, password string, confirmPassword string) (*User, apierr.ApiError) {
+func NewUser(name string, password string, confirmPassword string) (*User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -65,7 +65,7 @@ func RestoreUser(id uuid.UUID, name string, password string, createdAt time.Time
 	}
 }
 
-func (u *User) SetName(name string) apierr.ApiError {
+func (u *User) SetName(name string) error {
 	if len(name) < 3 {
 		return ErrUserNameTooShort
 	}
@@ -84,7 +84,7 @@ func (u *User) SetName(name string) apierr.ApiError {
 	return nil
 }
 
-func (u *User) SetPassword(password string, confirmPassword string) apierr.ApiError {
+func (u *User) SetPassword(password string, confirmPassword string) error {
 	if password != confirmPassword {
 		return ErrUserPasswordDoesNotMatch
 	}
@@ -110,7 +110,7 @@ func (u *User) SetPassword(password string, confirmPassword string) apierr.ApiEr
 	return nil
 }
 
-func (u *User) ComparePassword(password string) apierr.ApiError {
+func (u *User) ComparePassword(password string) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return ErrAuthenticationFailed

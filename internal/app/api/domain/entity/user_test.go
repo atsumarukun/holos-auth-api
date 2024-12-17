@@ -2,7 +2,6 @@ package entity_test
 
 import (
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"strings"
 	"testing"
 
@@ -37,7 +36,7 @@ func TestNewUser(t *testing.T) {
 func TestUser_SetName(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			name:   "valid_NAME",
@@ -89,7 +88,7 @@ func TestUser_SetPassword(t *testing.T) {
 	tests := []struct {
 		password        string
 		confirmPassword string
-		expect          apierr.ApiError
+		expect          error
 	}{
 		{
 			password:        "password",
@@ -147,7 +146,7 @@ func TestUser_SetPassword(t *testing.T) {
 func TestUser_ComparePassword(t *testing.T) {
 	tests := []struct {
 		password string
-		expect   apierr.ApiError
+		expect   error
 	}{
 		{
 			password: "password",

@@ -6,7 +6,6 @@ package mock_usecase
 
 import (
 	context "context"
-	apierr "holos-auth-api/internal/app/api/pkg/apierr"
 	dto "holos-auth-api/internal/app/api/usecase/dto"
 	reflect "reflect"
 
@@ -38,11 +37,11 @@ func (m *MockUserUsecase) EXPECT() *MockUserUsecaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserUsecase) Create(arg0 context.Context, arg1, arg2, arg3 string) (*dto.UserDTO, apierr.ApiError) {
+func (m *MockUserUsecase) Create(arg0 context.Context, arg1, arg2, arg3 string) (*dto.UserDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*dto.UserDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -53,10 +52,10 @@ func (mr *MockUserUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3 interface{}
 }
 
 // Delete mocks base method.
-func (m *MockUserUsecase) Delete(arg0 context.Context, arg1 uuid.UUID, arg2 string) apierr.ApiError {
+func (m *MockUserUsecase) Delete(arg0 context.Context, arg1 uuid.UUID, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -67,11 +66,11 @@ func (mr *MockUserUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gom
 }
 
 // UpdateName mocks base method.
-func (m *MockUserUsecase) UpdateName(arg0 context.Context, arg1 uuid.UUID, arg2 string) (*dto.UserDTO, apierr.ApiError) {
+func (m *MockUserUsecase) UpdateName(arg0 context.Context, arg1 uuid.UUID, arg2 string) (*dto.UserDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateName", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*dto.UserDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -82,11 +81,11 @@ func (mr *MockUserUsecaseMockRecorder) UpdateName(arg0, arg1, arg2 interface{}) 
 }
 
 // UpdatePassword mocks base method.
-func (m *MockUserUsecase) UpdatePassword(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (*dto.UserDTO, apierr.ApiError) {
+func (m *MockUserUsecase) UpdatePassword(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (*dto.UserDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePassword", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*dto.UserDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

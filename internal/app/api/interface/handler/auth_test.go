@@ -20,7 +20,7 @@ func TestAuth_Signin(t *testing.T) {
 		name         string
 		requestJSON  string
 		resultString string
-		resultError  apierr.ApiError
+		resultError  error
 		expect       int
 	}{
 		{
@@ -77,7 +77,7 @@ func TestAuth_Signout(t *testing.T) {
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
+		resultError         error
 		expect              int
 	}{
 		{
@@ -132,7 +132,7 @@ func TestAuth_GetUserID(t *testing.T) {
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
+		resultError         error
 		expect              int
 	}{
 		{

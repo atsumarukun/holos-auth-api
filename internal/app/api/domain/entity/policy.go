@@ -34,7 +34,7 @@ type Policy struct {
 	UpdatedAt time.Time
 }
 
-func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, apierr.ApiError) {
+func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -80,7 +80,7 @@ func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, 
 	}
 }
 
-func (p *Policy) SetName(name string) apierr.ApiError {
+func (p *Policy) SetName(name string) error {
 	if len(name) < 3 {
 		return ErrPolicyNameTooShort
 	}
@@ -99,7 +99,7 @@ func (p *Policy) SetName(name string) apierr.ApiError {
 	return nil
 }
 
-func (p *Policy) SetService(service string) apierr.ApiError {
+func (p *Policy) SetService(service string) error {
 	if !slices.Contains([]string{"STORAGE", "CONTENT"}, service) {
 		return ErrInvalidPolicyService
 	}
@@ -109,7 +109,7 @@ func (p *Policy) SetService(service string) apierr.ApiError {
 	return nil
 }
 
-func (p *Policy) SetPath(path string) apierr.ApiError {
+func (p *Policy) SetPath(path string) error {
 	if len(path) == 0 {
 		return ErrRequiredPolicyPath
 	}
@@ -128,7 +128,7 @@ func (p *Policy) SetPath(path string) apierr.ApiError {
 	return nil
 }
 
-func (p *Policy) SetMethods(methods []string) apierr.ApiError {
+func (p *Policy) SetMethods(methods []string) error {
 	if len(methods) == 0 {
 		return ErrRequiredPolicyMethods
 	}

@@ -7,7 +7,6 @@ package mock_repository
 import (
 	context "context"
 	entity "holos-auth-api/internal/app/api/domain/entity"
-	apierr "holos-auth-api/internal/app/api/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,10 +36,10 @@ func (m *MockUserTokenRepository) EXPECT() *MockUserTokenRepositoryMockRecorder 
 }
 
 // Delete mocks base method.
-func (m *MockUserTokenRepository) Delete(arg0 context.Context, arg1 *entity.UserToken) apierr.ApiError {
+func (m *MockUserTokenRepository) Delete(arg0 context.Context, arg1 *entity.UserToken) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -51,11 +50,11 @@ func (mr *MockUserTokenRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *g
 }
 
 // FindOneByTokenAndNotExpired mocks base method.
-func (m *MockUserTokenRepository) FindOneByTokenAndNotExpired(arg0 context.Context, arg1 string) (*entity.UserToken, apierr.ApiError) {
+func (m *MockUserTokenRepository) FindOneByTokenAndNotExpired(arg0 context.Context, arg1 string) (*entity.UserToken, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOneByTokenAndNotExpired", arg0, arg1)
 	ret0, _ := ret[0].(*entity.UserToken)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -66,10 +65,10 @@ func (mr *MockUserTokenRepositoryMockRecorder) FindOneByTokenAndNotExpired(arg0,
 }
 
 // Save mocks base method.
-func (m *MockUserTokenRepository) Save(arg0 context.Context, arg1 *entity.UserToken) apierr.ApiError {
+func (m *MockUserTokenRepository) Save(arg0 context.Context, arg1 *entity.UserToken) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

@@ -26,7 +26,7 @@ func NewPolicyDBRepository(db *sqlx.DB) repository.PolicyRepository {
 	}
 }
 
-func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	policyModel, err := r.convertToModel(policy)
@@ -44,7 +44,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 	return nil
 }
 
-func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	policyModel, err := r.convertToModel(policy)
@@ -62,7 +62,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 	return r.updateAgents(ctx, policy.ID, policy.Agents)
 }
 
-func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) apierr.ApiError {
+func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
 	policyModel, err := r.convertToModel(policy)
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) 
 	return nil
 }
 
-func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, error) {
 	var policy model.PolicyModel
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
@@ -115,7 +115,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 	return r.convertToEntity(&policy)
 }
 
-func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, error) {
 	var policies []*model.PolicyModel
 	driver := getSqlxDriver(ctx, r.db)
 	rows, err := driver.QueryxContext(
@@ -137,7 +137,7 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 	return r.convertToEntities(policies)
 }
 
-func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Policy, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -176,7 +176,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	return r.convertToEntities(policies)
 }
 
-func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, agentIDs []uuid.UUID) apierr.ApiError {
+func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, agentIDs []uuid.UUID) error {
 	driver := getSqlxDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(
@@ -209,7 +209,7 @@ func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, age
 	return nil
 }
 
-func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, apierr.ApiError) {
+func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, error) {
 	Methods, err := json.Marshal(policy.Methods)
 	if err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -217,7 +217,7 @@ func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.Polic
 	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(Methods), policy.CreatedAt, policy.UpdatedAt), nil
 }
 
-func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, error) {
 	var methods []string
 	if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
 		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
@@ -235,9 +235,9 @@ func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity
 	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, methods, agents, policy.CreatedAt, policy.UpdatedAt), nil
 }
 
-func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, apierr.ApiError) {
+func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, error) {
 	entities := make([]*entity.Policy, len(policies))
-	var err apierr.ApiError
+	var err error
 	for i, policy := range policies {
 		entities[i], err = r.convertToEntity(policy)
 		if err != nil {

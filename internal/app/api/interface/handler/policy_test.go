@@ -23,7 +23,7 @@ func TestPolicy_Create(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.PolicyDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -95,7 +95,7 @@ func TestPolicy_Update(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.PolicyDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -166,7 +166,7 @@ func TestPolicy_Delete(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -224,7 +224,7 @@ func TestPolicy_Gets(t *testing.T) {
 		name                 string
 		isSetUserIDToContext bool
 		resultDTO            []*dto.PolicyDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -285,7 +285,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            []*dto.AgentDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -357,7 +357,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 		name                 string
 		isSetUserIDToContext bool
 		resultDTO            []*dto.AgentDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{

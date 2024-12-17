@@ -24,7 +24,7 @@ func NewUserDBRepository(db *sqlx.DB) repository.UserRepository {
 	}
 }
 
-func (r *userDBRepository) Create(ctx context.Context, user *entity.User) apierr.ApiError {
+func (r *userDBRepository) Create(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := r.convertToModel(user)
 	if _, err := driver.NamedExecContext(
@@ -37,7 +37,7 @@ func (r *userDBRepository) Create(ctx context.Context, user *entity.User) apierr
 	return nil
 }
 
-func (r *userDBRepository) Update(ctx context.Context, user *entity.User) apierr.ApiError {
+func (r *userDBRepository) Update(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := r.convertToModel(user)
 	if _, err := driver.NamedExecContext(
@@ -50,7 +50,7 @@ func (r *userDBRepository) Update(ctx context.Context, user *entity.User) apierr
 	return nil
 }
 
-func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) apierr.ApiError {
+func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := r.convertToModel(user)
 	if _, err := driver.NamedExecContext(
@@ -73,7 +73,7 @@ func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) apierr
 	return nil
 }
 
-func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, apierr.ApiError) {
+func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user model.UserModel
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(
@@ -90,7 +90,7 @@ func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid
 	return r.convertToEntity(&user), nil
 }
 
-func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*entity.User, apierr.ApiError) {
+func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*entity.User, error) {
 	var user model.UserModel
 	driver := getSqlxDriver(ctx, r.db)
 	if err := driver.QueryRowxContext(

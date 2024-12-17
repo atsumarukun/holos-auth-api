@@ -6,7 +6,6 @@ package mock_usecase
 
 import (
 	context "context"
-	apierr "holos-auth-api/internal/app/api/pkg/apierr"
 	dto "holos-auth-api/internal/app/api/usecase/dto"
 	reflect "reflect"
 
@@ -38,11 +37,11 @@ func (m *MockPolicyUsecase) EXPECT() *MockPolicyUsecaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPolicyUsecase) Create(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string, arg5 []string) (*dto.PolicyDTO, apierr.ApiError) {
+func (m *MockPolicyUsecase) Create(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string, arg5 []string) (*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(*dto.PolicyDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -53,10 +52,10 @@ func (mr *MockPolicyUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3, arg4, ar
 }
 
 // Delete mocks base method.
-func (m *MockPolicyUsecase) Delete(arg0 context.Context, arg1, arg2 uuid.UUID) apierr.ApiError {
+func (m *MockPolicyUsecase) Delete(arg0 context.Context, arg1, arg2 uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -67,11 +66,11 @@ func (mr *MockPolicyUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *g
 }
 
 // GetAgents mocks base method.
-func (m *MockPolicyUsecase) GetAgents(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+func (m *MockPolicyUsecase) GetAgents(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*dto.AgentDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAgents", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*dto.AgentDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -82,11 +81,11 @@ func (mr *MockPolicyUsecaseMockRecorder) GetAgents(arg0, arg1, arg2 interface{})
 }
 
 // Gets mocks base method.
-func (m *MockPolicyUsecase) Gets(arg0 context.Context, arg1 uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+func (m *MockPolicyUsecase) Gets(arg0 context.Context, arg1 uuid.UUID) ([]*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Gets", arg0, arg1)
 	ret0, _ := ret[0].([]*dto.PolicyDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -97,11 +96,11 @@ func (mr *MockPolicyUsecaseMockRecorder) Gets(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // Update mocks base method.
-func (m *MockPolicyUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, arg3, arg4, arg5 string, arg6 []string) (*dto.PolicyDTO, apierr.ApiError) {
+func (m *MockPolicyUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, arg3, arg4, arg5 string, arg6 []string) (*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(*dto.PolicyDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -112,11 +111,11 @@ func (mr *MockPolicyUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3, arg4, ar
 }
 
 // UpdateAgents mocks base method.
-func (m *MockPolicyUsecase) UpdateAgents(arg0 context.Context, arg1, arg2 uuid.UUID, arg3 []uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+func (m *MockPolicyUsecase) UpdateAgents(arg0 context.Context, arg1, arg2 uuid.UUID, arg3 []uuid.UUID) ([]*dto.AgentDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAgents", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]*dto.AgentDTO)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

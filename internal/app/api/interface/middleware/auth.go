@@ -35,7 +35,7 @@ func (m *authMiddleware) Authenticate(c *gin.Context) {
 
 	userID, err := m.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		c.Abort()
 		return
 	}

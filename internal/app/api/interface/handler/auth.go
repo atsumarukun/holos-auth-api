@@ -36,7 +36,7 @@ func (h *authHandler) Signin(c *gin.Context) {
 
 	token, err := h.authUsecase.Signin(ctx, req.UserName, req.Password)
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *authHandler) Signout(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	if err := h.authUsecase.Signout(ctx, bearerToken[1]); err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *authHandler) GetUserID(c *gin.Context) {
 
 	userID, err := h.authUsecase.GetUserID(ctx, bearerToken[1])
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 

@@ -39,7 +39,7 @@ func (h *userHandler) Create(c *gin.Context) {
 
 	dto, err := h.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *userHandler) UpdateName(c *gin.Context) {
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *userHandler) UpdateName(c *gin.Context) {
 
 	dto, err := h.userUsecase.UpdateName(ctx, id, req.Name)
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -79,7 +79,7 @@ func (h *userHandler) UpdatePassword(c *gin.Context) {
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *userHandler) UpdatePassword(c *gin.Context) {
 
 	dto, err := h.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
@@ -103,14 +103,14 @@ func (h *userHandler) Delete(c *gin.Context) {
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	if err := h.userUsecase.Delete(ctx, id, req.Password); err != nil {
-		c.String(err.Error())
+		c.String(err.Code(), err.Message())
 		return
 	}
 

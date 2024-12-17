@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,9 @@ func NewUserHandler(userUsecase usecase.UserUsecase) UserHandler {
 func (h *userHandler) Create(c *gin.Context) {
 	var req request.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -40,8 +43,9 @@ func (h *userHandler) Create(c *gin.Context) {
 
 	dto, err := h.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -51,14 +55,17 @@ func (h *userHandler) Create(c *gin.Context) {
 func (h *userHandler) UpdateName(c *gin.Context) {
 	var req request.UpdateUserNameRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -66,8 +73,9 @@ func (h *userHandler) UpdateName(c *gin.Context) {
 
 	dto, err := h.userUsecase.UpdateName(ctx, id, req.Name)
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -77,14 +85,17 @@ func (h *userHandler) UpdateName(c *gin.Context) {
 func (h *userHandler) UpdatePassword(c *gin.Context) {
 	var req request.UpdateUserPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -92,8 +103,9 @@ func (h *userHandler) UpdatePassword(c *gin.Context) {
 
 	dto, err := h.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -103,22 +115,26 @@ func (h *userHandler) UpdatePassword(c *gin.Context) {
 func (h *userHandler) Delete(c *gin.Context) {
 	var req request.DeleteUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	if err := h.userUsecase.Delete(ctx, id, req.Password); err != nil {
-		e := status.FromError(err)
-		c.String(e.Code(), e.Message())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 

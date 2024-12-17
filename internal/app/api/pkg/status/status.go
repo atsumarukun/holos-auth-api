@@ -10,6 +10,13 @@ type Status struct {
 	message string
 }
 
+func New(code int, message string) *Status {
+	return &Status{
+		code:    code,
+		message: message,
+	}
+}
+
 func Error(code int, message string) error {
 	return &Status{
 		code:    code,

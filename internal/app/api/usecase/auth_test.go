@@ -3,7 +3,6 @@ package usecase_test
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
@@ -19,7 +18,7 @@ func TestAuth_Signin(t *testing.T) {
 		userPassword   string
 		signinPassword string
 		isReturnNil    bool
-		expect         apierr.ApiError
+		expect         error
 	}{
 		{
 			name:           "success",
@@ -86,7 +85,7 @@ func TestAuth_Signout(t *testing.T) {
 		name        string
 		token       string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			name:        "success",
@@ -143,7 +142,7 @@ func TestAuth_GetUserID(t *testing.T) {
 		name        string
 		token       string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			name:        "success",

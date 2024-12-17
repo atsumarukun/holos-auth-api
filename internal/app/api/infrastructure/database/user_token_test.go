@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/test"
 	"net/http"
 	"regexp"
@@ -56,7 +56,7 @@ func TestUserToken_Save(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Save(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
@@ -109,7 +109,7 @@ func TestUserToken_Delete(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return ur.Delete(ctx, userToken)
 				}); err != nil {
 					t.Error(err.Error())
@@ -173,13 +173,13 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 			ur := database.NewUserTokenDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
 					if err != nil {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {

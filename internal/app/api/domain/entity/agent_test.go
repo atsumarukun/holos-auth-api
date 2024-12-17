@@ -2,7 +2,6 @@ package entity_test
 
 import (
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"strings"
 	"testing"
 
@@ -37,7 +36,7 @@ func TestNewAgent(t *testing.T) {
 func TestAgent_SetName(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			name:   "valid_NAME",

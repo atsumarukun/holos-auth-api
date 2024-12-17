@@ -2,7 +2,6 @@ package entity_test
 
 import (
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"strings"
 	"testing"
 
@@ -46,7 +45,7 @@ func TestNewPolicy(t *testing.T) {
 func TestPolicy_SetName(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			name:   "valid_NAME",
@@ -98,7 +97,7 @@ func TestPolicy_SetService(t *testing.T) {
 	tests := []struct {
 		name    string
 		service string
-		expect  apierr.ApiError
+		expect  error
 	}{
 		{
 			name:    "storage",
@@ -142,7 +141,7 @@ func TestPolicy_SetPath(t *testing.T) {
 	tests := []struct {
 		name   string
 		path   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			name:   "valid",
@@ -196,7 +195,7 @@ func TestPolicy_SetMethods(t *testing.T) {
 	tests := []struct {
 		name    string
 		Methods []string
-		expect  apierr.ApiError
+		expect  error
 	}{
 		{
 			name:    "valid",

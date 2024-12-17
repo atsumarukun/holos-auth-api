@@ -6,7 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
@@ -14,17 +14,17 @@ import (
 )
 
 var (
-	ErrAgentAlreadyExists = apierr.NewApiError(http.StatusBadRequest, "agent already exists")
-	ErrAgentNotFound      = apierr.NewApiError(http.StatusNotFound, "agent not found")
+	ErrAgentAlreadyExists = status.Error(http.StatusBadRequest, "agent already exists")
+	ErrAgentNotFound      = status.Error(http.StatusNotFound, "agent not found")
 )
 
 type AgentUsecase interface {
-	Create(context.Context, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
-	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, apierr.ApiError)
-	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
-	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
-	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
-	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
+	Create(context.Context, uuid.UUID, string) (*dto.AgentDTO, error)
+	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, error)
+	Delete(context.Context, uuid.UUID, uuid.UUID) error
+	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, error)
+	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, error)
+	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, error)
 }
 
 type agentUsecase struct {
@@ -41,7 +41,7 @@ func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository
 	}
 }
 
-func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
+func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string) (*dto.AgentDTO, error) {
 	agent, err := entity.NewAgent(userID, name)
 	if err != nil {
 		return nil, err
@@ -54,11 +54,11 @@ func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string
 	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string) (*dto.AgentDTO, apierr.ApiError) {
+func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string) (*dto.AgentDTO, error) {
 	var agent *entity.Agent
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		var err apierr.ApiError
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		var err error
 		agent, err = u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -79,8 +79,8 @@ func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
 }
 
-func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
-	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	})
 }
 
-func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.AgentDTO, error) {
 	agents, err := u.agentRepository.FindByUserIDAndNotDeleted(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -102,10 +102,10 @@ func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Agent
 	return u.convertToDTOs(agents), nil
 }
 
-func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID, policyIDs []uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID, policyIDs []uuid.UUID) ([]*dto.PolicyDTO, error) {
 	policies := make([]*entity.Policy, len(policyIDs))
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -134,7 +134,7 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 	return dtos, nil
 }
 
-func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
 	agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 	if err != nil {
 		return nil, err

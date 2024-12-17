@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/internal/app/api/usecase/dto"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,13 +36,17 @@ func NewAgentHandler(agentUsecase usecase.AgentUsecase) AgentHandler {
 func (h *agentHandler) Create(c *gin.Context) {
 	var req request.CreateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -48,7 +54,9 @@ func (h *agentHandler) Create(c *gin.Context) {
 
 	dto, err := h.agentUsecase.Create(ctx, userID, req.Name)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -58,19 +66,25 @@ func (h *agentHandler) Create(c *gin.Context) {
 func (h *agentHandler) Update(c *gin.Context) {
 	var req request.UpdateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -78,7 +92,9 @@ func (h *agentHandler) Update(c *gin.Context) {
 
 	dto, err := h.agentUsecase.Update(ctx, id, userID, req.Name)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -88,20 +104,26 @@ func (h *agentHandler) Update(c *gin.Context) {
 func (h *agentHandler) Delete(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	if err := h.agentUsecase.Delete(ctx, id, userID); err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -111,7 +133,9 @@ func (h *agentHandler) Delete(c *gin.Context) {
 func (h *agentHandler) Gets(c *gin.Context) {
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -119,7 +143,9 @@ func (h *agentHandler) Gets(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.Gets(ctx, userID)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -129,19 +155,25 @@ func (h *agentHandler) Gets(c *gin.Context) {
 func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 	var req request.UpdateAgentPoliciesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -149,7 +181,9 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.UpdatePolicies(ctx, id, userID, req.PolicyIDs)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -163,13 +197,17 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 func (h *agentHandler) GetPolicies(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -177,7 +215,9 @@ func (h *agentHandler) GetPolicies(c *gin.Context) {
 
 	dtos, err := h.agentUsecase.GetPolicies(ctx, id, userID)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 

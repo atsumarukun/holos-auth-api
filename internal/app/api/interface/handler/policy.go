@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
 	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/internal/app/api/usecase/dto"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,13 +36,17 @@ func NewPolicyHandler(policyUsecase usecase.PolicyUsecase) PolicyHandler {
 func (h *policyHandler) Create(c *gin.Context) {
 	var req request.CreatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -48,7 +54,9 @@ func (h *policyHandler) Create(c *gin.Context) {
 
 	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.Methods)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -58,19 +66,25 @@ func (h *policyHandler) Create(c *gin.Context) {
 func (h *policyHandler) Update(c *gin.Context) {
 	var req request.UpdatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -78,7 +92,9 @@ func (h *policyHandler) Update(c *gin.Context) {
 
 	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.Methods)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -88,20 +104,26 @@ func (h *policyHandler) Update(c *gin.Context) {
 func (h *policyHandler) Delete(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	if err := h.policyUsecase.Delete(ctx, id, userID); err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -111,7 +133,9 @@ func (h *policyHandler) Delete(c *gin.Context) {
 func (h *policyHandler) Gets(c *gin.Context) {
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -119,7 +143,9 @@ func (h *policyHandler) Gets(c *gin.Context) {
 
 	dtos, err := h.policyUsecase.Gets(ctx, userID)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -129,19 +155,25 @@ func (h *policyHandler) Gets(c *gin.Context) {
 func (h *policyHandler) UpdateAgents(c *gin.Context) {
 	var req request.UpdatePolicyAgentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -149,7 +181,9 @@ func (h *policyHandler) UpdateAgents(c *gin.Context) {
 
 	dtos, err := h.policyUsecase.UpdateAgents(ctx, id, userID, req.AgentIDs)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -163,13 +197,17 @@ func (h *policyHandler) UpdateAgents(c *gin.Context) {
 func (h *policyHandler) GetAgents(c *gin.Context) {
 	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -177,7 +215,9 @@ func (h *policyHandler) GetAgents(c *gin.Context) {
 
 	dtos, err := h.policyUsecase.GetAgents(ctx, id, userID)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 

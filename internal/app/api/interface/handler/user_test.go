@@ -3,7 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
@@ -22,7 +22,7 @@ func TestUser_Create(t *testing.T) {
 		name        string
 		requestJSON string
 		resultDTO   *dto.UserDTO
-		resultError apierr.ApiError
+		resultError error
 		expect      int
 	}{
 		{
@@ -43,7 +43,7 @@ func TestUser_Create(t *testing.T) {
 			name:        "result_error",
 			requestJSON: `{"name": "name", "password": "password", "confirm_password": "password"}`,
 			resultDTO:   nil,
-			resultError: apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError: status.Error(http.StatusInternalServerError, "test error"),
 			expect:      http.StatusInternalServerError,
 		},
 	}
@@ -81,7 +81,7 @@ func TestUser_UpdateName(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -113,7 +113,7 @@ func TestUser_UpdateName(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name"}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -154,7 +154,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -186,7 +186,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"current_password": "password", "new_password": "new_password", "confirm_new_password": "new_password"}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -227,7 +227,7 @@ func TestUser_Delete(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.UserDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -256,7 +256,7 @@ func TestUser_Delete(t *testing.T) {
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			requestJSON:          `{"password": "password"}`,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}

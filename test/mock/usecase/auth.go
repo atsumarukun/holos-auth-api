@@ -6,7 +6,6 @@ package mock_usecase
 
 import (
 	context "context"
-	apierr "holos-auth-api/internal/app/api/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,11 +36,11 @@ func (m *MockAuthUsecase) EXPECT() *MockAuthUsecaseMockRecorder {
 }
 
 // GetUserID mocks base method.
-func (m *MockAuthUsecase) GetUserID(arg0 context.Context, arg1 string) (uuid.UUID, apierr.ApiError) {
+func (m *MockAuthUsecase) GetUserID(arg0 context.Context, arg1 string) (uuid.UUID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserID", arg0, arg1)
 	ret0, _ := ret[0].(uuid.UUID)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -52,11 +51,11 @@ func (mr *MockAuthUsecaseMockRecorder) GetUserID(arg0, arg1 interface{}) *gomock
 }
 
 // Signin mocks base method.
-func (m *MockAuthUsecase) Signin(arg0 context.Context, arg1, arg2 string) (string, apierr.ApiError) {
+func (m *MockAuthUsecase) Signin(arg0 context.Context, arg1, arg2 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Signin", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -67,10 +66,10 @@ func (mr *MockAuthUsecaseMockRecorder) Signin(arg0, arg1, arg2 interface{}) *gom
 }
 
 // Signout mocks base method.
-func (m *MockAuthUsecase) Signout(arg0 context.Context, arg1 string) apierr.ApiError {
+func (m *MockAuthUsecase) Signout(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Signout", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

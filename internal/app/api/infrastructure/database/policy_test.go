@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/test"
 	"net/http"
 	"regexp"
@@ -57,7 +57,7 @@ func TestPolicy_Create(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return pr.Create(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
@@ -113,7 +113,7 @@ func TestPolicy_Update(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return pr.Update(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
@@ -166,7 +166,7 @@ func TestPolicy_Delete(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					return pr.Delete(ctx, policy)
 				}); err != nil {
 					t.Error(err.Error())
@@ -259,13 +259,13 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := pr.FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID)
 					if err != nil {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {
@@ -334,13 +334,13 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := pr.FindByUserIDAndNotDeleted(ctx, tt.userID)
 					if err != nil {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {
@@ -418,13 +418,13 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 			pr := database.NewPolicyDBRepository(db)
 			if tt.isTransaction {
 				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+				if err := to.Transaction(ctx, func(ctx context.Context) error {
 					result, err := pr.FindByIDsAndUserIDAndNotDeleted(ctx, tt.ids, tt.userID)
 					if err != nil {
 						return err
 					}
 					if (result == nil) != tt.resultIsNil {
-						return apierr.NewApiError(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
+						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
 					}
 					return nil
 				}); err != nil {

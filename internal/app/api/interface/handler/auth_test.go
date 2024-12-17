@@ -3,7 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +20,7 @@ func TestAuth_Signin(t *testing.T) {
 		name         string
 		requestJSON  string
 		resultString string
-		resultError  apierr.ApiError
+		resultError  error
 		expect       int
 	}{
 		{
@@ -41,7 +41,7 @@ func TestAuth_Signin(t *testing.T) {
 			name:         "result_error",
 			requestJSON:  `{"name": "name", "password": "password", "confirm_password": "password"}`,
 			resultString: "",
-			resultError:  apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:  status.Error(http.StatusInternalServerError, "test error"),
 			expect:       http.StatusInternalServerError,
 		},
 	}
@@ -77,7 +77,7 @@ func TestAuth_Signout(t *testing.T) {
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
+		resultError         error
 		expect              int
 	}{
 		{
@@ -95,7 +95,7 @@ func TestAuth_Signout(t *testing.T) {
 		{
 			name:                "result_error",
 			authorizationHeader: "Bearer token",
-			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:         status.Error(http.StatusInternalServerError, "test error"),
 			expect:              http.StatusInternalServerError,
 		},
 	}
@@ -132,7 +132,7 @@ func TestAuth_GetUserID(t *testing.T) {
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
+		resultError         error
 		expect              int
 	}{
 		{
@@ -150,7 +150,7 @@ func TestAuth_GetUserID(t *testing.T) {
 		{
 			name:                "result_error",
 			authorizationHeader: "Bearer token",
-			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:         status.Error(http.StatusInternalServerError, "test error"),
 			expect:              http.StatusInternalServerError,
 		},
 	}

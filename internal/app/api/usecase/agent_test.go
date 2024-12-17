@@ -3,7 +3,6 @@ package usecase_test
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/app/api/pkg/apierr"
 	"holos-auth-api/internal/app/api/usecase"
 	"holos-auth-api/test"
 	mock_repository "holos-auth-api/test/mock/domain/repository"
@@ -17,7 +16,7 @@ import (
 func TestAgent_Create(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			name:   "exists",
@@ -58,7 +57,7 @@ func TestAgent_Update(t *testing.T) {
 		userID      uuid.UUID
 		name        string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),
@@ -120,7 +119,7 @@ func TestAgent_Delete(t *testing.T) {
 		userID      uuid.UUID
 		name        string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),
@@ -178,7 +177,7 @@ func TestAgent_Gets(t *testing.T) {
 		userID      uuid.UUID
 		name        string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),
@@ -235,7 +234,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 		id     uuid.UUID
 		userID uuid.UUID
 		name   string
-		expect apierr.ApiError
+		expect error
 	}{
 		{
 			id:     uuid.New(),
@@ -288,7 +287,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 		userID      uuid.UUID
 		name        string
 		isReturnNil bool
-		expect      apierr.ApiError
+		expect      error
 	}{
 		{
 			id:          uuid.New(),

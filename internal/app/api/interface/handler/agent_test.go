@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	mock_usecase "holos-auth-api/test/mock/usecase"
 	"net/http"
@@ -24,7 +24,7 @@ func TestAgent_Create(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.AgentDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -56,7 +56,7 @@ func TestAgent_Create(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name"}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -97,7 +97,7 @@ func TestAgent_Update(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            *dto.AgentDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -129,7 +129,7 @@ func TestAgent_Update(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name"}`,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -169,7 +169,7 @@ func TestAgent_Delete(t *testing.T) {
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -187,7 +187,7 @@ func TestAgent_Delete(t *testing.T) {
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -227,7 +227,7 @@ func TestAgent_Gets(t *testing.T) {
 		name                 string
 		isSetUserIDToContext bool
 		resultDTO            []*dto.AgentDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -248,7 +248,7 @@ func TestAgent_Gets(t *testing.T) {
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -288,7 +288,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 		isSetUserIDToContext bool
 		requestJSON          string
 		resultDTO            []*dto.PolicyDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -320,7 +320,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 			isSetUserIDToContext: true,
 			requestJSON:          fmt.Sprintf(`{"policy_ids": ["%s"]}`, uuid.New()),
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}
@@ -360,7 +360,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 		name                 string
 		isSetUserIDToContext bool
 		resultDTO            []*dto.PolicyDTO
-		resultError          apierr.ApiError
+		resultError          error
 		expect               int
 	}{
 		{
@@ -381,7 +381,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			resultDTO:            nil,
-			resultError:          apierr.NewApiError(http.StatusInternalServerError, "test error"),
+			resultError:          status.Error(http.StatusInternalServerError, "test error"),
 			expect:               http.StatusInternalServerError,
 		},
 	}

@@ -6,7 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/app/api/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"net/http"
 
@@ -14,16 +14,16 @@ import (
 )
 
 var (
-	ErrPolicyNotFound = apierr.NewApiError(http.StatusNotFound, "policy not found")
+	ErrPolicyNotFound = status.Error(http.StatusNotFound, "policy not found")
 )
 
 type PolicyUsecase interface {
-	Create(context.Context, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, apierr.ApiError)
-	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, apierr.ApiError)
-	Delete(context.Context, uuid.UUID, uuid.UUID) apierr.ApiError
-	Gets(context.Context, uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError)
-	UpdateAgents(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
-	GetAgents(context.Context, uuid.UUID, uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError)
+	Create(context.Context, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, error)
+	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, error)
+	Delete(context.Context, uuid.UUID, uuid.UUID) error
+	Gets(context.Context, uuid.UUID) ([]*dto.PolicyDTO, error)
+	UpdateAgents(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.AgentDTO, error)
+	GetAgents(context.Context, uuid.UUID, uuid.UUID) ([]*dto.AgentDTO, error)
 }
 
 type policyUsecase struct {
@@ -40,7 +40,7 @@ func NewPolicyUsecase(transactionObject domain.TransactionObject, policyReposito
 	}
 }
 
-func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, apierr.ApiError) {
+func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
 	policy, err := entity.NewPolicy(userID, name, service, path, methods)
 	if err != nil {
 		return nil, err
@@ -53,11 +53,11 @@ func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name strin
 	return u.convertToDTO(policy), nil
 }
 
-func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, apierr.ApiError) {
+func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
 	var policy *entity.Policy
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		var err apierr.ApiError
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		var err error
 		policy, err = u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -87,8 +87,8 @@ func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 	return u.convertToDTO(policy), nil
 }
 
-func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) apierr.ApiError {
-	return u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -101,7 +101,7 @@ func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 	})
 }
 
-func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.PolicyDTO, apierr.ApiError) {
+func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
 	policies, err := u.policyRepository.FindByUserIDAndNotDeleted(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -110,10 +110,10 @@ func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Poli
 	return u.convertToDTOs(policies), nil
 }
 
-func (u *policyUsecase) UpdateAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID, agentIDs []uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+func (u *policyUsecase) UpdateAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID, agentIDs []uuid.UUID) ([]*dto.AgentDTO, error) {
 	agents := make([]*entity.Agent, len(agentIDs))
 
-	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
 		policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func (u *policyUsecase) UpdateAgents(ctx context.Context, id uuid.UUID, userID u
 	return dtos, nil
 }
 
-func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.AgentDTO, apierr.ApiError) {
+func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.AgentDTO, error) {
 	policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
 	if err != nil {
 		return nil, err

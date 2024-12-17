@@ -1,6 +1,9 @@
 package apierr
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 type ApiError interface {
 	Error() string
@@ -17,6 +20,21 @@ func NewApiError(code int, message string) ApiError {
 	return &apiError{
 		code:    code,
 		message: message,
+	}
+}
+
+func FromError(err error) ApiError {
+	if err == nil {
+		return nil
+	}
+
+	if v, ok := err.(*apiError); ok {
+		return v
+	} else {
+		return &apiError{
+			code:    http.StatusInternalServerError,
+			message: err.Error(),
+		}
 	}
 }
 

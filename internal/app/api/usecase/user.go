@@ -9,6 +9,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/service"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
+	"holos-auth-api/internal/app/api/usecase/mapper"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -58,7 +59,7 @@ func (u *userUsecase) Create(ctx context.Context, name string, password string, 
 		return nil, err
 	}
 
-	return u.convertToDTO(user), nil
+	return mapper.ToUserDTO(user), nil
 }
 
 func (u *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string) (*dto.UserDTO, error) {
@@ -89,7 +90,7 @@ func (u *userUsecase) UpdateName(ctx context.Context, id uuid.UUID, name string)
 		return nil, err
 	}
 
-	return u.convertToDTO(user), nil
+	return mapper.ToUserDTO(user), nil
 }
 
 func (u *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentPassword string, newPassword string, confirmNewPassword string) (*dto.UserDTO, error) {
@@ -118,7 +119,7 @@ func (u *userUsecase) UpdatePassword(ctx context.Context, id uuid.UUID, currentP
 		return nil, err
 	}
 
-	return u.convertToDTO(user), nil
+	return mapper.ToUserDTO(user), nil
 }
 
 func (u *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string) error {
@@ -137,8 +138,4 @@ func (u *userUsecase) Delete(ctx context.Context, id uuid.UUID, password string)
 
 		return u.userRepository.Delete(ctx, user)
 	})
-}
-
-func (u *userUsecase) convertToDTO(user *entity.User) *dto.UserDTO {
-	return dto.NewUserDTO(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
 }

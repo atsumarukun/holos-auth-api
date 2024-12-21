@@ -3,14 +3,13 @@ package database
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
+	"holos-auth-api/internal/app/api/infrastructure/transformer"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -29,7 +28,7 @@ func NewPolicyDBRepository(db *sqlx.DB) repository.PolicyRepository {
 func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
 
-	policyModel, err := r.convertToModel(policy)
+	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
 	}
@@ -47,7 +46,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
 
-	policyModel, err := r.convertToModel(policy)
+	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
 	}
@@ -64,7 +63,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 
 func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) error {
 	driver := getSqlxDriver(ctx, r.db)
-	policyModel, err := r.convertToModel(policy)
+	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
 	}
@@ -112,7 +111,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&policy)
+	return transformer.ToPolicyEntity(&policy)
 }
 
 func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, error) {
@@ -134,7 +133,7 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 		}
 		policies = append(policies, &policy)
 	}
-	return r.convertToEntities(policies)
+	return transformer.ToPolicyEntities(policies)
 }
 
 func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Policy, error) {
@@ -173,7 +172,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 		}
 		policies = append(policies, &policy)
 	}
-	return r.convertToEntities(policies)
+	return transformer.ToPolicyEntities(policies)
 }
 
 func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, agentIDs []uuid.UUID) error {
@@ -207,42 +206,4 @@ func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, age
 	}
 
 	return nil
-}
-
-func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.PolicyModel, error) {
-	Methods, err := json.Marshal(policy.Methods)
-	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, Methods, policy.CreatedAt, policy.UpdatedAt), nil
-}
-
-func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, error) {
-	var methods []string
-	if err := json.Unmarshal([]byte(policy.Methods), &methods); err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
-	}
-	var agents []uuid.UUID
-	if policy.Agents != nil {
-		for _, agentID := range strings.Split(*policy.Agents, ",") {
-			id, err := uuid.Parse(agentID)
-			if err != nil {
-				return nil, status.Error(http.StatusInternalServerError, err.Error())
-			}
-			agents = append(agents, id)
-		}
-	}
-	return entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, methods, agents, policy.CreatedAt, policy.UpdatedAt), nil
-}
-
-func (r *policyDBRepository) convertToEntities(policies []*model.PolicyModel) ([]*entity.Policy, error) {
-	entities := make([]*entity.Policy, len(policies))
-	var err error
-	for i, policy := range policies {
-		entities[i], err = r.convertToEntity(policy)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return entities, nil
 }

@@ -13,6 +13,7 @@ type PolicyDTO struct {
 	Service   string
 	Path      string
 	Methods   []string
+	Agents    []uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

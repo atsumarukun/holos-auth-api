@@ -7,6 +7,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
+	"holos-auth-api/internal/app/api/infrastructure/transformer"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
@@ -25,7 +26,7 @@ func NewUserTokenDBRepository(db *sqlx.DB) repository.UserTokenRepository {
 
 func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.UserToken) error {
 	driver := getSqlxDriver(ctx, r.db)
-	userTokenModel := r.convertToModel(userToken)
+	userTokenModel := transformer.ToUserTokenModel(userToken)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`REPLACE user_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at);`,
@@ -38,7 +39,7 @@ func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.User
 
 func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.UserToken) error {
 	driver := getSqlxDriver(ctx, r.db)
-	userTokenModel := r.convertToModel(userToken)
+	userTokenModel := transformer.ToUserTokenModel(userToken)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`DELETE FROM user_tokens WHERE user_id = :user_id;`,
@@ -63,13 +64,5 @@ func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context,
 			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&userToken), nil
-}
-
-func (r *userTokenDBRepository) convertToModel(userToken *entity.UserToken) *model.UserTokenModel {
-	return model.NewUserTokenModel(userToken.UserID, userToken.Token, userToken.ExpiresAt)
-}
-
-func (r *userTokenDBRepository) convertToEntity(userToken *model.UserTokenModel) *entity.UserToken {
-	return entity.RestoreUserToken(userToken.UserID, userToken.Token, userToken.ExpiresAt)
+	return transformer.ToUserTokenEntity(&userToken), nil
 }

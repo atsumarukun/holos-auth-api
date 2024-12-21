@@ -7,6 +7,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
+	"holos-auth-api/internal/app/api/infrastructure/transformer"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
@@ -26,7 +27,7 @@ func NewUserDBRepository(db *sqlx.DB) repository.UserRepository {
 
 func (r *userDBRepository) Create(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
-	userModel := r.convertToModel(user)
+	userModel := transformer.ToUserModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO users (id, name, password, created_at, updated_at) VALUES (:id, :name, :password, :created_at, :updated_at);`,
@@ -39,7 +40,7 @@ func (r *userDBRepository) Create(ctx context.Context, user *entity.User) error 
 
 func (r *userDBRepository) Update(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
-	userModel := r.convertToModel(user)
+	userModel := transformer.ToUserModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users SET name = :name, password = :password, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -52,7 +53,7 @@ func (r *userDBRepository) Update(ctx context.Context, user *entity.User) error 
 
 func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) error {
 	driver := getSqlxDriver(ctx, r.db)
-	userModel := r.convertToModel(user)
+	userModel := transformer.ToUserModel(user)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users
@@ -87,7 +88,7 @@ func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid
 			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&user), nil
+	return transformer.ToUesrEntity(&user), nil
 }
 
 func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*entity.User, error) {
@@ -104,13 +105,5 @@ func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*ent
 			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&user), nil
-}
-
-func (r *userDBRepository) convertToModel(user *entity.User) *model.UserModel {
-	return model.NewUserModel(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
-}
-
-func (r *userDBRepository) convertToEntity(user *model.UserModel) *entity.User {
-	return entity.RestoreUser(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt)
+	return transformer.ToUesrEntity(&user), nil
 }

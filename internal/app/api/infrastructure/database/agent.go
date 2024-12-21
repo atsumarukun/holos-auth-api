@@ -7,9 +7,9 @@ import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/infrastructure/model"
+	"holos-auth-api/internal/app/api/infrastructure/transformer"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -28,7 +28,7 @@ func NewAgentDBRepository(db *sqlx.DB) repository.AgentRepository {
 func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
 
-	agentModel := r.convertToModel(agent)
+	agentModel := transformer.ToAgentModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO agents (id, user_id, name, created_at, updated_at) VALUES (:id, :user_id, :name, :created_at, :updated_at);`,
@@ -43,7 +43,7 @@ func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) err
 func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
 
-	agentModel := r.convertToModel(agent)
+	agentModel := transformer.ToAgentModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET user_id = :user_id, name = :name, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -57,7 +57,7 @@ func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) err
 
 func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) error {
 	driver := getSqlxDriver(ctx, r.db)
-	agentModel := r.convertToModel(agent)
+	agentModel := transformer.ToAgentModel(agent)
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
@@ -99,7 +99,7 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return r.convertToEntity(&agent)
+	return transformer.ToAgentEntity(&agent)
 }
 
 func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
@@ -121,7 +121,7 @@ func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userI
 		}
 		agents = append(agents, &agent)
 	}
-	return r.convertToEntities(agents)
+	return transformer.ToAgentEntities(agents)
 }
 
 func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, error) {
@@ -160,7 +160,7 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 		}
 		agents = append(agents, &agent)
 	}
-	return r.convertToEntities(agents)
+	return transformer.ToAgentEntities(agents)
 }
 
 func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, policieIDs []uuid.UUID) error {
@@ -194,34 +194,4 @@ func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, po
 	}
 
 	return nil
-}
-
-func (r *agentDBRepository) convertToModel(agent *entity.Agent) *model.AgentModel {
-	return model.NewAgentModel(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
-}
-
-func (r *agentDBRepository) convertToEntity(agent *model.AgentModel) (*entity.Agent, error) {
-	var policies []uuid.UUID
-	if agent.Policies != nil {
-		for _, policyID := range strings.Split(*agent.Policies, ",") {
-			id, err := uuid.Parse(policyID)
-			if err != nil {
-				return nil, status.Error(http.StatusInternalServerError, err.Error())
-			}
-			policies = append(policies, id)
-		}
-	}
-	return entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, policies, agent.CreatedAt, agent.UpdatedAt), nil
-}
-
-func (r *agentDBRepository) convertToEntities(agents []*model.AgentModel) ([]*entity.Agent, error) {
-	entities := make([]*entity.Agent, len(agents))
-	for i, agent := range agents {
-		var err error
-		entities[i], err = r.convertToEntity(agent)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return entities, nil
 }

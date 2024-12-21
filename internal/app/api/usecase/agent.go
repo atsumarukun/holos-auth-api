@@ -8,6 +8,7 @@ import (
 	"holos-auth-api/internal/app/api/domain/repository"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
+	"holos-auth-api/internal/app/api/usecase/mapper"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -51,7 +52,7 @@ func (u *agentUsecase) Create(ctx context.Context, userID uuid.UUID, name string
 		return nil, err
 	}
 
-	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
+	return mapper.ToAgentDTO(agent), nil
 }
 
 func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string) (*dto.AgentDTO, error) {
@@ -76,7 +77,7 @@ func (u *agentUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUI
 		return nil, err
 	}
 
-	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt), nil
+	return mapper.ToAgentDTO(agent), nil
 }
 
 func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
@@ -99,7 +100,7 @@ func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.Agent
 		return nil, err
 	}
 
-	return u.convertToDTOs(agents), nil
+	return mapper.ToAgentDTOs(agents), nil
 }
 
 func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID, policyIDs []uuid.UUID) ([]*dto.PolicyDTO, error) {
@@ -126,12 +127,7 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 		return nil, err
 	}
 
-	dtos := make([]*dto.PolicyDTO, len(policies))
-	for i, policy := range policies {
-		dtos[i] = dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
-	}
-
-	return dtos, nil
+	return mapper.ToPolicyDTOs(policies), nil
 }
 
 func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
@@ -148,21 +144,5 @@ func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uui
 		return nil, err
 	}
 
-	dtos := make([]*dto.PolicyDTO, len(policies))
-	for i, policy := range policies {
-		dtos[i] = dto.NewPolicyDTO(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.CreatedAt, policy.UpdatedAt)
-	}
-	return dtos, nil
-}
-
-func (u *agentUsecase) convertToDTO(agent *entity.Agent) *dto.AgentDTO {
-	return dto.NewAgentDTO(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
-}
-
-func (u *agentUsecase) convertToDTOs(agents []*entity.Agent) []*dto.AgentDTO {
-	dtos := make([]*dto.AgentDTO, len(agents))
-	for i, agent := range agents {
-		dtos[i] = u.convertToDTO(agent)
-	}
-	return dtos
+	return mapper.ToPolicyDTOs(policies), nil
 }

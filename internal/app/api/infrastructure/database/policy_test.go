@@ -48,7 +48,7 @@ func TestPolicy_Create(t *testing.T) {
 				mock.ExpectBegin()
 			}
 			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
-				WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.CreatedAt, policy.UpdatedAt).
+				WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, []byte(`["GET"]`), policy.CreatedAt, policy.UpdatedAt).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			if tt.isTransaction {
 				mock.ExpectCommit()
@@ -101,7 +101,7 @@ func TestPolicy_Update(t *testing.T) {
 				mock.ExpectBegin()
 			}
 			mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(policy.UserID, policy.Name, policy.Service, policy.Path, `["GET"]`, policy.UpdatedAt, policy.ID).
+				WithArgs(policy.UserID, policy.Name, policy.Service, policy.Path, []byte(`["GET"]`), policy.UpdatedAt, policy.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
 				WithArgs(policy.ID).
@@ -249,7 +249,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				WithArgs(tt.id, tt.userID).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", []byte(`["GET"]`), time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
 			if tt.isTransaction {
@@ -324,7 +324,7 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 				WithArgs(tt.userID).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", []byte(`["GET"]`), time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
 			if tt.isTransaction {
@@ -408,7 +408,7 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 				WithArgs(args...).
 				WillReturnRows(
 					sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", `["GET"]`, time.Now(), time.Now()),
+						AddRow(tt.id, tt.userID, tt.name, "STORAGE", "/", []byte(`["GET"]`), time.Now(), time.Now()),
 				).
 				WillReturnError(tt.resultError)
 			if tt.isTransaction {

@@ -15,15 +15,3 @@ type PolicyResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
-
-func NewPolicyResponse(id uuid.UUID, name string, service string, path string, methods []string, createdAt time.Time, updatedAt time.Time) *PolicyResponse {
-	return &PolicyResponse{
-		ID:        id,
-		Name:      name,
-		Service:   service,
-		Path:      path,
-		Methods:   methods,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}

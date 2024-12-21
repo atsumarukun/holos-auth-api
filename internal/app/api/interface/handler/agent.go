@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"holos-auth-api/internal/app/api/interface/builder"
 	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
-	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
-	"holos-auth-api/internal/app/api/usecase/dto"
 	"log"
 	"net/http"
 
@@ -60,7 +59,7 @@ func (h *agentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, h.convertToResponse(dto))
+	c.JSON(http.StatusCreated, builder.ToAgentResponse(dto))
 }
 
 func (h *agentHandler) Update(c *gin.Context) {
@@ -98,7 +97,7 @@ func (h *agentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, h.convertToResponse(dto))
+	c.JSON(http.StatusOK, builder.ToAgentResponse(dto))
 }
 
 func (h *agentHandler) Delete(c *gin.Context) {
@@ -149,7 +148,7 @@ func (h *agentHandler) Gets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, h.convertToResponses(dtos))
+	c.JSON(http.StatusOK, builder.ToAgentResponses(dtos))
 }
 
 func (h *agentHandler) UpdatePolicies(c *gin.Context) {
@@ -187,11 +186,7 @@ func (h *agentHandler) UpdatePolicies(c *gin.Context) {
 		return
 	}
 
-	responses := make([]*response.PolicyResponse, len(dtos))
-	for i, dto := range dtos {
-		responses[i] = response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.Methods, dto.CreatedAt, dto.UpdatedAt)
-	}
-	c.JSON(http.StatusOK, responses)
+	c.JSON(http.StatusOK, builder.ToPolicyResponses(dtos))
 }
 
 func (h *agentHandler) GetPolicies(c *gin.Context) {
@@ -221,21 +216,5 @@ func (h *agentHandler) GetPolicies(c *gin.Context) {
 		return
 	}
 
-	responses := make([]*response.PolicyResponse, len(dtos))
-	for i, dto := range dtos {
-		responses[i] = response.NewPolicyResponse(dto.ID, dto.Name, dto.Service, dto.Path, dto.Methods, dto.CreatedAt, dto.UpdatedAt)
-	}
-	c.JSON(http.StatusOK, responses)
-}
-
-func (h *agentHandler) convertToResponse(agent *dto.AgentDTO) *response.AgentResponse {
-	return response.NewAgentResponse(agent.ID, agent.Name, agent.CreatedAt, agent.UpdatedAt)
-}
-
-func (h *agentHandler) convertToResponses(agents []*dto.AgentDTO) []*response.AgentResponse {
-	responses := make([]*response.AgentResponse, len(agents))
-	for i, agent := range agents {
-		responses[i] = h.convertToResponse(agent)
-	}
-	return responses
+	c.JSON(http.StatusOK, builder.ToPolicyResponses(dtos))
 }

@@ -12,11 +12,3 @@ func ToUserResponse(user *dto.UserDTO) *response.UserResponse {
 		UpdatedAt: user.UpdatedAt,
 	}
 }
-
-func ToUserResponses(users []*dto.UserDTO) []*response.UserResponse {
-	responses := make([]*response.UserResponse, len(users))
-	for i, user := range users {
-		responses[i] = ToUserResponse(user)
-	}
-	return responses
-}

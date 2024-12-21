@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"holos-auth-api/internal/app/api/interface/builder"
 	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
-	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
 	"log"
 	"net/http"
@@ -49,7 +49,7 @@ func (h *userHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, builder.ToUserResponse(dto))
 }
 
 func (h *userHandler) UpdateName(c *gin.Context) {
@@ -79,7 +79,7 @@ func (h *userHandler) UpdateName(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusOK, builder.ToUserResponse(dto))
 }
 
 func (h *userHandler) UpdatePassword(c *gin.Context) {
@@ -109,7 +109,7 @@ func (h *userHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusOK, builder.ToUserResponse(dto))
 }
 
 func (h *userHandler) Delete(c *gin.Context) {

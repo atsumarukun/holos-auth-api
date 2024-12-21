@@ -12,12 +12,3 @@ type AgentResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
-
-func NewAgentResponse(id uuid.UUID, name string, createdAt time.Time, updatedAt time.Time) *AgentResponse {
-	return &AgentResponse{
-		ID:        id,
-		Name:      name,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}

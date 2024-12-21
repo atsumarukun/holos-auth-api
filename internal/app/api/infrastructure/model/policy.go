@@ -12,13 +12,13 @@ type PolicyModel struct {
 	Name      string    `db:"name"`
 	Service   string    `db:"service"`
 	Path      string    `db:"path"`
-	Methods   string    `db:"methods"`
+	Methods   []byte    `db:"methods"`
 	Agents    *string   `db:"agents"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func NewPolicyModel(id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods string, createdAt time.Time, updatedAt time.Time) *PolicyModel {
+func NewPolicyModel(id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []byte, createdAt time.Time, updatedAt time.Time) *PolicyModel {
 	return &PolicyModel{
 		ID:        id,
 		UserID:    userID,

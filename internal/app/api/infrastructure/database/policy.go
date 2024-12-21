@@ -214,7 +214,7 @@ func (r *policyDBRepository) convertToModel(policy *entity.Policy) (*model.Polic
 	if err != nil {
 		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
-	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, string(Methods), policy.CreatedAt, policy.UpdatedAt), nil
+	return model.NewPolicyModel(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, Methods, policy.CreatedAt, policy.UpdatedAt), nil
 }
 
 func (r *policyDBRepository) convertToEntity(policy *model.PolicyModel) (*entity.Policy, error) {

@@ -54,8 +54,8 @@ func ToAgentEntity(agent *model.AgentModel) (*entity.Agent, error) {
 
 func ToAgentEntities(agents []*model.AgentModel) ([]*entity.Agent, error) {
 	entities := make([]*entity.Agent, len(agents))
+	var err error
 	for i, agent := range agents {
-		var err error
 		entities[i], err = ToAgentEntity(agent)
 		if err != nil {
 			return nil, err

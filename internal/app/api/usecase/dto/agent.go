@@ -14,13 +14,3 @@ type AgentDTO struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
-
-func NewAgentDTO(id uuid.UUID, userID uuid.UUID, name string, createdAt time.Time, updatedAt time.Time) *AgentDTO {
-	return &AgentDTO{
-		ID:        id,
-		UserID:    userID,
-		Name:      name,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}

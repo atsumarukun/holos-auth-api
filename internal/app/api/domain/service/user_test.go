@@ -2,58 +2,76 @@ package service_test
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/service"
-	mock_repository "holos-auth-api/test/mock/domain/repository"
+	mockRepository "holos-auth-api/test/mock/domain/repository"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 )
 
 func TestUser_Exists(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name        string
-		isReturnNil bool
-		expect      bool
+		name                  string
+		expectResult          bool
+		expectError           error
+		setMockUserRepository func(context.Context, *mockRepository.MockUserRepository)
 	}{
 		{
-			name:        "exists",
-			isReturnNil: false,
-			expect:      true,
+			name:         "exists",
+			expectResult: true,
+			setMockUserRepository: func(ctx context.Context, ur *mockRepository.MockUserRepository) {
+				ur.EXPECT().
+					FindOneByName(ctx, user.Name).
+					Return(user, nil)
+			},
 		},
 		{
-			name:        "not_exists",
-			isReturnNil: true,
-			expect:      false,
+			name:         "not exists",
+			expectResult: false,
+			expectError:  nil,
+			setMockUserRepository: func(ctx context.Context, ur *mockRepository.MockUserRepository) {
+				ur.EXPECT().
+					FindOneByName(ctx, user.Name).
+					Return(nil, nil)
+			},
+		},
+		{
+			name:         "mock return error",
+			expectResult: false,
+			expectError:  sql.ErrConnDone,
+			setMockUserRepository: func(ctx context.Context, ur *mockRepository.MockUserRepository) {
+				ur.EXPECT().
+					FindOneByName(ctx, user.Name).
+					Return(nil, sql.ErrConnDone)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			res := user
-			if tt.isReturnNil {
-				res = nil
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			ur := mockRepository.NewMockUserRepository(ctrl)
+
 			ctx := context.Background()
 
-			ur := mock_repository.NewMockUserRepository(ctrl)
-			ur.EXPECT().FindOneByName(ctx, tt.name).Return(res, nil)
+			tt.setMockUserRepository(ctx, ur)
 
-			us := service.NewUserService(ur)
-			exists, err := us.Exists(ctx, user)
-			if err != nil {
-				t.Error(err.Error())
+			s := service.NewUserService(ur)
+			exists, err := s.Exists(ctx, user)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if exists != tt.expect {
-				t.Errorf("expect %t but got %t", tt.expect, exists)
+			if exists != tt.expectResult {
+				t.Errorf("\nexpect %t \ngot %t", tt.expectResult, exists)
 			}
 		})
 	}

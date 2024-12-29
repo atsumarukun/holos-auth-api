@@ -15,6 +15,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	ErrRequiredUser = status.Error(http.StatusInternalServerError, "user is required")
+)
+
 type userDBRepository struct {
 	db *sqlx.DB
 }
@@ -26,57 +30,60 @@ func NewUserDBRepository(db *sqlx.DB) repository.UserRepository {
 }
 
 func (r *userDBRepository) Create(ctx context.Context, user *entity.User) error {
+	if user == nil {
+		return ErrRequiredUser
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO users (id, name, password, created_at, updated_at) VALUES (:id, :name, :password, :created_at, :updated_at);`,
 		userModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *userDBRepository) Update(ctx context.Context, user *entity.User) error {
+	if user == nil {
+		return ErrRequiredUser
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE users SET name = :name, password = :password, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		userModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) error {
+	if user == nil {
+		return ErrRequiredUser
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE users
-		LEFT JOIN agents ON users.id = agents.user_id
-		SET
-			users.updated_at = users.updated_at,
-			users.deleted_at = NOW(6),
-			agents.updated_at = agents.updated_at,
-			agents.deleted_at = NOW(6)
-		WHERE
-			users.id = :id
-			AND users.deleted_at IS NULL
-			AND agents.deleted_at IS NULL;`,
+		`UPDATE users SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		userModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user model.UserModel
 	driver := getSqlxDriver(ctx, r.db)
+
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;`,
@@ -84,16 +91,17 @@ func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid
 	).StructScan(&user); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
-		} else {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
+		return nil, err
 	}
+
 	return transformer.ToUesrEntity(&user), nil
 }
 
 func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*entity.User, error) {
 	var user model.UserModel
 	driver := getSqlxDriver(ctx, r.db)
+
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;`,
@@ -101,9 +109,9 @@ func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*ent
 	).StructScan(&user); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
-		} else {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
+		return nil, err
 	}
+
 	return transformer.ToUesrEntity(&user), nil
 }

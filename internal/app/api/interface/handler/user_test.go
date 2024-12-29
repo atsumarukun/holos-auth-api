@@ -80,7 +80,7 @@ func TestUser_Create(t *testing.T) {
 			h.Create(ctx)
 
 			if w.Code != tt.expectStatusCode {
-				t.Errorf("\nexpect %d \ngot %d", tt.expectStatusCode, w.Code)
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
@@ -164,7 +164,7 @@ func TestUser_UpdateName(t *testing.T) {
 			h.UpdateName(ctx)
 
 			if w.Code != tt.expectStatusCode {
-				t.Errorf("\nexpect %d \ngot %d", tt.expectStatusCode, w.Code)
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
@@ -248,7 +248,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 			h.UpdatePassword(ctx)
 
 			if w.Code != tt.expectStatusCode {
-				t.Errorf("\nexpect %d \ngot %d", tt.expectStatusCode, w.Code)
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
@@ -260,14 +260,14 @@ func TestUser_Delete(t *testing.T) {
 		name                 string
 		isSetUserIDToContext bool
 		requestJSON          string
-		expect               int
+		expectStatusCode     int
 		setMockUsecase       func(*mockUsecase.MockUserUsecase)
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
 			requestJSON:          `{"password": "password"}`,
-			expect:               http.StatusOK,
+			expectStatusCode:     http.StatusOK,
 			setMockUsecase: func(u *mockUsecase.MockUserUsecase) {
 				u.EXPECT().
 					Delete(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -279,21 +279,21 @@ func TestUser_Delete(t *testing.T) {
 			name:                 "no user id in context",
 			isSetUserIDToContext: false,
 			requestJSON:          `{"password": "new_password"}`,
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
 			setMockUsecase:       func(u *mockUsecase.MockUserUsecase) {},
 		},
 		{
 			name:                 "invalid_request",
 			isSetUserIDToContext: true,
 			requestJSON:          "",
-			expect:               http.StatusBadRequest,
+			expectStatusCode:     http.StatusBadRequest,
 			setMockUsecase:       func(u *mockUsecase.MockUserUsecase) {},
 		},
 		{
 			name:                 "result_error",
 			isSetUserIDToContext: true,
 			requestJSON:          `{"password": "password"}`,
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockUserUsecase) {
 				u.EXPECT().
 					Delete(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -325,8 +325,8 @@ func TestUser_Delete(t *testing.T) {
 			h := handler.NewUserHandler(u)
 			h.Delete(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("expect: %d but got: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}

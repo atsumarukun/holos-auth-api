@@ -44,7 +44,8 @@ func TestUser_Create(t *testing.T) {
 			expectResult:         mapper.ToUserDTO(user),
 			expectError:          nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -82,7 +83,8 @@ func TestUser_Create(t *testing.T) {
 			expectResult:         nil,
 			expectError:          usecase.ErrUserAlreadyExists,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -104,7 +106,8 @@ func TestUser_Create(t *testing.T) {
 			expectResult:         nil,
 			expectError:          sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -126,7 +129,8 @@ func TestUser_Create(t *testing.T) {
 			expectResult:         nil,
 			expectError:          sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -199,7 +203,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: &dto.UserDTO{ID: user.ID, Name: "update", Password: user.Password, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt},
 			expectError:  nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -229,7 +234,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  entity.ErrInvalidUserName,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -250,7 +256,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  usecase.ErrUserNotFound,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -271,7 +278,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  usecase.ErrUserAlreadyExists,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -297,7 +305,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -318,7 +327,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -344,7 +354,8 @@ func TestUser_UpdateName(t *testing.T) {
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -424,7 +435,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            mapper.ToUserDTO(user),
 			expectError:             nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -450,7 +462,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             entity.ErrInvalidUserPassword,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -472,7 +485,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             entity.ErrAuthenticationFailed,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -494,7 +508,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             entity.ErrUserPasswordDoesNotMatch,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -516,7 +531,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             usecase.ErrUserNotFound,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -538,7 +554,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -560,7 +577,8 @@ func TestUser_UpdatePassword(t *testing.T) {
 			expectResult:            nil,
 			expectError:             sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -632,7 +650,8 @@ func TestUser_Delete(t *testing.T) {
 			inputPassword: "password",
 			expectError:   nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -655,7 +674,8 @@ func TestUser_Delete(t *testing.T) {
 			inputPassword: "password",
 			expectError:   usecase.ErrUserNotFound,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -674,7 +694,8 @@ func TestUser_Delete(t *testing.T) {
 			inputPassword: "PASSWORD",
 			expectError:   entity.ErrAuthenticationFailed,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -693,7 +714,8 @@ func TestUser_Delete(t *testing.T) {
 			inputPassword: "password",
 			expectError:   sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).
@@ -712,7 +734,8 @@ func TestUser_Delete(t *testing.T) {
 			inputPassword: "password",
 			expectError:   sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
-				to.EXPECT().Transaction(ctx, gomock.Any()).
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 						return fn(ctx)
 					}).

@@ -3,340 +3,366 @@ package database_test
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/test"
-	"net/http"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
 func TestUser_Create(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
+		name        string
+		inputUser   *entity.User
+		expectError error
+		setMockDB   func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
+			name:      "success",
+			inputUser: user,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users (id, name, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?);")).
+					WithArgs(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
+			name:        "mock return error",
+			inputUser:   user,
+			expectError: sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users (id, name, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?);")).
+					WithArgs(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+		{
+			name:        "nil user",
+			inputUser:   nil,
+			expectError: database.ErrRequiredUser,
+			setMockDB:   func(mock sqlmock.Sqlmock) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
-			}
-			mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users (id, name, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?);")).
-				WithArgs(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserDBRepository(db)
+			if err := r.Create(ctx, tt.inputUser); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 
-			ur := database.NewUserDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					return ur.Create(ctx, user)
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				if err := ur.Create(ctx, user); err != nil {
-					t.Error(err.Error())
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUser_Update(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
+		name        string
+		inputUser   *entity.User
+		expectError error
+		setMockDB   func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
+			name:        "success",
+			inputUser:   user,
+			expectError: nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET name = ?, password = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(user.Name, user.Password, user.UpdatedAt, user.ID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
+			name:        "mock return error",
+			inputUser:   user,
+			expectError: sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET name = ?, password = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(user.Name, user.Password, user.UpdatedAt, user.ID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+		{
+			name:        "nil user",
+			inputUser:   nil,
+			expectError: database.ErrRequiredUser,
+			setMockDB:   func(mock sqlmock.Sqlmock) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
-			}
-			mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET name = ?, password = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(user.Name, user.Password, user.UpdatedAt, user.ID).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserDBRepository(db)
+			if err := r.Update(ctx, tt.inputUser); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 
-			ur := database.NewUserDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					return ur.Update(ctx, user)
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				if err := ur.Update(ctx, user); err != nil {
-					t.Error(err.Error())
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUser_Delete(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
+		name        string
+		inputUser   *entity.User
+		expectError error
+		setMockDB   func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
+			name:        "success",
+			inputUser:   user,
+			expectError: nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(`UPDATE users SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = ? AND deleted_at IS NULL LIMIT 1;`)).
+					WithArgs(user.ID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
+			name:        "mock return error",
+			inputUser:   user,
+			expectError: sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(`UPDATE users SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = ? AND deleted_at IS NULL LIMIT 1;`)).
+					WithArgs(user.ID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+		{
+			name:        "nil user",
+			inputUser:   nil,
+			expectError: database.ErrRequiredUser,
+			setMockDB:   func(mock sqlmock.Sqlmock) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := entity.NewUser(tt.name, "password", "password")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
-			}
-			mock.ExpectExec(regexp.QuoteMeta(
-				`UPDATE users
-				LEFT JOIN agents ON users.id = agents.user_id
-				SET
-					users.updated_at = users.updated_at,
-					users.deleted_at = NOW(6),
-					agents.updated_at = agents.updated_at,
-					agents.deleted_at = NOW(6)
-				WHERE
-					users.id = ?
-					AND users.deleted_at IS NULL
-					AND agents.deleted_at IS NULL;`,
-			)).
-				WithArgs(user.ID).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserDBRepository(db)
+			if err := r.Delete(ctx, tt.inputUser); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 
-			ur := database.NewUserDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					return ur.Delete(ctx, user)
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				if err := ur.Delete(ctx, user); err != nil {
-					t.Error(err.Error())
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id            uuid.UUID
-		name          string
-		isTransaction bool
-		resultIsNil   bool
-		resultError   error
+		name         string
+		inputID      uuid.UUID
+		expectResult *entity.User
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
 	}{
 		{
-			id:            uuid.New(),
-			name:          "without_transaction",
-			isTransaction: false,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "found",
+			inputID:      user.ID,
+			expectResult: user,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(user.ID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(nil)
+			},
 		},
 		{
-			id:            uuid.New(),
-			name:          "with_transaction",
-			isTransaction: true,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "not found",
+			inputID:      user.ID,
+			expectResult: nil,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(user.ID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(sql.ErrNoRows)
+			},
 		},
 		{
-			id:            uuid.New(),
-			name:          "user_not_found",
-			isTransaction: false,
-			resultIsNil:   true,
-			resultError:   sql.ErrNoRows,
+			name:         "mock return error",
+			inputID:      user.ID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(user.ID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserDBRepository(db)
+			result, err := r.FindOneByIDAndNotDeleted(ctx, tt.inputID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-				WithArgs(tt.id).
-				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
-						AddRow(tt.id, tt.name, "password", time.Now(), time.Now()),
-				).
-				WillReturnError(tt.resultError)
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 
-			ur := database.NewUserDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
-					if err != nil {
-						return err
-					}
-					if (result == nil) != tt.resultIsNil {
-						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
-					}
-					return nil
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				result, err := ur.FindOneByIDAndNotDeleted(ctx, tt.id)
-				if err != nil {
-					t.Error(err.Error())
-				}
-				if (result == nil) != tt.resultIsNil {
-					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUser_FindOneByName(t *testing.T) {
+	user, err := entity.NewUser("name", "password", "password")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
-		resultIsNil   bool
-		resultError   error
+		name         string
+		inputName    string
+		expectResult *entity.User
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "found",
+			inputName:    user.Name,
+			expectResult: user,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
+					WithArgs(user.Name).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "not found",
+			inputName:    user.Name,
+			expectResult: nil,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
+					WithArgs(user.Name).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(sql.ErrNoRows)
+			},
 		},
 		{
-			name:          "user_not_found",
-			isTransaction: false,
-			resultIsNil:   true,
-			resultError:   sql.ErrNoRows,
+			name:         "mock return error",
+			inputName:    user.Name,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
+					WithArgs(user.Name).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
+							AddRow(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserDBRepository(db)
+			result, err := r.FindOneByName(ctx, tt.inputName)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, password, created_at, updated_at FROM users WHERE name = ? LIMIT 1;")).
-				WithArgs(tt.name).
-				WillReturnRows(
-					sqlmock.NewRows([]string{"id", "name", "password", "created_at", "updated_at"}).
-						AddRow(uuid.New(), tt.name, "password", time.Now(), time.Now()),
-				).
-				WillReturnError(tt.resultError)
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 
-			ur := database.NewUserDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					result, err := ur.FindOneByName(ctx, tt.name)
-					if err != nil {
-						return err
-					}
-					if (result == nil) != tt.resultIsNil {
-						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
-					}
-					return nil
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				result, err := ur.FindOneByName(ctx, tt.name)
-				if err != nil {
-					t.Error(err.Error())
-				}
-				if (result == nil) != tt.resultIsNil {
-					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}

@@ -51,7 +51,7 @@ func TestNewUser(t *testing.T) {
 					t.Error("id: expect uuid but got empty")
 				}
 				if user.Name != tt.inputName {
-					t.Errorf("name: expect string but got %s", tt.inputName)
+					t.Errorf("name: expect %s but got %s", tt.inputName, user.Name)
 				}
 				if len(user.Password) != 60 {
 					t.Errorf("password: expect 60 characters but got %d characters", len(user.Password))

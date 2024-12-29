@@ -3,196 +3,221 @@ package database_test
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/database"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/test"
-	"net/http"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
 func TestUserToken_Save(t *testing.T) {
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
+		name           string
+		inputUserToken *entity.UserToken
+		expectError    error
+		setMockDB      func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
+			name:           "success",
+			inputUserToken: userToken,
+			expectError:    nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("REPLACE user_tokens (user_id, token, expires_at) VALUES (?, ?, ?);")).
+					WithArgs(userToken.UserID, userToken.Token, userToken.ExpiresAt).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
+			name:           "save error",
+			inputUserToken: userToken,
+			expectError:    sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("REPLACE user_tokens (user_id, token, expires_at) VALUES (?, ?, ?);")).
+					WithArgs(userToken.UserID, userToken.Token, userToken.ExpiresAt).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+		{
+			name:           "no user token",
+			inputUserToken: nil,
+			expectError:    database.ErrRequiredUserToken,
+			setMockDB:      func(mock sqlmock.Sqlmock) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userToken, err := entity.NewUserToken(uuid.New())
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
-			}
-			mock.ExpectExec(regexp.QuoteMeta("REPLACE user_tokens (user_id, token, expires_at) VALUES (?, ?, ?);")).
-				WithArgs(userToken.UserID, userToken.Token, userToken.ExpiresAt).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserTokenDBRepository(db)
+			if err := r.Save(ctx, tt.inputUserToken); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 
-			ur := database.NewUserTokenDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					return ur.Save(ctx, userToken)
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				if err := ur.Save(ctx, userToken); err != nil {
-					t.Error(err.Error())
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUserToken_Delete(t *testing.T) {
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name          string
-		isTransaction bool
+		name           string
+		inputUserToken *entity.UserToken
+		expectError    error
+		setMockDB      func(sqlmock.Sqlmock)
 	}{
 		{
-			name:          "without_transaction",
-			isTransaction: false,
+			name:           "success",
+			inputUserToken: userToken,
+			expectError:    nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM user_tokens WHERE user_id = ?;")).
+					WithArgs(userToken.UserID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(nil)
+			},
 		},
 		{
-			name:          "with_transaction",
-			isTransaction: true,
+			name:           "delete error",
+			inputUserToken: userToken,
+			expectError:    sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM user_tokens WHERE user_id = ?;")).
+					WithArgs(userToken.UserID).
+					WillReturnResult(sqlmock.NewResult(1, 1)).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+		{
+			name:           "no user token",
+			inputUserToken: nil,
+			expectError:    database.ErrRequiredUserToken,
+			setMockDB:      func(mock sqlmock.Sqlmock) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userToken, err := entity.NewUserToken(uuid.New())
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			ctx := context.Background()
-
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
-			}
-			mock.ExpectExec(regexp.QuoteMeta("DELETE FROM user_tokens WHERE user_id = ?;")).
-				WithArgs(userToken.UserID).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserTokenDBRepository(db)
+			if err := r.Delete(ctx, tt.inputUserToken); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 
-			ur := database.NewUserTokenDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					return ur.Delete(ctx, userToken)
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				if err := ur.Delete(ctx, userToken); err != nil {
-					t.Error(err.Error())
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}
 }
 
 func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		token         string
-		isTransaction bool
-		resultIsNil   bool
-		resultError   error
+		name         string
+		inputToken   string
+		expectResult *entity.UserToken
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
 	}{
 		{
-			token:         "without_transaction",
-			isTransaction: false,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "found",
+			inputToken:   userToken.Token,
+			expectResult: userToken,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;")).
+					WithArgs(userToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"user_id", "token", "expires_at"}).
+							AddRow(userToken.UserID, userToken.Token, userToken.ExpiresAt),
+					).
+					WillReturnError(nil)
+			},
 		},
 		{
-			token:         "with_transaction",
-			isTransaction: true,
-			resultIsNil:   false,
-			resultError:   nil,
+			name:         "not found",
+			inputToken:   userToken.Token,
+			expectResult: nil,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;")).
+					WithArgs(userToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"user_id", "token", "expires_at"}).
+							AddRow(userToken.UserID, userToken.Token, userToken.ExpiresAt),
+					).
+					WillReturnError(sql.ErrNoRows)
+			},
 		},
 		{
-			token:         "user_not_found",
-			isTransaction: false,
-			resultIsNil:   true,
-			resultError:   sql.ErrNoRows,
+			name:         "not found",
+			inputToken:   userToken.Token,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;")).
+					WithArgs(userToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"user_id", "token", "expires_at"}).
+							AddRow(userToken.UserID, userToken.Token, userToken.ExpiresAt),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.token, func(t *testing.T) {
-			ctx := context.Background()
-
+		t.Run(tt.name, func(t *testing.T) {
 			db, mock := test.NewMockDB(t)
 			defer db.Close()
 
-			if tt.isTransaction {
-				mock.ExpectBegin()
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewUserTokenDBRepository(db)
+			result, err := r.FindOneByTokenAndNotExpired(ctx, tt.inputToken)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;")).
-				WithArgs(tt.token).
-				WillReturnRows(
-					sqlmock.NewRows([]string{"user_id", "token", "expires_at"}).
-						AddRow(uuid.New(), tt.token, time.Now()),
-				).
-				WillReturnError(tt.resultError)
-			if tt.isTransaction {
-				mock.ExpectCommit()
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 
-			ur := database.NewUserTokenDBRepository(db)
-			if tt.isTransaction {
-				to := database.NewSqlxTransactionObject(db)
-				if err := to.Transaction(ctx, func(ctx context.Context) error {
-					result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
-					if err != nil {
-						return err
-					}
-					if (result == nil) != tt.resultIsNil {
-						return status.Error(http.StatusInternalServerError, fmt.Sprintf("expect %t but got %t", (result == nil), tt.resultIsNil))
-					}
-					return nil
-				}); err != nil {
-					t.Error(err.Error())
-				}
-			} else {
-				result, err := ur.FindOneByTokenAndNotExpired(ctx, tt.token)
-				if err != nil {
-					t.Error(err.Error())
-				}
-				if (result == nil) != tt.resultIsNil {
-					t.Errorf("expect %t but got %t", (result == nil), tt.resultIsNil)
-				}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
 			}
 		})
 	}

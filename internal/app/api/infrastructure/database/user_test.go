@@ -28,8 +28,9 @@ func TestUser_Create(t *testing.T) {
 		setMockDB   func(sqlmock.Sqlmock)
 	}{
 		{
-			name:      "success",
-			inputUser: user,
+			name:        "success",
+			inputUser:   user,
+			expectError: nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
 				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users (id, name, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?);")).
 					WithArgs(user.ID, user.Name, user.Password, user.CreatedAt, user.UpdatedAt).
@@ -38,7 +39,7 @@ func TestUser_Create(t *testing.T) {
 			},
 		},
 		{
-			name:        "mock return error",
+			name:        "create error",
 			inputUser:   user,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
@@ -49,7 +50,7 @@ func TestUser_Create(t *testing.T) {
 			},
 		},
 		{
-			name:        "nil user",
+			name:        "no user",
 			inputUser:   nil,
 			expectError: database.ErrRequiredUser,
 			setMockDB:   func(mock sqlmock.Sqlmock) {},
@@ -100,7 +101,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		},
 		{
-			name:        "mock return error",
+			name:        "update error",
 			inputUser:   user,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
@@ -111,7 +112,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		},
 		{
-			name:        "nil user",
+			name:        "no user",
 			inputUser:   nil,
 			expectError: database.ErrRequiredUser,
 			setMockDB:   func(mock sqlmock.Sqlmock) {},
@@ -162,7 +163,7 @@ func TestUser_Delete(t *testing.T) {
 			},
 		},
 		{
-			name:        "mock return error",
+			name:        "delete error",
 			inputUser:   user,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
@@ -173,7 +174,7 @@ func TestUser_Delete(t *testing.T) {
 			},
 		},
 		{
-			name:        "nil user",
+			name:        "no user",
 			inputUser:   nil,
 			expectError: database.ErrRequiredUser,
 			setMockDB:   func(mock sqlmock.Sqlmock) {},
@@ -244,7 +245,7 @@ func TestUser_FindOneByIDAndNotDeleted(t *testing.T) {
 			},
 		},
 		{
-			name:         "mock return error",
+			name:         "find error",
 			inputID:      user.ID,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
@@ -328,7 +329,7 @@ func TestUser_FindOneByName(t *testing.T) {
 			},
 		},
 		{
-			name:         "mock return error",
+			name:         "find error",
 			inputName:    user.Name,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,

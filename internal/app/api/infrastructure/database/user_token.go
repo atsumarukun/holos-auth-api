@@ -14,6 +14,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	ErrRequiredUserToken = status.Error(http.StatusInternalServerError, "user token is required")
+)
+
 type userTokenDBRepository struct {
 	db *sqlx.DB
 }
@@ -25,34 +29,43 @@ func NewUserTokenDBRepository(db *sqlx.DB) repository.UserTokenRepository {
 }
 
 func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.UserToken) error {
+	if userToken == nil {
+		return ErrRequiredUserToken
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	userTokenModel := transformer.ToUserTokenModel(userToken)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`REPLACE user_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at);`,
 		userTokenModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.UserToken) error {
+	if userToken == nil {
+		return ErrRequiredUserToken
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	userTokenModel := transformer.ToUserTokenModel(userToken)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`DELETE FROM user_tokens WHERE user_id = :user_id;`,
 		userTokenModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, error) {
 	var userToken model.UserTokenModel
 	driver := getSqlxDriver(ctx, r.db)
+
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT user_id, token, expires_at FROM user_tokens WHERE token = ? AND NOW(6) < expires_at LIMIT 1;`,
@@ -60,9 +73,9 @@ func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context,
 	).StructScan(&userToken); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
-		} else {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
+		return nil, err
 	}
+
 	return transformer.ToUserTokenEntity(&userToken), nil
 }

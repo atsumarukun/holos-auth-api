@@ -15,6 +15,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	ErrRequiredAgent = status.Error(http.StatusInternalServerError, "agent is required")
+)
+
 type agentDBRepository struct {
 	db *sqlx.DB
 }
@@ -26,51 +30,62 @@ func NewAgentDBRepository(db *sqlx.DB) repository.AgentRepository {
 }
 
 func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) error {
-	driver := getSqlxDriver(ctx, r.db)
+	if agent == nil {
+		return ErrRequiredAgent
+	}
 
+	driver := getSqlxDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO agents (id, user_id, name, created_at, updated_at) VALUES (:id, :user_id, :name, :created_at, :updated_at);`,
 		agentModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
+	)
 
-	return nil
+	return err
 }
 
 func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) error {
-	driver := getSqlxDriver(ctx, r.db)
+	if agent == nil {
+		return ErrRequiredAgent
+	}
 
+	driver := getSqlxDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
+
 	if _, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET user_id = :user_id, name = :name, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		agentModel,
 	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	return r.updatePolicies(ctx, agent.ID, agent.Policies)
 }
 
 func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) error {
+	if agent == nil {
+		return ErrRequiredAgent
+	}
+
 	driver := getSqlxDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
-	if _, err := driver.NamedExecContext(
+
+	_, err := driver.NamedExecContext(
 		ctx,
 		`UPDATE agents SET updated_at = updated_at, deleted_at = NOW(6) WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		agentModel,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
-	return nil
+	)
+
+	return err
 }
 
 func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, error) {
 	var agent model.AgentModel
 	driver := getSqlxDriver(ctx, r.db)
+
 	if err := driver.QueryRowxContext(
 		ctx,
 		`SELECT
@@ -95,41 +110,44 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 	).StructScan(&agent); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
-		} else {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
 		}
+		return nil, err
 	}
+
 	return transformer.ToAgentEntity(&agent)
 }
 
 func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
-	var agents []*model.AgentModel
+	agents := []*model.AgentModel{}
 	driver := getSqlxDriver(ctx, r.db)
+
 	rows, err := driver.QueryxContext(
 		ctx,
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND deleted_at IS NULL;`,
 		userID,
 	)
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var agent model.AgentModel
 		if err := rows.StructScan(&agent); err != nil {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
+			return nil, err
 		}
 		agents = append(agents, &agent)
 	}
+
 	return transformer.ToAgentEntities(agents)
 }
 
 func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) ([]*entity.Agent, error) {
 	if len(ids) == 0 {
-		return nil, nil
+		return []*entity.Agent{}, nil
 	}
 
-	var agents []*model.AgentModel
+	agents := []*model.AgentModel{}
 	driver := getSqlxDriver(ctx, r.db)
 
 	query, args, err := sqlx.Named(
@@ -140,26 +158,28 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 		},
 	)
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 	query, args, err = sqlx.In(query, args...)
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 	query = driver.Rebind(query)
 
 	rows, err := driver.QueryxContext(ctx, query, args...)
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var agent model.AgentModel
 		if err := rows.StructScan(&agent); err != nil {
-			return nil, status.Error(http.StatusInternalServerError, err.Error())
+			return nil, err
 		}
 		agents = append(agents, &agent)
 	}
+
 	return transformer.ToAgentEntities(agents)
 }
 
@@ -171,7 +191,7 @@ func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, po
 		`DELETE FROM permissions WHERE agent_id = :agent_id;`,
 		map[string]interface{}{"agent_id": id},
 	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	if len(policieIDs) == 0 {
@@ -185,13 +205,11 @@ func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, po
 			"policy_id": policyID,
 		}
 	}
-	if _, err := driver.NamedExecContext(
+	_, err := driver.NamedExecContext(
 		ctx,
 		`INSERT INTO permissions (agent_id, policy_id) VALUES (:agent_id, :policy_id);`,
 		args,
-	); err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
-	}
+	)
 
-	return nil
+	return err
 }

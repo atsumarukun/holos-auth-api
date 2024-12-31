@@ -31,7 +31,7 @@ func ToAgentModel(agent *entity.Agent) *model.AgentModel {
 }
 
 func ToAgentEntity(agent *model.AgentModel) (*entity.Agent, error) {
-	var policies []uuid.UUID
+	policies := []uuid.UUID{}
 	if agent.Policies != nil {
 		for _, policyID := range strings.Split(*agent.Policies, ",") {
 			policy, err := uuid.Parse(policyID)

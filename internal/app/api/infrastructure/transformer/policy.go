@@ -45,7 +45,7 @@ func ToPolicyEntity(policy *model.PolicyModel) (*entity.Policy, error) {
 		return nil, status.Error(http.StatusInternalServerError, err.Error())
 	}
 
-	var agents []uuid.UUID
+	agents := []uuid.UUID{}
 	if policy.Agents != nil {
 		for _, agentID := range strings.Split(*policy.Agents, ",") {
 			agent, err := uuid.Parse(agentID)

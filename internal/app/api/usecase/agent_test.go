@@ -2,25 +2,68 @@ package usecase_test
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/usecase"
-	"holos-auth-api/test"
-	mock_repository "holos-auth-api/test/mock/domain/repository"
-	"reflect"
+	"holos-auth-api/internal/app/api/usecase/dto"
+	mockDomain "holos-auth-api/test/mock/domain"
+	mockRepository "holos-auth-api/test/mock/domain/repository"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 )
 
 func TestAgent_Create(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name   string
-		expect error
+		name                   string
+		inputUserID            uuid.UUID
+		inputName              string
+		expectResult           *dto.AgentDTO
+		expectError            error
+		setMockAgentRepository func(context.Context, *mockRepository.MockAgentRepository)
 	}{
 		{
-			name:   "exists",
-			expect: nil,
+			name:         "success",
+			inputUserID:  agent.UserID,
+			inputName:    "name",
+			expectResult: &dto.AgentDTO{ID: agent.ID, UserID: agent.UserID, Name: agent.Name, Policies: []uuid.UUID{}, CreatedAt: agent.CreatedAt, UpdatedAt: agent.UpdatedAt},
+			expectError:  nil,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					Create(ctx, gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			name:                   "invalid name",
+			inputUserID:            agent.UserID,
+			inputName:              "なまえ",
+			expectResult:           nil,
+			expectError:            entity.ErrInvalidAgentName,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {},
+		},
+		{
+			name:         "create error",
+			inputUserID:  agent.UserID,
+			inputName:    "name",
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					Create(ctx, gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -28,319 +71,742 @@ func TestAgent_Create(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
+			tt.setMockAgentRepository(ctx, ar)
 
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().Create(ctx, gomock.Any()).Return(nil).AnyTimes()
-
-			au := usecase.NewAgentUsecase(to, ar, nil)
-			dto, err := au.Create(ctx, uuid.New(), tt.name)
-			if err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			au := usecase.NewAgentUsecase(nil, ar, nil)
+			result, err := au.Create(ctx, tt.inputUserID, tt.inputName)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if reflect.TypeOf(dto).Elem().Name() != "AgentDTO" {
-				t.Errorf("expect AgentDTO but got %s", reflect.TypeOf(dto).Elem().Name())
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(dto.AgentDTO{}, "ID", "CreatedAt", "UpdatedAt"),
+			}
+			if diff := cmp.Diff(result, tt.expectResult, opts...); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}
 }
 
 func TestAgent_Update(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id          uuid.UUID
-		userID      uuid.UUID
-		name        string
-		isReturnNil bool
-		expect      error
+		name                     string
+		inputID                  uuid.UUID
+		inputUserID              uuid.UUID
+		inputName                string
+		expectResult             *dto.AgentDTO
+		expectError              error
+		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
+		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
 	}{
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "success",
-			isReturnNil: false,
-			expect:      nil,
+			name:         "success",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			inputName:    "update",
+			expectResult: &dto.AgentDTO{ID: agent.ID, UserID: agent.UserID, Name: "update", Policies: []uuid.UUID{}, CreatedAt: agent.CreatedAt, UpdatedAt: agent.UpdatedAt},
+			expectError:  nil,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Update(ctx, gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
 		},
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "not_found",
-			isReturnNil: true,
-			expect:      usecase.ErrAgentNotFound,
+			name:         "invalid name",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			inputName:    "なまえ",
+			expectResult: nil,
+			expectError:  entity.ErrInvalidAgentName,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "agent not found",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			inputName:    "update",
+			expectResult: nil,
+			expectError:  usecase.ErrAgentNotFound,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "find error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			inputName:    "update",
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+		{
+			name:         "update error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			inputName:    "update",
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Update(ctx, gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			res := agent
-			if tt.isReturnNil {
-				res = nil
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			to := mockDomain.NewMockTransactionObject(ctrl)
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
-
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
-			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil).AnyTimes()
+			tt.setMockTransactionObject(ctx, to)
+			tt.setMockAgentRepository(ctx, ar)
 
 			au := usecase.NewAgentUsecase(to, ar, nil)
-			dto, err := au.Update(ctx, tt.id, tt.userID, tt.name)
-			if err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			result, err := au.Update(ctx, tt.inputID, tt.inputUserID, tt.inputName)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if reflect.TypeOf(dto).Elem().Name() != "AgentDTO" {
-				t.Errorf("expect AgentDTO but got %s", reflect.TypeOf(dto).Elem().Name())
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(dto.AgentDTO{}, "UpdatedAt"),
+			}
+			if diff := cmp.Diff(result, tt.expectResult, opts...); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}
 }
 
 func TestAgent_Delete(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id          uuid.UUID
-		userID      uuid.UUID
-		name        string
-		isReturnNil bool
-		expect      error
+		name                     string
+		inputID                  uuid.UUID
+		inputUserID              uuid.UUID
+		expectError              error
+		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
+		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
 	}{
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
 			name:        "success",
-			isReturnNil: false,
-			expect:      nil,
+			inputID:     agent.ID,
+			inputUserID: agent.UserID,
+			expectError: nil,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Delete(ctx, gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
 		},
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "not_found",
-			isReturnNil: true,
-			expect:      usecase.ErrAgentNotFound,
+			name:        "agent not found",
+			inputID:     agent.ID,
+			inputUserID: agent.UserID,
+			expectError: usecase.ErrAgentNotFound,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:        "find error",
+			inputID:     agent.ID,
+			inputUserID: agent.UserID,
+			expectError: sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+		{
+			name:        "delete error",
+			inputID:     agent.ID,
+			inputUserID: agent.UserID,
+			expectError: sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Delete(ctx, gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			res := agent
-			if tt.isReturnNil {
-				res = nil
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			to := mockDomain.NewMockTransactionObject(ctrl)
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
-
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(res, nil)
-			ar.EXPECT().Delete(ctx, gomock.Any()).Return(nil).AnyTimes()
+			tt.setMockTransactionObject(ctx, to)
+			tt.setMockAgentRepository(ctx, ar)
 
 			au := usecase.NewAgentUsecase(to, ar, nil)
-			if err := au.Delete(ctx, tt.id, tt.userID); err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			if err := au.Delete(ctx, tt.inputID, tt.inputUserID); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
 		})
 	}
 }
 
 func TestAgent_Gets(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id          uuid.UUID
-		userID      uuid.UUID
-		name        string
-		isReturnNil bool
-		expect      error
+		name                   string
+		inputUserID            uuid.UUID
+		expectResult           []*dto.AgentDTO
+		expectError            error
+		setMockAgentRepository func(context.Context, *mockRepository.MockAgentRepository)
 	}{
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "success",
-			isReturnNil: false,
-			expect:      nil,
+			name:         "found",
+			inputUserID:  agent.UserID,
+			expectResult: []*dto.AgentDTO{{ID: agent.ID, UserID: agent.UserID, Name: agent.Name, Policies: []uuid.UUID{}, CreatedAt: agent.CreatedAt, UpdatedAt: agent.UpdatedAt}},
+			expectError:  nil,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					Return([]*entity.Agent{entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt)}, nil).
+					Times(1)
+			},
 		},
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "not_found",
-			isReturnNil: true,
-			expect:      nil,
+			name:         "not found",
+			inputUserID:  agent.UserID,
+			expectResult: []*dto.AgentDTO{},
+			expectError:  nil,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "find error",
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			res := []*entity.Agent{agent}
-			if tt.isReturnNil {
-				res = nil
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
+			tt.setMockAgentRepository(ctx, ar)
 
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindByUserIDAndNotDeleted(ctx, tt.userID).Return(res, nil)
-
-			au := usecase.NewAgentUsecase(to, ar, nil)
-			_, err = au.Gets(ctx, tt.userID)
-			if err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			au := usecase.NewAgentUsecase(nil, ar, nil)
+			result, err := au.Gets(ctx, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}
 }
 
 func TestAgent_UpdatePolicies(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id     uuid.UUID
-		userID uuid.UUID
-		name   string
-		expect error
+		name                     string
+		inputID                  uuid.UUID
+		inputUserID              uuid.UUID
+		inputPolicyIDs           []uuid.UUID
+		expectResult             []*dto.PolicyDTO
+		expectError              error
+		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
+		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
+		setMockPolicyRepository  func(context.Context, *mockRepository.MockPolicyRepository)
 	}{
 		{
-			id:     uuid.New(),
-			userID: uuid.New(),
-			name:   "success",
-			expect: nil,
+			name:           "success",
+			inputID:        agent.ID,
+			inputUserID:    agent.UserID,
+			inputPolicyIDs: []uuid.UUID{policy.ID},
+			expectResult:   []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
+			expectError:    nil,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Update(ctx, gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Times(1)
+			},
+		},
+		{
+			name:           "agent not found",
+			inputID:        agent.ID,
+			inputUserID:    agent.UserID,
+			inputPolicyIDs: []uuid.UUID{policy.ID},
+			expectResult:   nil,
+			expectError:    usecase.ErrAgentNotFound,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+		},
+		{
+			name:           "find agent error",
+			inputID:        agent.ID,
+			inputUserID:    agent.UserID,
+			inputPolicyIDs: []uuid.UUID{policy.ID},
+			expectResult:   nil,
+			expectError:    sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+		},
+		{
+			name:           "find policies error",
+			inputID:        agent.ID,
+			inputUserID:    agent.UserID,
+			inputPolicyIDs: []uuid.UUID{policy.ID},
+			expectResult:   nil,
+			expectError:    sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+		{
+			name:           "update agent error",
+			inputID:        agent.ID,
+			inputUserID:    agent.UserID,
+			inputPolicyIDs: []uuid.UUID{policy.ID},
+			expectResult:   nil,
+			expectError:    sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+				ar.EXPECT().
+					Update(ctx, gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			to := mockDomain.NewMockTransactionObject(ctrl)
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+			pr := mockRepository.NewMockPolicyRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
-
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(agent, nil)
-			ar.EXPECT().Update(ctx, gomock.Any()).Return(nil)
-
-			pr := mock_repository.NewMockPolicyRepository(ctrl)
-			pr.EXPECT().FindByIDsAndUserIDAndNotDeleted(ctx, []uuid.UUID{policy.ID}, tt.userID)
+			tt.setMockTransactionObject(ctx, to)
+			tt.setMockAgentRepository(ctx, ar)
+			tt.setMockPolicyRepository(ctx, pr)
 
 			au := usecase.NewAgentUsecase(to, ar, pr)
-			_, err = au.UpdatePolicies(ctx, tt.id, tt.userID, []uuid.UUID{policy.ID})
-			if err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			result, err := au.UpdatePolicies(ctx, tt.inputID, tt.inputUserID, tt.inputPolicyIDs)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}
 }
 
 func TestAgent_GetPolicies(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		id          uuid.UUID
-		userID      uuid.UUID
-		name        string
-		isReturnNil bool
-		expect      error
+		name                     string
+		inputID                  uuid.UUID
+		inputUserID              uuid.UUID
+		expectResult             []*dto.PolicyDTO
+		expectError              error
+		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
+		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
+		setMockPolicyRepository  func(context.Context, *mockRepository.MockPolicyRepository)
 	}{
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "success",
-			isReturnNil: false,
-			expect:      nil,
+			name:         "success",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
+			expectError:  nil,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Times(1)
+			},
 		},
 		{
-			id:          uuid.New(),
-			userID:      uuid.New(),
-			name:        "not_found",
-			isReturnNil: true,
-			expect:      nil,
+			name:         "agent not found",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  usecase.ErrAgentNotFound,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+		},
+		{
+			name:         "policies not found",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: []*dto.PolicyDTO{},
+			expectError:  nil,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "find agent error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+		},
+		{
+			name:         "find policies error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			agent, err := entity.NewAgent(uuid.New(), "name")
-			if err != nil {
-				t.Error(err.Error())
-			}
-			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
-			}
-
-			res := []*entity.Policy{policy}
-			if tt.isReturnNil {
-				res = nil
-			}
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			to := mockDomain.NewMockTransactionObject(ctrl)
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+			pr := mockRepository.NewMockPolicyRepository(ctrl)
+
 			ctx := context.Background()
 
-			to := test.NewTestTransactionObject()
-
-			ar := mock_repository.NewMockAgentRepository(ctrl)
-			ar.EXPECT().FindOneByIDAndUserIDAndNotDeleted(ctx, tt.id, tt.userID).Return(agent, nil)
-
-			pr := mock_repository.NewMockPolicyRepository(ctrl)
-			pr.EXPECT().FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), tt.userID).Return(res, nil)
+			tt.setMockTransactionObject(ctx, to)
+			tt.setMockAgentRepository(ctx, ar)
+			tt.setMockPolicyRepository(ctx, pr)
 
 			au := usecase.NewAgentUsecase(to, ar, pr)
-			_, err = au.GetPolicies(ctx, tt.id, tt.userID)
-			if err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
-				}
+			result, err := au.GetPolicies(ctx, tt.inputID, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}

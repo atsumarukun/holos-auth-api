@@ -256,6 +256,7 @@ func TestUser_UpdatePassword(t *testing.T) {
 
 func TestUser_Delete(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool

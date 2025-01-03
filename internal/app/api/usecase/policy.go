@@ -139,16 +139,20 @@ func (u *policyUsecase) UpdateAgents(ctx context.Context, id uuid.UUID, userID u
 }
 
 func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.AgentDTO, error) {
-	policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
-	if err != nil {
-		return nil, err
-	}
-	if policy == nil {
-		return nil, ErrPolicyNotFound
-	}
+	agents := []*entity.Agent{}
 
-	agents, err := u.agentRepository.FindByIDsAndUserIDAndNotDeleted(ctx, policy.Agents, userID)
-	if err != nil {
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+		if err != nil {
+			return err
+		}
+		if policy == nil {
+			return ErrPolicyNotFound
+		}
+
+		agents, err = u.agentRepository.FindByIDsAndUserIDAndNotDeleted(ctx, policy.Agents, userID)
+		return err
+	}); err != nil {
 		return nil, err
 	}
 

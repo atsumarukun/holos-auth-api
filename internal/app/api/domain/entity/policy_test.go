@@ -1,92 +1,187 @@
 package entity_test
 
 import (
+	"errors"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
 func TestNewPolicy(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if policy.ID == uuid.Nil {
-		t.Error("id: expect uuid but got empty")
-	}
-	if policy.UserID == uuid.Nil {
-		t.Error("user_id: expect uuid but got empty")
-	}
-	if policy.Name == "" {
-		t.Error("name: expect string but got empty")
-	}
-	if policy.Service == "" {
-		t.Error("service: expect string but got empty")
-	}
-	if policy.Path == "" {
-		t.Error("path: expect string but got empty")
-	}
-	if len(policy.Methods) == 0 {
-		t.Error("methods: expect array but got empty")
-	}
-	if policy.CreatedAt.IsZero() {
-		t.Error("created_at: expect time but got empty")
-	}
-	if policy.UpdatedAt.IsZero() {
-		t.Error("updated_at: expect time but got empty")
-	}
-	if !policy.CreatedAt.Equal(policy.UpdatedAt) {
-		t.Error("expect created_at and updated_at to be equal")
-	}
-}
-
-func TestPolicy_SetName(t *testing.T) {
 	tests := []struct {
-		name   string
-		expect error
+		name         string
+		inputUserID  uuid.UUID
+		inputName    string
+		inputService string
+		inputPath    string
+		inputMethods []string
+		expectError  error
 	}{
 		{
-			name:   "valid_NAME",
-			expect: nil,
+			name:         "success",
+			inputUserID:  uuid.New(),
+			inputName:    "name",
+			inputService: "STORAGE",
+			inputPath:    "/",
+			inputMethods: []string{"GET"},
+			expectError:  nil,
 		},
 		{
-			name:   "invalid-NAME",
-			expect: entity.ErrInvalidPolicyName,
+			name:         "invalied name",
+			inputUserID:  uuid.New(),
+			inputName:    "なまえ",
+			inputService: "STORAGE",
+			inputPath:    "/",
+			inputMethods: []string{"GET"},
+			expectError:  entity.ErrInvalidPolicyName,
 		},
 		{
-			name:   "なまえ",
-			expect: entity.ErrInvalidPolicyName,
+			name:         "invalid service",
+			inputUserID:  uuid.New(),
+			inputName:    "name",
+			inputService: "SERVICE",
+			inputPath:    "/",
+			inputMethods: []string{"GET"},
+			expectError:  entity.ErrInvalidPolicyService,
 		},
 		{
-			name:   strings.Repeat("a", 2),
-			expect: entity.ErrPolicyNameTooShort,
+			name:         "invalid path",
+			inputUserID:  uuid.New(),
+			inputName:    "name",
+			inputService: "STORAGE",
+			inputPath:    "path",
+			inputMethods: []string{"GET"},
+			expectError:  entity.ErrInvalidPolicyPath,
 		},
 		{
-			name:   strings.Repeat("a", 3),
-			expect: nil,
-		},
-		{
-			name:   strings.Repeat("a", 255),
-			expect: nil,
-		},
-		{
-			name:   strings.Repeat("a", 256),
-			expect: entity.ErrPolicyNameTooLong,
+			name:         "invalid methods",
+			inputUserID:  uuid.New(),
+			inputName:    "name",
+			inputService: "STORAGE",
+			inputPath:    "/",
+			inputMethods: []string{"PATCH"},
+			expectError:  entity.ErrInvalidPolicyMethods,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
+			policy, err := entity.NewPolicy(tt.inputUserID, tt.inputName, tt.inputService, tt.inputPath, tt.inputMethods)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if err := policy.SetName(tt.name); err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
+
+			if tt.expectError == nil {
+				if policy.ID == uuid.Nil {
+					t.Error("id: expect uuid but got empty")
+				}
+				if policy.UserID != tt.inputUserID {
+					t.Errorf("user_id: expect %v but got %v", tt.inputUserID, policy.UserID)
+				}
+				if policy.Name != tt.inputName {
+					t.Errorf("name: expect %s but got %s", tt.inputName, policy.Name)
+				}
+				if policy.Service != tt.inputService {
+					t.Errorf("name: expect %s but got %s", tt.inputService, policy.Service)
+				}
+				if policy.Path != tt.inputPath {
+					t.Errorf("name: expect %s but got %s", tt.inputPath, policy.Path)
+				}
+				if diff := cmp.Diff(policy.Methods, tt.inputMethods); diff != "" {
+					t.Error(diff)
+				}
+				if policy.CreatedAt.IsZero() {
+					t.Error("created_at: expect time but got empty")
+				}
+				if policy.UpdatedAt.IsZero() {
+					t.Error("updated_at: expect time but got empty")
+				}
+				if !policy.CreatedAt.Equal(policy.UpdatedAt) {
+					t.Error("expect created_at and updated_at to be equal")
+				}
+			}
+		})
+	}
+}
+
+func TestPolicy_SetName(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name        string
+		inputName   string
+		expectError error
+	}{
+		{
+			name:        "lower case",
+			inputName:   "name",
+			expectError: nil,
+		},
+		{
+			name:        "upper case",
+			inputName:   "NAME",
+			expectError: nil,
+		},
+		{
+			name:        "numeral",
+			inputName:   "name01",
+			expectError: nil,
+		},
+		{
+			name:        "underscore",
+			inputName:   "sample_name",
+			expectError: nil,
+		},
+		{
+			name:        "hiragana",
+			inputName:   "なまえ",
+			expectError: entity.ErrInvalidPolicyName,
+		},
+		{
+			name:        "hyphen",
+			inputName:   "sample-name",
+			expectError: entity.ErrInvalidPolicyName,
+		},
+		{
+			name:        "slash",
+			inputName:   "sample/name",
+			expectError: entity.ErrInvalidPolicyName,
+		},
+		{
+			name:        "2 characters",
+			inputName:   strings.Repeat("a", 2),
+			expectError: entity.ErrPolicyNameTooShort,
+		},
+		{
+			name:        "3 characters",
+			inputName:   strings.Repeat("a", 3),
+			expectError: nil,
+		},
+		{
+			name:        "255 characters",
+			inputName:   strings.Repeat("a", 255),
+			expectError: nil,
+		},
+		{
+			name:        "256 characters",
+			inputName:   strings.Repeat("a", 256),
+			expectError: entity.ErrPolicyNameTooLong,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			updatedAt := policy.UpdatedAt
+			if err := policy.SetName(tt.inputName); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if tt.expectError == nil {
+				if !policy.UpdatedAt.After(updatedAt) {
+					t.Error("updatedAt has not been updated")
 				}
 			}
 		})
@@ -94,43 +189,46 @@ func TestPolicy_SetName(t *testing.T) {
 }
 
 func TestPolicy_SetService(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name    string
-		service string
-		expect  error
+		name         string
+		inputService string
+		expectError  error
 	}{
 		{
-			name:    "storage",
-			service: "STORAGE",
-			expect:  nil,
+			name:         "storage",
+			inputService: "STORAGE",
+			expectError:  nil,
 		},
 		{
-			name:    "content",
-			service: "CONTENT",
-			expect:  nil,
+			name:         "content",
+			inputService: "CONTENT",
+			expectError:  nil,
 		},
 		{
-			name:    "lower_case",
-			service: "storage",
-			expect:  entity.ErrInvalidPolicyService,
+			name:         "lower case",
+			inputService: "storage",
+			expectError:  entity.ErrInvalidPolicyService,
 		},
 		{
-			name:    "invalid",
-			service: "INVALID",
-			expect:  entity.ErrInvalidPolicyService,
+			name:         "no service",
+			inputService: "SERVICE",
+			expectError:  entity.ErrInvalidPolicyService,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			policy, err := entity.NewPolicy(uuid.New(), tt.name, "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
+			updatedAt := policy.UpdatedAt
+			if err := policy.SetService(tt.inputService); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if err := policy.SetService(tt.service); err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
+			if tt.expectError == nil {
+				if !policy.UpdatedAt.After(updatedAt) {
+					t.Error("updatedAt has not been updated")
 				}
 			}
 		})
@@ -138,53 +236,86 @@ func TestPolicy_SetService(t *testing.T) {
 }
 
 func TestPolicy_SetPath(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name   string
-		path   string
-		expect error
+		name        string
+		inputPath   string
+		expectError error
 	}{
 		{
-			name:   "valid",
-			path:   "/path",
-			expect: nil,
+			name:        "lower case",
+			inputPath:   "/path",
+			expectError: nil,
 		},
 		{
-			name:   "invalid",
-			path:   "path",
-			expect: entity.ErrInvalidPolicyPath,
+			name:        "upper case",
+			inputPath:   "/PATH",
+			expectError: entity.ErrInvalidPolicyPath,
 		},
 		{
-			name:   "last_character_is_slash",
-			path:   "/path/",
-			expect: nil,
+			name:        "numeral",
+			inputPath:   "/path01",
+			expectError: entity.ErrInvalidPolicyPath,
 		},
 		{
-			name:   "max_length",
-			path:   "/" + strings.Repeat("a", 254),
-			expect: nil,
+			name:        "underscore",
+			inputPath:   "/sample_path",
+			expectError: entity.ErrInvalidPolicyPath,
 		},
 		{
-			name:   "too_long",
-			path:   "/" + strings.Repeat("a", 255),
-			expect: entity.ErrPolicyPathTooLong,
+			name:        "hiragana",
+			inputPath:   "/ぱす",
+			expectError: entity.ErrInvalidPolicyPath,
 		},
 		{
-			name:   "required",
-			path:   "",
-			expect: entity.ErrRequiredPolicyPath,
+			name:        "hyphen",
+			inputPath:   "/sample-path",
+			expectError: nil,
+		},
+		{
+			name:        "slash only",
+			inputPath:   "/",
+			expectError: nil,
+		},
+		{
+			name:        "not slash start",
+			inputPath:   "path",
+			expectError: entity.ErrInvalidPolicyPath,
+		},
+		{
+			name:        "slash end",
+			inputPath:   "/path/",
+			expectError: entity.ErrInvalidPolicyPath,
+		},
+		{
+			name:        "255 characters",
+			inputPath:   "/" + strings.Repeat("a", 254),
+			expectError: nil,
+		},
+		{
+			name:        "256 characters",
+			inputPath:   "/" + strings.Repeat("a", 255),
+			expectError: entity.ErrPolicyPathTooLong,
+		},
+		{
+			name:        "empty",
+			inputPath:   "",
+			expectError: entity.ErrRequiredPolicyPath,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			policy, err := entity.NewPolicy(uuid.New(), tt.name, "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
+			updatedAt := policy.UpdatedAt
+			if err := policy.SetPath(tt.inputPath); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if err := policy.SetPath(tt.path); err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
+			if tt.expectError == nil {
+				if !policy.UpdatedAt.After(updatedAt) {
+					t.Error("updatedAt has not been updated")
 				}
 			}
 		})
@@ -192,49 +323,121 @@ func TestPolicy_SetPath(t *testing.T) {
 }
 
 func TestPolicy_SetMethods(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name    string
-		Methods []string
-		expect  error
+		name         string
+		inputMethods []string
+		expectError  error
 	}{
 		{
-			name:    "valid",
-			Methods: []string{"GET", "POST"},
-			expect:  nil,
+			name:         "allow methods",
+			inputMethods: []string{"GET", "POST", "PUT", "DELETE"},
+			expectError:  nil,
 		},
 		{
-			name:    "required",
-			Methods: []string{},
-			expect:  entity.ErrRequiredPolicyMethods,
+			name:         "head",
+			inputMethods: []string{"HEAD"},
+			expectError:  entity.ErrInvalidPolicyMethods,
 		},
 		{
-			name:    "lower_case",
-			Methods: []string{"get", "post"},
-			expect:  entity.ErrInvalidPolicyMethods,
+			name:         "connect",
+			inputMethods: []string{"CONNECT"},
+			expectError:  entity.ErrInvalidPolicyMethods,
 		},
 		{
-			name:    "invalid",
-			Methods: []string{"INVALID"},
-			expect:  entity.ErrInvalidPolicyMethods,
+			name:         "options",
+			inputMethods: []string{"OPTIONS"},
+			expectError:  entity.ErrInvalidPolicyMethods,
 		},
 		{
-			name:    "duplication",
-			Methods: []string{"GET", "POST", "GET"},
-			expect:  nil,
+			name:         "trace",
+			inputMethods: []string{"TRACE"},
+			expectError:  entity.ErrInvalidPolicyMethods,
+		},
+		{
+			name:         "patch",
+			inputMethods: []string{"PATCH"},
+			expectError:  entity.ErrInvalidPolicyMethods,
+		},
+		{
+			name:         "lower case",
+			inputMethods: []string{"get"},
+			expectError:  entity.ErrInvalidPolicyMethods,
+		},
+		{
+			name:         "duplication",
+			inputMethods: []string{"GET", "POST", "GET"},
+			expectError:  nil,
+		},
+		{
+			name:         "empty",
+			inputMethods: []string{},
+			expectError:  entity.ErrRequiredPolicyMethods,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			policy, err := entity.NewPolicy(uuid.New(), tt.name, "STORAGE", "/", []string{"GET"})
-			if err != nil {
-				t.Error(err.Error())
+			updatedAt := policy.UpdatedAt
+			if err := policy.SetMethods(tt.inputMethods); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
-			if err := policy.SetMethods(tt.Methods); err != tt.expect {
-				if err == nil {
-					t.Error("expect err but got nil")
-				} else {
-					t.Error(err.Error())
+			if tt.expectError == nil {
+				if !policy.UpdatedAt.After(updatedAt) {
+					t.Error("updatedAt has not been updated")
 				}
+			}
+		})
+	}
+}
+
+func TestPolicy_SetAgents(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agent, err := entity.NewAgent(policy.UserID, "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name         string
+		inputAgents  []*entity.Agent
+		expectResult []uuid.UUID
+		expectError  error
+	}{
+		{
+			name:         "success",
+			inputAgents:  []*entity.Agent{agent},
+			expectResult: []uuid.UUID{agent.ID},
+			expectError:  nil,
+		},
+		{
+			name:         "empty",
+			inputAgents:  []*entity.Agent{},
+			expectResult: []uuid.UUID{},
+			expectError:  nil,
+		},
+		{
+			name:         "duplication",
+			inputAgents:  []*entity.Agent{agent, agent},
+			expectResult: []uuid.UUID{agent.ID},
+			expectError:  nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			updatedAt := policy.UpdatedAt
+			policy.SetAgents(tt.inputAgents)
+			if diff := cmp.Diff(policy.Agents, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+			if !policy.UpdatedAt.After(updatedAt) {
+				t.Error("updatedAt has not been updated")
 			}
 		})
 	}

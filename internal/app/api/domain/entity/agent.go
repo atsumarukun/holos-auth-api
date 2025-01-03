@@ -4,6 +4,7 @@ import (
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -82,5 +83,6 @@ func (a *Agent) SetPolicies(policies []*Policy) {
 	for i, policy := range policies {
 		ids[i] = policy.ID
 	}
-	a.Policies = ids
+	a.Policies = slices.Compact(ids)
+	a.UpdatedAt = time.Now()
 }

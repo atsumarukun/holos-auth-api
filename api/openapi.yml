@@ -349,9 +349,9 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
-  /auth/user_id:
+  /auth/authorization:
     get:
-      summary: "ユーザーID取得"
+      summary: "認可"
       tags:
         - "auth"
       security:
@@ -359,10 +359,13 @@ paths:
       responses:
         200:
           description: "成功"
-          $ref: "#/components/responses/get_user_id"
+          $ref: "#/components/responses/auth_authorization"
         401:
           description: "認証エラー"
           $ref: "#/components/responses/401"
+        403:
+          description: "認可エラー"
+          $ref: "#/components/responses/403"
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
@@ -748,8 +751,8 @@ components:
             type: "array"
             items:
               $ref: "#/components/schemas/agent"
-    get_user_id:
-      description: "ユーザーID取得"
+    auth_authorization:
+      description: "認可"
       content:
         text/plain:
           schema:
@@ -769,6 +772,13 @@ components:
           schema:
             type: "string"
             example: "unauthorized"
+    403:
+      description: "Forbidden"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            example: "forbidden"
     404:
       description: "Resource Not Found"
       content:

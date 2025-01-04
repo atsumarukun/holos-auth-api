@@ -9,6 +9,7 @@ import (
 type PolicyResponse struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
+	Effect    string    `json:"effect"`
 	Service   string    `json:"service"`
 	Path      string    `json:"path"`
 	Methods   []string  `json:"methods"`

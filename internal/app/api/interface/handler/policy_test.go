@@ -21,7 +21,7 @@ import (
 func TestPolicy_Create(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -36,11 +36,11 @@ func TestPolicy_Create(t *testing.T) {
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:          `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:     http.StatusCreated,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(mapper.ToPolicyDTO(policy), nil).
 					Times(1)
 			},
@@ -48,7 +48,7 @@ func TestPolicy_Create(t *testing.T) {
 		{
 			name:                 "no user id in context",
 			isSetUserIDToContext: false,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:          `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:     http.StatusInternalServerError,
 			setMockUsecase:       func(u *mockUsecase.MockPolicyUsecase) {},
 		},
@@ -62,11 +62,11 @@ func TestPolicy_Create(t *testing.T) {
 		{
 			name:                 "create error",
 			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:          `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:     http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -105,7 +105,7 @@ func TestPolicy_Create(t *testing.T) {
 func TestPolicy_Update(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -122,11 +122,11 @@ func TestPolicy_Update(t *testing.T) {
 			name:                   "success",
 			isSetIDToPathParameter: true,
 			isSetUserIDToContext:   true,
-			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:            `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:       http.StatusOK,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(mapper.ToPolicyDTO(policy), nil).
 					Times(1)
 			},
@@ -135,7 +135,7 @@ func TestPolicy_Update(t *testing.T) {
 			name:                   "no id in path parameter",
 			isSetIDToPathParameter: false,
 			isSetUserIDToContext:   true,
-			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:            `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:       http.StatusBadRequest,
 			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
@@ -143,7 +143,7 @@ func TestPolicy_Update(t *testing.T) {
 			name:                   "no user id in context",
 			isSetIDToPathParameter: true,
 			isSetUserIDToContext:   false,
-			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:            `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:       http.StatusInternalServerError,
 			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
@@ -159,11 +159,11 @@ func TestPolicy_Update(t *testing.T) {
 			name:                   "update error",
 			isSetIDToPathParameter: true,
 			isSetUserIDToContext:   true,
-			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			requestJSON:            `{"name": "name", "effect": "ALLOW", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
 			expectStatusCode:       http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -205,7 +205,7 @@ func TestPolicy_Update(t *testing.T) {
 func TestPolicy_Delete(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -292,7 +292,7 @@ func TestPolicy_Delete(t *testing.T) {
 func TestPolicy_Gets(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -365,7 +365,7 @@ func TestPolicy_Gets(t *testing.T) {
 func TestPolicy_UpdateAgents(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -469,7 +469,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 func TestPolicy_GetAgents(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}

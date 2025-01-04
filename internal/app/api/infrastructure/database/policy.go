@@ -42,7 +42,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 
 	_, err = driver.NamedExecContext(
 		ctx,
-		`INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (:id, :user_id, :name, :service, :path, :methods, :created_at, :updated_at);`,
+		`INSERT INTO policies (id, user_id, name, effect, service, path, methods, created_at, updated_at) VALUES (:id, :user_id, :name, :effect, :service, :path, :methods, :created_at, :updated_at);`,
 		policyModel,
 	)
 
@@ -62,7 +62,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 
 	if _, err := driver.NamedExecContext(
 		ctx,
-		`UPDATE policies SET user_id = :user_id, name = :name, service = :service, path = :path, methods = :methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
+		`UPDATE policies SET user_id = :user_id, name = :name, effect = :effect, service = :service, path = :path, methods = :methods, updated_at = :updated_at WHERE id = :id AND deleted_at IS NULL LIMIT 1;`,
 		policyModel,
 	); err != nil {
 		return err
@@ -101,6 +101,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 			policies.id,
 			policies.user_id,
 			policies.name,
+			policies.effect,
 			policies.service,
 			policies.path,
 			policies.methods,
@@ -135,7 +136,7 @@ func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, user
 
 	rows, err := driver.QueryxContext(
 		ctx,
-		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
+		`SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
 		userID,
 	)
 	if err != nil {
@@ -163,7 +164,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	driver := getDriver(ctx, r.db)
 
 	query, args, err := sqlx.Named(
-		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
+		`SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
 		map[string]interface{}{
 			"ids":     ids,
 			"user_id": userID,

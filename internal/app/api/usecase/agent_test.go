@@ -457,7 +457,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	policy, err := entity.NewPolicy(agent.UserID, "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(agent.UserID, "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -478,7 +478,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 			inputID:        agent.ID,
 			inputUserID:    agent.UserID,
 			inputPolicyIDs: []uuid.UUID{policy.ID},
-			expectResult:   []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
+			expectResult:   []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
 			expectError:    nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
 				to.EXPECT().
@@ -501,7 +501,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
-					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},
@@ -607,7 +607,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
-					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},
@@ -644,7 +644,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	policy, err := entity.NewPolicy(agent.UserID, "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(agent.UserID, "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -663,7 +663,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "success",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
-			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
+			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
 			expectError:  nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
 				to.EXPECT().
@@ -682,7 +682,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
-					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},

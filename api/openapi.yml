@@ -486,6 +486,10 @@ components:
           type: "string"
           description: "ポリシー名"
           example: "policy_name"
+        effect:
+          type: "string"
+          description: "効果"
+          example: "ALLOW"
         service:
           type: "string"
           description: "サービス"
@@ -510,6 +514,7 @@ components:
       required:
         - "id"
         - "name"
+        - "effect"
         - "service"
         - "path"
         - "method"

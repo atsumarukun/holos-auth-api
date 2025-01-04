@@ -9,6 +9,7 @@ func ToPolicyResponse(policy *dto.PolicyDTO) *response.PolicyResponse {
 	return &response.PolicyResponse{
 		ID:        policy.ID,
 		Name:      policy.Name,
+		Effect:    policy.Effect,
 		Service:   policy.Service,
 		Path:      policy.Path,
 		Methods:   policy.Methods,

@@ -14,6 +14,7 @@ var (
 	ErrPolicyNameTooShort    = status.Error(http.StatusBadRequest, "policy name must be 3 characters or more")
 	ErrPolicyNameTooLong     = status.Error(http.StatusBadRequest, "policy name must be 255 characters or less")
 	ErrInvalidPolicyName     = status.Error(http.StatusBadRequest, "invalid policy name")
+	ErrInvalidPolicyEffect   = status.Error(http.StatusBadRequest, "invalid policy effect")
 	ErrInvalidPolicyService  = status.Error(http.StatusBadRequest, "invalid policy service")
 	ErrRequiredPolicyPath    = status.Error(http.StatusBadRequest, "policy path is required")
 	ErrPolicyPathTooLong     = status.Error(http.StatusBadRequest, "policy path must be 255 characters or less")
@@ -26,6 +27,7 @@ type Policy struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
+	Effect    string
 	Service   string
 	Path      string
 	Methods   []string
@@ -34,7 +36,7 @@ type Policy struct {
 	UpdatedAt time.Time
 }
 
-func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, error) {
+func NewPolicy(userID uuid.UUID, name string, effect string, service string, path string, methods []string) (*Policy, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -47,6 +49,9 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, metho
 	}
 
 	if err := policy.SetName(name); err != nil {
+		return nil, err
+	}
+	if err := policy.SetEffect(effect); err != nil {
 		return nil, err
 	}
 	if err := policy.SetService(service); err != nil {
@@ -66,11 +71,12 @@ func NewPolicy(userID uuid.UUID, name string, service string, path string, metho
 	return policy, nil
 }
 
-func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string, agents []uuid.UUID, createdAt time.Time, updatedAt time.Time) *Policy {
+func RestorePolicy(id uuid.UUID, userID uuid.UUID, name string, effect string, service string, path string, methods []string, agents []uuid.UUID, createdAt time.Time, updatedAt time.Time) *Policy {
 	return &Policy{
 		ID:        id,
 		UserID:    userID,
 		Name:      name,
+		Effect:    effect,
 		Service:   service,
 		Path:      path,
 		Methods:   methods,
@@ -95,6 +101,16 @@ func (p *Policy) SetName(name string) error {
 		return ErrInvalidPolicyName
 	}
 	p.Name = name
+	p.UpdatedAt = time.Now()
+	return nil
+}
+
+func (p *Policy) SetEffect(effect string) error {
+	if !slices.Contains([]string{"ALLOW", "DENY"}, effect) {
+		return ErrInvalidPolicyEffect
+	}
+
+	p.Effect = effect
 	p.UpdatedAt = time.Now()
 	return nil
 }

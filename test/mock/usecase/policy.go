@@ -37,18 +37,18 @@ func (m *MockPolicyUsecase) EXPECT() *MockPolicyUsecaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPolicyUsecase) Create(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string, arg5 []string) (*dto.PolicyDTO, error) {
+func (m *MockPolicyUsecase) Create(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4, arg5 string, arg6 []string) (*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(*dto.PolicyDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockPolicyUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockPolicyUsecaseMockRecorder) Create(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPolicyUsecase)(nil).Create), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPolicyUsecase)(nil).Create), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // Delete mocks base method.
@@ -96,18 +96,18 @@ func (mr *MockPolicyUsecaseMockRecorder) Gets(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // Update mocks base method.
-func (m *MockPolicyUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, arg3, arg4, arg5 string, arg6 []string) (*dto.PolicyDTO, error) {
+func (m *MockPolicyUsecase) Update(arg0 context.Context, arg1, arg2 uuid.UUID, arg3, arg4, arg5, arg6 string, arg7 []string) (*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	ret0, _ := ret[0].(*dto.PolicyDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockPolicyUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+func (mr *MockPolicyUsecaseMockRecorder) Update(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPolicyUsecase)(nil).Update), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPolicyUsecase)(nil).Update), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 }
 
 // UpdateAgents mocks base method.

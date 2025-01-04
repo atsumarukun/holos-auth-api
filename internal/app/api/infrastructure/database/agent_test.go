@@ -83,7 +83,7 @@ func TestAgent_Update(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	policy, err := entity.NewPolicy(agentWithoutPolicies.UserID, "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(agentWithoutPolicies.UserID, "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}

@@ -18,7 +18,7 @@ import (
 )
 
 func TestPolicy_Create(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -34,8 +34,8 @@ func TestPolicy_Create(t *testing.T) {
 			inputPolicy: policy,
 			expectError: nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
-					WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, []byte(`["GET"]`), policy.CreatedAt, policy.UpdatedAt).
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, effect, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")).
+					WithArgs(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, []byte(`["GET"]`), policy.CreatedAt, policy.UpdatedAt).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 			},
@@ -45,8 +45,8 @@ func TestPolicy_Create(t *testing.T) {
 			inputPolicy: policy,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")).
-					WithArgs(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, []byte(`["GET"]`), policy.CreatedAt, policy.UpdatedAt).
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO policies (id, user_id, name, effect, service, path, methods, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")).
+					WithArgs(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, []byte(`["GET"]`), policy.CreatedAt, policy.UpdatedAt).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(sql.ErrConnDone)
 			},
@@ -80,7 +80,7 @@ func TestPolicy_Create(t *testing.T) {
 }
 
 func TestPolicy_Update(t *testing.T) {
-	policyWithoutAgents, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policyWithoutAgents, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -89,7 +89,7 @@ func TestPolicy_Update(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	policyWithAgents, err := entity.NewPolicy(policyWithoutAgents.UserID, "name", "STORAGE", "/", []string{"GET"})
+	policyWithAgents, err := entity.NewPolicy(policyWithoutAgents.UserID, "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -106,8 +106,8 @@ func TestPolicy_Update(t *testing.T) {
 			inputPolicy: policyWithoutAgents,
 			expectError: nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, effect = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Effect, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
@@ -121,8 +121,8 @@ func TestPolicy_Update(t *testing.T) {
 			inputPolicy: policyWithAgents,
 			expectError: nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-					WithArgs(policyWithAgents.UserID, policyWithAgents.Name, policyWithAgents.Service, policyWithAgents.Path, []byte(`["GET"]`), policyWithAgents.UpdatedAt, policyWithAgents.ID).
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, effect = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(policyWithAgents.UserID, policyWithAgents.Name, policyWithAgents.Effect, policyWithAgents.Service, policyWithAgents.Path, []byte(`["GET"]`), policyWithAgents.UpdatedAt, policyWithAgents.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
@@ -140,8 +140,8 @@ func TestPolicy_Update(t *testing.T) {
 			inputPolicy: policyWithoutAgents,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, effect = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Effect, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(sql.ErrConnDone)
 			},
@@ -151,8 +151,8 @@ func TestPolicy_Update(t *testing.T) {
 			inputPolicy: policyWithoutAgents,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, effect = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(policyWithoutAgents.UserID, policyWithoutAgents.Name, policyWithoutAgents.Effect, policyWithoutAgents.Service, policyWithoutAgents.Path, []byte(`["GET"]`), policyWithoutAgents.UpdatedAt, policyWithoutAgents.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
@@ -166,8 +166,8 @@ func TestPolicy_Update(t *testing.T) {
 			inputPolicy: policyWithAgents,
 			expectError: sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
-					WithArgs(policyWithAgents.UserID, policyWithAgents.Name, policyWithAgents.Service, policyWithAgents.Path, []byte(`["GET"]`), policyWithAgents.UpdatedAt, policyWithAgents.ID).
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE policies SET user_id = ?, name = ?, effect = ?, service = ?, path = ?, methods = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL LIMIT 1;")).
+					WithArgs(policyWithAgents.UserID, policyWithAgents.Name, policyWithAgents.Effect, policyWithAgents.Service, policyWithAgents.Path, []byte(`["GET"]`), policyWithAgents.UpdatedAt, policyWithAgents.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 				mock.ExpectExec(regexp.QuoteMeta("DELETE FROM permissions WHERE policy_id = ?;")).
@@ -209,7 +209,7 @@ func TestPolicy_Update(t *testing.T) {
 }
 
 func TestPolicy_Delete(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -271,7 +271,7 @@ func TestPolicy_Delete(t *testing.T) {
 }
 
 func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -296,6 +296,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 						policies.id,
 						policies.user_id,
 						policies.name,
+						policies.effect,
 						policies.service,
 						policies.path,
 						policies.methods,
@@ -315,8 +316,8 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				)).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-							AddRow(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
 					).
 					WillReturnError(nil)
 			},
@@ -333,6 +334,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 						policies.id,
 						policies.user_id,
 						policies.name,
+						policies.effect,
 						policies.service,
 						policies.path,
 						policies.methods,
@@ -352,8 +354,8 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				)).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-							AddRow(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
 					).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -370,6 +372,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 						policies.id,
 						policies.user_id,
 						policies.name,
+						policies.effect,
 						policies.service,
 						policies.path,
 						policies.methods,
@@ -389,8 +392,8 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 				)).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-							AddRow(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
 					).
 					WillReturnError(sql.ErrConnDone)
 			},
@@ -422,7 +425,7 @@ func TestPolicy_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 }
 
 func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -440,11 +443,11 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 			expectResult: []*entity.Policy{policy},
 			expectError:  nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-							AddRow(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
 					).
 					WillReturnError(nil)
 			},
@@ -455,10 +458,10 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 			expectResult: []*entity.Policy{},
 			expectError:  nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
 					).
 					WillReturnError(nil)
 			},
@@ -469,10 +472,10 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
 					).
 					WillReturnError(sql.ErrConnDone)
 			},
@@ -504,7 +507,7 @@ func TestPolicy_FindByUserIDAndNotDeleted(t *testing.T) {
 }
 
 func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -524,11 +527,11 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 			expectResult: []*entity.Policy{policy},
 			expectError:  nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}).
-							AddRow(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
 					).
 					WillReturnError(nil)
 			},
@@ -540,10 +543,10 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 			expectResult: []*entity.Policy{},
 			expectError:  nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
 					).
 					WillReturnError(nil)
 			},
@@ -555,10 +558,10 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND user_id = ? AND deleted_at IS NULL;")).
 					WithArgs(policy.ID, policy.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "user_id", "name", "service", "path", "methods", "created_at", "updated_at"}),
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
 					).
 					WillReturnError(sql.ErrConnDone)
 			},

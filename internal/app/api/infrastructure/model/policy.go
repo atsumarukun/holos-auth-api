@@ -10,6 +10,7 @@ type PolicyModel struct {
 	ID        uuid.UUID `db:"id"`
 	UserID    uuid.UUID `db:"user_id"`
 	Name      string    `db:"name"`
+	Effect    string    `db:"effect"`
 	Service   string    `db:"service"`
 	Path      string    `db:"path"`
 	Methods   []byte    `db:"methods"`

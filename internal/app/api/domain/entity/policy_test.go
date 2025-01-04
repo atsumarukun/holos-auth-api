@@ -15,6 +15,7 @@ func TestNewPolicy(t *testing.T) {
 		name         string
 		inputUserID  uuid.UUID
 		inputName    string
+		inputEffect  string
 		inputService string
 		inputPath    string
 		inputMethods []string
@@ -24,6 +25,7 @@ func TestNewPolicy(t *testing.T) {
 			name:         "success",
 			inputUserID:  uuid.New(),
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "/",
 			inputMethods: []string{"GET"},
@@ -33,15 +35,27 @@ func TestNewPolicy(t *testing.T) {
 			name:         "invalied name",
 			inputUserID:  uuid.New(),
 			inputName:    "なまえ",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "/",
 			inputMethods: []string{"GET"},
 			expectError:  entity.ErrInvalidPolicyName,
 		},
 		{
+			name:         "invalid effect",
+			inputUserID:  uuid.New(),
+			inputName:    "name",
+			inputEffect:  "EFFECT",
+			inputService: "STORAGE",
+			inputPath:    "/",
+			inputMethods: []string{"GET"},
+			expectError:  entity.ErrInvalidPolicyEffect,
+		},
+		{
 			name:         "invalid service",
 			inputUserID:  uuid.New(),
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "SERVICE",
 			inputPath:    "/",
 			inputMethods: []string{"GET"},
@@ -51,6 +65,7 @@ func TestNewPolicy(t *testing.T) {
 			name:         "invalid path",
 			inputUserID:  uuid.New(),
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "path",
 			inputMethods: []string{"GET"},
@@ -60,6 +75,7 @@ func TestNewPolicy(t *testing.T) {
 			name:         "invalid methods",
 			inputUserID:  uuid.New(),
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "/",
 			inputMethods: []string{"PATCH"},
@@ -68,7 +84,7 @@ func TestNewPolicy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			policy, err := entity.NewPolicy(tt.inputUserID, tt.inputName, tt.inputService, tt.inputPath, tt.inputMethods)
+			policy, err := entity.NewPolicy(tt.inputUserID, tt.inputName, tt.inputEffect, tt.inputService, tt.inputPath, tt.inputMethods)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
@@ -83,11 +99,14 @@ func TestNewPolicy(t *testing.T) {
 				if policy.Name != tt.inputName {
 					t.Errorf("name: expect %s but got %s", tt.inputName, policy.Name)
 				}
+				if policy.Effect != tt.inputEffect {
+					t.Errorf("effect: expect %s but got %s", tt.inputEffect, policy.Effect)
+				}
 				if policy.Service != tt.inputService {
-					t.Errorf("name: expect %s but got %s", tt.inputService, policy.Service)
+					t.Errorf("service: expect %s but got %s", tt.inputService, policy.Service)
 				}
 				if policy.Path != tt.inputPath {
-					t.Errorf("name: expect %s but got %s", tt.inputPath, policy.Path)
+					t.Errorf("path: expect %s but got %s", tt.inputPath, policy.Path)
 				}
 				if diff := cmp.Diff(policy.Methods, tt.inputMethods); diff != "" {
 					t.Error(diff)
@@ -107,7 +126,7 @@ func TestNewPolicy(t *testing.T) {
 }
 
 func TestPolicy_SetName(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -188,8 +207,55 @@ func TestPolicy_SetName(t *testing.T) {
 	}
 }
 
+func TestPolicy_SetEffect(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name        string
+		inputEffect string
+		expectError error
+	}{
+		{
+			name:        "allow",
+			inputEffect: "ALLOW",
+			expectError: nil,
+		},
+		{
+			name:        "deny",
+			inputEffect: "DENY",
+			expectError: nil,
+		},
+		{
+			name:        "lower case",
+			inputEffect: "allow",
+			expectError: entity.ErrInvalidPolicyEffect,
+		},
+		{
+			name:        "no service",
+			inputEffect: "EFFECT",
+			expectError: entity.ErrInvalidPolicyEffect,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			updatedAt := policy.UpdatedAt
+			if err := policy.SetEffect(tt.inputEffect); !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if tt.expectError == nil {
+				if !policy.UpdatedAt.After(updatedAt) {
+					t.Error("updatedAt has not been updated")
+				}
+			}
+		})
+	}
+}
+
 func TestPolicy_SetService(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -236,7 +302,7 @@ func TestPolicy_SetService(t *testing.T) {
 }
 
 func TestPolicy_SetPath(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -323,7 +389,7 @@ func TestPolicy_SetPath(t *testing.T) {
 }
 
 func TestPolicy_SetMethods(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -395,7 +461,7 @@ func TestPolicy_SetMethods(t *testing.T) {
 }
 
 func TestPolicy_SetAgents(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}

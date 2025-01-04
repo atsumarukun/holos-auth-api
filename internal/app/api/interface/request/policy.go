@@ -4,6 +4,7 @@ import "github.com/google/uuid"
 
 type CreatePolicyRequest struct {
 	Name    string   `json:"name"`
+	Effect  string   `json:"effect"`
 	Service string   `json:"service"`
 	Path    string   `json:"path"`
 	Methods []string `json:"methods"`
@@ -11,6 +12,7 @@ type CreatePolicyRequest struct {
 
 type UpdatePolicyRequest struct {
 	Name    string   `json:"name"`
+	Effect  string   `json:"effect"`
 	Service string   `json:"service"`
 	Path    string   `json:"path"`
 	Methods []string `json:"methods"`

@@ -19,8 +19,8 @@ var (
 )
 
 type PolicyUsecase interface {
-	Create(context.Context, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, error)
-	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, []string) (*dto.PolicyDTO, error)
+	Create(context.Context, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
+	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
 	Delete(context.Context, uuid.UUID, uuid.UUID) error
 	Gets(context.Context, uuid.UUID) ([]*dto.PolicyDTO, error)
 	UpdateAgents(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.AgentDTO, error)
@@ -41,8 +41,8 @@ func NewPolicyUsecase(transactionObject domain.TransactionObject, policyReposito
 	}
 }
 
-func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
-	policy, err := entity.NewPolicy(userID, name, service, path, methods)
+func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name string, effect string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
+	policy, err := entity.NewPolicy(userID, name, effect, service, path, methods)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (u *policyUsecase) Create(ctx context.Context, userID uuid.UUID, name strin
 	return mapper.ToPolicyDTO(policy), nil
 }
 
-func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
+func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, name string, effect string, service string, path string, methods []string) (*dto.PolicyDTO, error) {
 	var policy *entity.Policy
 
 	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
@@ -68,6 +68,9 @@ func (u *policyUsecase) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 		}
 
 		if err := policy.SetName(name); err != nil {
+			return err
+		}
+		if err := policy.SetEffect(effect); err != nil {
 			return err
 		}
 		if err := policy.SetService(service); err != nil {

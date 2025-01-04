@@ -18,7 +18,7 @@ import (
 )
 
 func TestPolicy_Create(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -27,6 +27,7 @@ func TestPolicy_Create(t *testing.T) {
 		name                    string
 		inputUserID             uuid.UUID
 		inputName               string
+		inputEffect             string
 		inputService            string
 		inputPath               string
 		inputMethods            []string
@@ -38,10 +39,11 @@ func TestPolicy_Create(t *testing.T) {
 			name:         "success",
 			inputUserID:  policy.UserID,
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "/",
 			inputMethods: []string{"GET"},
-			expectResult: &dto.PolicyDTO{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt},
+			expectResult: &dto.PolicyDTO{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt},
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
@@ -54,6 +56,7 @@ func TestPolicy_Create(t *testing.T) {
 			name:                    "invalid name",
 			inputUserID:             policy.UserID,
 			inputName:               "なまえ",
+			inputEffect:             "ALLOW",
 			inputService:            "STORAGE",
 			inputPath:               "/",
 			inputMethods:            []string{"GET"},
@@ -62,9 +65,22 @@ func TestPolicy_Create(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
 		},
 		{
+			name:                    "invalid effect",
+			inputUserID:             policy.UserID,
+			inputName:               "name",
+			inputEffect:             "EFFECT",
+			inputService:            "STORAGE",
+			inputPath:               "/",
+			inputMethods:            []string{"GET"},
+			expectResult:            nil,
+			expectError:             entity.ErrInvalidPolicyEffect,
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+		},
+		{
 			name:                    "invalid service",
 			inputUserID:             policy.UserID,
 			inputName:               "name",
+			inputEffect:             "ALLOW",
 			inputService:            "SERVICE",
 			inputPath:               "/",
 			inputMethods:            []string{"GET"},
@@ -76,6 +92,7 @@ func TestPolicy_Create(t *testing.T) {
 			name:                    "invalid path",
 			inputUserID:             policy.UserID,
 			inputName:               "name",
+			inputEffect:             "ALLOW",
 			inputService:            "STORAGE",
 			inputPath:               "path",
 			inputMethods:            []string{"GET"},
@@ -87,6 +104,7 @@ func TestPolicy_Create(t *testing.T) {
 			name:                    "invalid methods",
 			inputUserID:             policy.UserID,
 			inputName:               "name",
+			inputEffect:             "ALLOW",
 			inputService:            "STORAGE",
 			inputPath:               "/",
 			inputMethods:            []string{"PATCH"},
@@ -98,6 +116,7 @@ func TestPolicy_Create(t *testing.T) {
 			name:         "create error",
 			inputUserID:  policy.UserID,
 			inputName:    "name",
+			inputEffect:  "ALLOW",
 			inputService: "STORAGE",
 			inputPath:    "/",
 			inputMethods: []string{"GET"},
@@ -123,7 +142,7 @@ func TestPolicy_Create(t *testing.T) {
 			tt.setMockPolicyRepository(ctx, pr)
 
 			pu := usecase.NewPolicyUsecase(nil, pr, nil)
-			result, err := pu.Create(ctx, tt.inputUserID, tt.inputName, tt.inputService, tt.inputPath, tt.inputMethods)
+			result, err := pu.Create(ctx, tt.inputUserID, tt.inputName, tt.inputEffect, tt.inputService, tt.inputPath, tt.inputMethods)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
@@ -138,7 +157,7 @@ func TestPolicy_Create(t *testing.T) {
 }
 
 func TestPolicy_Update(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -148,6 +167,7 @@ func TestPolicy_Update(t *testing.T) {
 		inputID                  uuid.UUID
 		inputUserID              uuid.UUID
 		inputName                string
+		inputEffect              string
 		inputService             string
 		inputPath                string
 		inputMethods             []string
@@ -161,10 +181,11 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
-			expectResult: &dto.PolicyDTO{ID: policy.ID, UserID: policy.UserID, Name: "update", Service: "CONTENT", Path: "/path", Methods: []string{"PUT"}, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt},
+			expectResult: &dto.PolicyDTO{ID: policy.ID, UserID: policy.UserID, Name: "update", Effect: "DENY", Service: "CONTENT", Path: "/path", Methods: []string{"PUT"}, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt},
 			expectError:  nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
 				to.EXPECT().
@@ -177,7 +198,7 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Update(ctx, gomock.Any()).
@@ -190,6 +211,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "なまえ",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
@@ -206,7 +228,33 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "invalid effect",
+			inputID:      policy.ID,
+			inputUserID:  policy.UserID,
+			inputName:    "update",
+			inputEffect:  "EFFECT",
+			inputService: "CONTENT",
+			inputPath:    "/path",
+			inputMethods: []string{"PUT"},
+			expectResult: nil,
+			expectError:  entity.ErrInvalidPolicyEffect,
+			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
+				to.EXPECT().
+					Transaction(ctx, gomock.Any()).
+					DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
+						return fn(ctx)
+					}).
+					Times(1)
+			},
+			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
+				pr.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 		},
@@ -215,6 +263,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "SERVICE",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
@@ -231,7 +280,7 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 		},
@@ -240,6 +289,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "path",
 			inputMethods: []string{"PUT"},
@@ -256,7 +306,7 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 		},
@@ -265,6 +315,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PATCH"},
@@ -281,7 +332,7 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 		},
@@ -290,6 +341,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
@@ -315,6 +367,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
@@ -340,6 +393,7 @@ func TestPolicy_Update(t *testing.T) {
 			inputID:      policy.ID,
 			inputUserID:  policy.UserID,
 			inputName:    "update",
+			inputEffect:  "DENY",
 			inputService: "CONTENT",
 			inputPath:    "/path",
 			inputMethods: []string{"PUT"},
@@ -356,7 +410,7 @@ func TestPolicy_Update(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Update(ctx, gomock.Any()).
@@ -379,7 +433,7 @@ func TestPolicy_Update(t *testing.T) {
 			tt.setMockPolicyRepository(ctx, pr)
 
 			pu := usecase.NewPolicyUsecase(to, pr, nil)
-			result, err := pu.Update(ctx, tt.inputID, tt.inputUserID, tt.inputName, tt.inputService, tt.inputPath, tt.inputMethods)
+			result, err := pu.Update(ctx, tt.inputID, tt.inputUserID, tt.inputName, tt.inputEffect, tt.inputService, tt.inputPath, tt.inputMethods)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
@@ -394,7 +448,7 @@ func TestPolicy_Update(t *testing.T) {
 }
 
 func TestPolicy_Delete(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -423,7 +477,7 @@ func TestPolicy_Delete(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Delete(ctx, gomock.Any()).
@@ -487,7 +541,7 @@ func TestPolicy_Delete(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Delete(ctx, gomock.Any()).
@@ -518,7 +572,7 @@ func TestPolicy_Delete(t *testing.T) {
 }
 
 func TestPolicy_Gets(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -533,12 +587,12 @@ func TestPolicy_Gets(t *testing.T) {
 		{
 			name:         "found",
 			inputUserID:  policy.UserID,
-			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: policy.Agents, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
+			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: policy.Agents, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindByUserIDAndNotDeleted(ctx, policy.UserID).
-					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
+					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},
@@ -591,7 +645,7 @@ func TestPolicy_Gets(t *testing.T) {
 }
 
 func TestPolicy_UpdateAgents(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -629,7 +683,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Update(ctx, gomock.Any()).
@@ -707,7 +761,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
@@ -735,7 +789,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 				pr.EXPECT().
 					Update(ctx, gomock.Any()).
@@ -778,7 +832,7 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 }
 
 func TestPolicy_GetAgents(t *testing.T) {
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -814,7 +868,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
@@ -863,7 +917,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
@@ -912,7 +966,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
 					FindOneByIDAndUserIDAndNotDeleted(ctx, policy.ID, policy.UserID).
-					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
+					Return(entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt), nil).
 					Times(1)
 			},
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {

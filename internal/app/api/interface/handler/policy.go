@@ -51,7 +51,7 @@ func (h *policyHandler) Create(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Service, req.Path, req.Methods)
+	dto, err := h.policyUsecase.Create(ctx, userID, req.Name, req.Effect, req.Service, req.Path, req.Methods)
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())
@@ -89,7 +89,7 @@ func (h *policyHandler) Update(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Service, req.Path, req.Methods)
+	dto, err := h.policyUsecase.Update(ctx, id, userID, req.Name, req.Effect, req.Service, req.Path, req.Methods)
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())

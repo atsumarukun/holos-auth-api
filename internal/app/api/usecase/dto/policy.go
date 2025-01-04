@@ -10,6 +10,7 @@ type PolicyDTO struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
+	Effect    string
 	Service   string
 	Path      string
 	Methods   []string

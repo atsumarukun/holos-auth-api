@@ -10,6 +10,7 @@ func ToPolicyDTO(policy *entity.Policy) *dto.PolicyDTO {
 		ID:        policy.ID,
 		UserID:    policy.UserID,
 		Name:      policy.Name,
+		Effect:    policy.Effect,
 		Service:   policy.Service,
 		Path:      policy.Path,
 		Methods:   policy.Methods,

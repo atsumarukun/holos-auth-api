@@ -14,13 +14,3 @@ type AgentModel struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
-
-func NewAgentModel(id uuid.UUID, userID uuid.UUID, name string, createdAt time.Time, updatedAt time.Time) *AgentModel {
-	return &AgentModel{
-		ID:        id,
-		UserID:    userID,
-		Name:      name,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}

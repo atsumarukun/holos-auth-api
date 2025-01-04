@@ -2,15 +2,16 @@ package handler_test
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
+	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
-	mock_usecase "holos-auth-api/test/mock/usecase"
+	"holos-auth-api/internal/app/api/usecase/mapper"
+	mockUsecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
@@ -18,45 +19,57 @@ import (
 )
 
 func TestPolicy_Create(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
 		requestJSON          string
-		resultDTO            *dto.PolicyDTO
-		resultError          error
-		expect               int
+		expectStatusCode     int
+		setMockUsecase       func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusCreated,
+			expectStatusCode:     http.StatusCreated,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(mapper.ToPolicyDTO(policy), nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "invalid_request",
-			isSetUserIDToContext: true,
-			requestJSON:          "",
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusBadRequest,
-		},
-		{
-			name:                 "context_does_not_have_user_id",
+			name:                 "no user id in context",
 			isSetUserIDToContext: false,
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
+			setMockUsecase:       func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
+			name:                 "invalid request",
+			isSetUserIDToContext: true,
+			requestJSON:          "",
+			expectStatusCode:     http.StatusBadRequest,
+			setMockUsecase:       func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                 "create error",
 			isSetUserIDToContext: true,
 			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            nil,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -70,65 +83,90 @@ func TestPolicy_Create(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ph := handler.NewPolicyHandler(pu)
-			ph.Create(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.Create(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
 func TestPolicy_Update(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name                 string
-		isSetUserIDToContext bool
-		requestJSON          string
-		resultDTO            *dto.PolicyDTO
-		resultError          error
-		expect               int
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		requestJSON            string
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
-			name:                 "success",
-			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusOK,
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(mapper.ToPolicyDTO(policy), nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "invalid_request",
-			isSetUserIDToContext: true,
-			requestJSON:          "",
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusBadRequest,
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "context_does_not_have_user_id",
-			isSetUserIDToContext: false,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            &dto.PolicyDTO{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()},
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
-			isSetUserIDToContext: true,
-			requestJSON:          `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
-			resultDTO:            nil,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			name:                   "invalid request",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            "",
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "update error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            `{"name": "name", "service": "STORAGE", "path": "/", "allowed_methods": ["GET"]}`,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -141,51 +179,81 @@ func TestPolicy_Update(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: uuid.New().String()})
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: policy.ID.String()})
+			}
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ph := handler.NewPolicyHandler(pu)
-			ph.Update(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.Update(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
 func TestPolicy_Delete(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name                 string
-		isSetUserIDToContext bool
-		resultError          error
-		expect               int
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
-			name:                 "success",
-			isSetUserIDToContext: true,
-			resultError:          nil,
-			expect:               http.StatusOK,
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Delete(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "context_does_not_have_user_id",
-			isSetUserIDToContext: false,
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
-			isSetUserIDToContext: true,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "delete error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Delete(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -198,55 +266,70 @@ func TestPolicy_Delete(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: uuid.New().String()})
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: policy.ID.String()})
+			}
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ph := handler.NewPolicyHandler(pu)
-			ph.Delete(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.Delete(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
 func TestPolicy_Gets(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
 		name                 string
 		isSetUserIDToContext bool
-		resultDTO            []*dto.PolicyDTO
-		resultError          error
-		expect               int
+		expectStatusCode     int
+		setMockUsecase       func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
 			name:                 "success",
 			isSetUserIDToContext: true,
-			resultDTO:            []*dto.PolicyDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusOK,
+			expectStatusCode:     http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Gets(gomock.Any(), gomock.Any()).
+					Return([]*dto.PolicyDTO{mapper.ToPolicyDTO(policy)}, nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "context_does_not_have_user_id",
+			name:                 "no user id in context",
 			isSetUserIDToContext: false,
-			resultDTO:            []*dto.PolicyDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", Service: "STORAGE", Path: "/", Methods: []string{"GET"}, CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
+			setMockUsecase:       func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
+			name:                 "get error",
 			isSetUserIDToContext: true,
-			resultDTO:            nil,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			expectStatusCode:     http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Gets(gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -260,65 +343,94 @@ func TestPolicy_Gets(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().Gets(gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ph := handler.NewPolicyHandler(pu)
-			ph.Gets(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.Gets(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
 func TestPolicy_UpdateAgents(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name                 string
-		isSetUserIDToContext bool
-		requestJSON          string
-		resultDTO            []*dto.AgentDTO
-		resultError          error
-		expect               int
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		requestJSON            string
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
-			name:                 "success",
-			isSetUserIDToContext: true,
-			requestJSON:          fmt.Sprintf(`{"agent_ids": ["%s"]}`, uuid.New()),
-			resultDTO:            []*dto.AgentDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusOK,
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            fmt.Sprintf(`{"agent_ids": ["%s"]}`, agent.ID),
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					UpdateAgents(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return([]*dto.AgentDTO{mapper.ToAgentDTO(agent)}, nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "invalid_request",
-			isSetUserIDToContext: true,
-			requestJSON:          "",
-			resultDTO:            []*dto.AgentDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusBadRequest,
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			requestJSON:            fmt.Sprintf(`{"agent_ids": ["%s"]}`, agent.ID),
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "context_does_not_have_user_id",
-			isSetUserIDToContext: false,
-			requestJSON:          fmt.Sprintf(`{"agent_ids": ["%s"]}`, uuid.New()),
-			resultDTO:            []*dto.AgentDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			requestJSON:            fmt.Sprintf(`{"agent_ids": ["%s"]}`, agent.ID),
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
-			isSetUserIDToContext: true,
-			requestJSON:          fmt.Sprintf(`{"agent_ids": ["%s"]}`, uuid.New()),
-			resultDTO:            nil,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			name:                   "invalid request",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            "",
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "update agents error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			requestJSON:            fmt.Sprintf(`{"agent_ids": ["%s"]}`, agent.ID),
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					UpdateAgents(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -331,55 +443,85 @@ func TestPolicy_UpdateAgents(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: uuid.New().String()})
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: policy.ID.String()})
+			}
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().UpdateAgents(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ah := handler.NewPolicyHandler(pu)
-			ah.UpdateAgents(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.UpdateAgents(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
 func TestPolicy_GetAgents(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name                 string
-		isSetUserIDToContext bool
-		resultDTO            []*dto.AgentDTO
-		resultError          error
-		expect               int
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockPolicyUsecase)
 	}{
 		{
-			name:                 "success",
-			isSetUserIDToContext: true,
-			resultDTO:            []*dto.AgentDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusOK,
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					GetAgents(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return([]*dto.AgentDTO{mapper.ToAgentDTO(agent)}, nil).
+					Times(1)
+			},
 		},
 		{
-			name:                 "context_does_not_have_user_id",
-			isSetUserIDToContext: false,
-			resultDTO:            []*dto.AgentDTO{{ID: uuid.New(), UserID: uuid.New(), Name: "name", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
-			resultError:          nil,
-			expect:               http.StatusInternalServerError,
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
 		},
 		{
-			name:                 "result_error",
-			isSetUserIDToContext: true,
-			resultDTO:            nil,
-			resultError:          status.Error(http.StatusInternalServerError, "test error"),
-			expect:               http.StatusInternalServerError,
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "aget agents error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					GetAgents(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -392,22 +534,24 @@ func TestPolicy_GetAgents(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = req
-			ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: uuid.New().String()})
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: policy.ID.String()})
+			}
 			if tt.isSetUserIDToContext {
-				ctx.Set("userID", uuid.New())
+				ctx.Set("userID", policy.UserID)
 			}
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			pu := mock_usecase.NewMockPolicyUsecase(ctrl)
-			pu.EXPECT().GetAgents(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultDTO, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ph := handler.NewPolicyHandler(pu)
-			ph.GetAgents(ctx)
+			h := handler.NewPolicyHandler(u)
+			h.GetAgents(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}

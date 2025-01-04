@@ -457,7 +457,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(agent.UserID, "name", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -644,7 +644,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	policy, err := entity.NewPolicy(agent.UserID, "name", "STORAGE", "/", []string{"GET"})
 	if err != nil {
 		t.Error(err.Error())
 	}

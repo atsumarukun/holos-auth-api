@@ -116,11 +116,15 @@ func (p *Policy) SetPath(path string) error {
 	if 255 < len(path) {
 		return ErrPolicyPathTooLong
 	}
-	if path[0] != '/' {
+	if path[0] != '/' || path[len(path)-1:] == "/" && 1 < len(path) {
 		return ErrInvalidPolicyPath
 	}
-	if path[len(path)-1:] == "/" && 1 < len(path) {
-		path = path[:len(path)-1]
+	matched, err := regexp.MatchString(`^[a-z\-/]*$`, path)
+	if err != nil {
+		return status.Error(http.StatusInternalServerError, err.Error())
+	}
+	if !matched {
+		return ErrInvalidPolicyPath
 	}
 
 	p.Path = path
@@ -149,5 +153,6 @@ func (p *Policy) SetAgents(agents []*Agent) {
 	for i, agent := range agents {
 		ids[i] = agent.ID
 	}
-	p.Agents = ids
+	p.Agents = slices.Compact(ids)
+	p.UpdatedAt = time.Now()
 }

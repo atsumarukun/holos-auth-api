@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
@@ -137,6 +138,55 @@ func TestAgent_SetName(t *testing.T) {
 				if !agent.UpdatedAt.After(updatedAt) {
 					t.Error("updatedAt has not been updated")
 				}
+			}
+		})
+	}
+}
+
+func TestAgent_SetPolicies(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	policy, err := entity.NewPolicy(uuid.New(), "name", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name          string
+		inputPolicies []*entity.Policy
+		expectResult  []uuid.UUID
+		expectError   error
+	}{
+		{
+			name:          "success",
+			inputPolicies: []*entity.Policy{policy},
+			expectResult:  []uuid.UUID{policy.ID},
+			expectError:   nil,
+		},
+		{
+			name:          "empty",
+			inputPolicies: []*entity.Policy{},
+			expectResult:  []uuid.UUID{},
+			expectError:   nil,
+		},
+		{
+			name:          "duplication",
+			inputPolicies: []*entity.Policy{policy, policy},
+			expectResult:  []uuid.UUID{policy.ID},
+			expectError:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			updatedAt := agent.UpdatedAt
+			agent.SetPolicies(tt.inputPolicies)
+			if diff := cmp.Diff(agent.Policies, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+			if !agent.UpdatedAt.After(updatedAt) {
+				t.Error("updatedAt has not been updated")
 			}
 		})
 	}

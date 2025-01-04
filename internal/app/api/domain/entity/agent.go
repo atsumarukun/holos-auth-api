@@ -28,7 +28,7 @@ type Agent struct {
 func NewAgent(userID uuid.UUID, name string) (*Agent, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	agent := &Agent{
@@ -68,7 +68,7 @@ func (a *Agent) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidAgentName

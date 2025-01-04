@@ -33,7 +33,7 @@ type User struct {
 func NewUser(name string, password string, confirmPassword string) (*User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	user := &User{
@@ -43,7 +43,6 @@ func NewUser(name string, password string, confirmPassword string) (*User, error
 	if err := user.SetName(name); err != nil {
 		return nil, err
 	}
-
 	if err := user.SetPassword(password, confirmPassword); err != nil {
 		return nil, err
 	}
@@ -74,7 +73,7 @@ func (u *User) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidUserName
@@ -96,14 +95,14 @@ func (u *User) SetPassword(password string, confirmPassword string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidUserPassword
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	u.Password = string(hashed)
 	u.UpdatedAt = time.Now()
@@ -114,9 +113,8 @@ func (u *User) ComparePassword(password string) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return ErrAuthenticationFailed
-		} else {
-			return status.Error(http.StatusInternalServerError, err.Error())
 		}
+		return err
 	}
 	return nil
 }

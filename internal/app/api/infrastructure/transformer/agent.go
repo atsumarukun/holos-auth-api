@@ -3,8 +3,6 @@ package transformer
 import (
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/model"
-	"holos-auth-api/internal/app/api/pkg/status"
-	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
@@ -36,7 +34,7 @@ func ToAgentEntity(agent *model.AgentModel) (*entity.Agent, error) {
 		for _, policyID := range strings.Split(*agent.Policies, ",") {
 			policy, err := uuid.Parse(policyID)
 			if err != nil {
-				return nil, status.Error(http.StatusInternalServerError, err.Error())
+				return nil, err
 			}
 			policies = append(policies, policy)
 		}

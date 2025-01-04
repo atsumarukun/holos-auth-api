@@ -37,7 +37,7 @@ type Policy struct {
 func NewPolicy(userID uuid.UUID, name string, service string, path string, methods []string) (*Policy, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	policy := &Policy{
@@ -89,7 +89,7 @@ func (p *Policy) SetName(name string) error {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidPolicyName
@@ -121,7 +121,7 @@ func (p *Policy) SetPath(path string) error {
 	}
 	matched, err := regexp.MatchString(`^[a-z\-/]*$`, path)
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidPolicyPath

@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"holos-auth-api/internal/app/api/domain"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"log"
-	"net/http"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -26,7 +24,7 @@ func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
 func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
 	tx, err := o.db.Beginx()
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	defer func() {
@@ -61,9 +59,8 @@ type sqlxDriver interface {
 }
 
 func getSqlxDriver(ctx context.Context, db *sqlx.DB) sqlxDriver {
-	if tx, ok := ctx.Value(transactionKey{}).(*sqlx.Tx); !ok {
-		return db
-	} else {
+	if tx, ok := ctx.Value(transactionKey{}).(*sqlx.Tx); ok {
 		return tx
 	}
+	return db
 }

@@ -2,7 +2,7 @@ package api
 
 import "github.com/gin-gonic/gin"
 
-func getRoutes(r *gin.Engine) {
+func registerRouter(r *gin.Engine) {
 	users := r.Group("users")
 	{
 		users.POST("/", userHandler.Create)

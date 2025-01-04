@@ -17,7 +17,8 @@ var ErrAuthenticationFailed = status.Error(http.StatusUnauthorized, "authenticat
 type AuthUsecase interface {
 	Signin(context.Context, string, string) (string, error)
 	Signout(context.Context, string) error
-	GetUserID(context.Context, string) (uuid.UUID, error)
+	Authenticate(context.Context, string) (uuid.UUID, error)
+	Authorize(context.Context, string) (uuid.UUID, error)
 }
 
 type authUsecase struct {
@@ -76,7 +77,19 @@ func (u *authUsecase) Signout(ctx context.Context, token string) error {
 	})
 }
 
-func (u *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, error) {
+func (u *authUsecase) Authenticate(ctx context.Context, token string) (uuid.UUID, error) {
+	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if userToken == nil {
+		return uuid.Nil, ErrAuthenticationFailed
+	}
+
+	return userToken.UserID, nil
+}
+
+func (u *authUsecase) Authorize(ctx context.Context, token string) (uuid.UUID, error) {
 	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 	if err != nil {
 		return uuid.Nil, err

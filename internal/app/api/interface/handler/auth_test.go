@@ -156,7 +156,7 @@ func TestAuth_Signout(t *testing.T) {
 	}
 }
 
-func TestAuth_GetUserID(t *testing.T) {
+func TestAuth_Authorize(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	userToken, err := entity.NewUserToken(uuid.New())
@@ -176,7 +176,7 @@ func TestAuth_GetUserID(t *testing.T) {
 			expectStatusCode:    http.StatusOK,
 			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
 				u.EXPECT().
-					GetUserID(gomock.Any(), gomock.Any()).
+					Authorize(gomock.Any(), gomock.Any()).
 					Return(userToken.UserID, nil).
 					Times(1)
 			},
@@ -193,7 +193,7 @@ func TestAuth_GetUserID(t *testing.T) {
 			expectStatusCode:    http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
 				u.EXPECT().
-					GetUserID(gomock.Any(), gomock.Any()).
+					Authorize(gomock.Any(), gomock.Any()).
 					Return(uuid.Nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -218,7 +218,7 @@ func TestAuth_GetUserID(t *testing.T) {
 			tt.setMockUsecase(u)
 
 			h := handler.NewAuthHandler(u)
-			h.GetUserID(ctx)
+			h.Authorize(ctx)
 
 			if w.Code != tt.expectStatusCode {
 				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)

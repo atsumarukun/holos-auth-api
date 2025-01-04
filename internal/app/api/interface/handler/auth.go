@@ -14,7 +14,7 @@ import (
 type AuthHandler interface {
 	Signin(*gin.Context)
 	Signout(*gin.Context)
-	GetUserID(*gin.Context)
+	Authorize(*gin.Context)
 }
 
 type authHandler struct {
@@ -52,7 +52,9 @@ func (h *authHandler) Signin(c *gin.Context) {
 func (h *authHandler) Signout(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-		c.String(http.StatusUnauthorized, "unauthorized")
+		status := errors.StatusUnauthorized
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
@@ -68,16 +70,18 @@ func (h *authHandler) Signout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *authHandler) GetUserID(c *gin.Context) {
+func (h *authHandler) Authorize(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-		c.String(http.StatusUnauthorized, "unauthorized")
+		status := errors.StatusUnauthorized
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
 	ctx := c.Request.Context()
 
-	userID, err := h.authUsecase.GetUserID(ctx, bearerToken[1])
+	userID, err := h.authUsecase.Authorize(ctx, bearerToken[1])
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())

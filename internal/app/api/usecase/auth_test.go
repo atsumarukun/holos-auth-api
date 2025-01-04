@@ -289,7 +289,7 @@ func TestAuth_Signout(t *testing.T) {
 	}
 }
 
-func TestAuth_GetUserID(t *testing.T) {
+func TestAuth_Authenticate(t *testing.T) {
 	userToken, err := entity.NewUserToken(uuid.New())
 	if err != nil {
 		t.Error(err.Error())
@@ -351,7 +351,7 @@ func TestAuth_GetUserID(t *testing.T) {
 			tt.setMockUserTokenRepository(ctx, utr)
 
 			au := usecase.NewAuthUsecase(nil, nil, utr)
-			result, err := au.GetUserID(ctx, tt.inputToken)
+			result, err := au.Authenticate(ctx, tt.inputToken)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}

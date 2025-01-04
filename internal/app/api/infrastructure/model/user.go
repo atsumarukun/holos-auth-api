@@ -13,13 +13,3 @@ type UserModel struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
-
-func NewUserModel(id uuid.UUID, name string, password string, createdAt time.Time, updatedAt time.Time) *UserModel {
-	return &UserModel{
-		ID:        id,
-		Name:      name,
-		Password:  password,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}

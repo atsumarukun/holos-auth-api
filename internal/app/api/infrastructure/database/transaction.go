@@ -4,29 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"holos-auth-api/internal/app/api/domain"
-	"holos-auth-api/internal/app/api/pkg/status"
 	"log"
-	"net/http"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type transactionKey struct{}
 
-type sqlxTransactionObject struct {
+type transactionObject struct {
 	db *sqlx.DB
 }
 
-func NewSqlxTransactionObject(db *sqlx.DB) domain.TransactionObject {
-	return &sqlxTransactionObject{
+func NewDBTransactionObject(db *sqlx.DB) domain.TransactionObject {
+	return &transactionObject{
 		db: db,
 	}
 }
 
-func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
-	tx, err := o.db.Beginx()
+func (to *transactionObject) Transaction(ctx context.Context, fn func(context.Context) error) error {
+	tx, err := to.db.Beginx()
 	if err != nil {
-		return status.Error(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	defer func() {
@@ -53,17 +51,16 @@ func (o *sqlxTransactionObject) Transaction(ctx context.Context, fn func(context
 	return nil
 }
 
-type sqlxDriver interface {
+type driver interface {
 	Rebind(string) string
 	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
 	QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error)
 	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
 }
 
-func getSqlxDriver(ctx context.Context, db *sqlx.DB) sqlxDriver {
-	if tx, ok := ctx.Value(transactionKey{}).(*sqlx.Tx); !ok {
-		return db
-	} else {
+func getDriver(ctx context.Context, db *sqlx.DB) driver {
+	if tx, ok := ctx.Value(transactionKey{}).(*sqlx.Tx); ok {
 		return tx
 	}
+	return db
 }

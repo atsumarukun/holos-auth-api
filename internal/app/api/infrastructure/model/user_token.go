@@ -11,11 +11,3 @@ type UserTokenModel struct {
 	Token     string    `db:"token"`
 	ExpiresAt time.Time `db:"expires_at"`
 }
-
-func NewUserTokenModel(userID uuid.UUID, token string, expiresAt time.Time) *UserTokenModel {
-	return &UserTokenModel{
-		UserID:    userID,
-		Token:     token,
-		ExpiresAt: expiresAt,
-	}
-}

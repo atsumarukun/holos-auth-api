@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/infrastructure/model"
-	"holos-auth-api/internal/app/api/pkg/status"
-	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
@@ -14,7 +12,7 @@ import (
 func ToPolicyModel(policy *entity.Policy) (*model.PolicyModel, error) {
 	methods, err := json.Marshal(policy.Methods)
 	if err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	var agents string
@@ -42,7 +40,7 @@ func ToPolicyModel(policy *entity.Policy) (*model.PolicyModel, error) {
 func ToPolicyEntity(policy *model.PolicyModel) (*entity.Policy, error) {
 	var methods []string
 	if err := json.Unmarshal(policy.Methods, &methods); err != nil {
-		return nil, status.Error(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	agents := []uuid.UUID{}
@@ -50,7 +48,7 @@ func ToPolicyEntity(policy *model.PolicyModel) (*entity.Policy, error) {
 		for _, agentID := range strings.Split(*policy.Agents, ",") {
 			agent, err := uuid.Parse(agentID)
 			if err != nil {
-				return nil, status.Error(http.StatusInternalServerError, err.Error())
+				return nil, err
 			}
 			agents = append(agents, agent)
 		}

@@ -34,7 +34,7 @@ func (r *policyDBRepository) Create(ctx context.Context, policy *entity.Policy) 
 		return ErrRequiredPolicy
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func (r *policyDBRepository) Update(ctx context.Context, policy *entity.Policy) 
 		return ErrRequiredPolicy
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) 
 		return ErrRequiredPolicy
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	policyModel, err := transformer.ToPolicyModel(policy)
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (r *policyDBRepository) Delete(ctx context.Context, policy *entity.Policy) 
 
 func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Policy, error) {
 	var policy model.PolicyModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -131,7 +131,7 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 
 func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, error) {
 	var policies []*model.PolicyModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	rows, err := driver.QueryxContext(
 		ctx,
@@ -160,7 +160,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	}
 
 	var policies []*model.PolicyModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	query, args, err := sqlx.Named(
 		`SELECT id, user_id, name, service, path, methods, created_at, updated_at FROM policies WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
@@ -196,7 +196,7 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 }
 
 func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, agentIDs []uuid.UUID) error {
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(
 		ctx,

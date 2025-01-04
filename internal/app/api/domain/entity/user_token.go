@@ -42,7 +42,7 @@ func RestoreUserToken(userID uuid.UUID, token string, expiresAt time.Time) *User
 func generateToken() (string, error) {
 	buf := make([]byte, 24)
 	if _, err := rand.Read(buf); err != nil {
-		return "", status.Error(http.StatusInternalServerError, err.Error())
+		return "", err
 	}
 	token := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(buf)
 	if 32 < len(token) {

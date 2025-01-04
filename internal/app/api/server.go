@@ -43,7 +43,7 @@ func Serve() {
 	inject(db)
 
 	r := gin.Default()
-	getRoutes(r)
+	registerRouter(r)
 
 	srv := &http.Server{
 		Addr:    ":8000",

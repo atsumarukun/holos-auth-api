@@ -33,7 +33,7 @@ func (r *userTokenDBRepository) Save(ctx context.Context, userToken *entity.User
 		return ErrRequiredUserToken
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	userTokenModel := transformer.ToUserTokenModel(userToken)
 
 	_, err := driver.NamedExecContext(
@@ -50,7 +50,7 @@ func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.Us
 		return ErrRequiredUserToken
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	userTokenModel := transformer.ToUserTokenModel(userToken)
 
 	_, err := driver.NamedExecContext(
@@ -64,7 +64,7 @@ func (r *userTokenDBRepository) Delete(ctx context.Context, userToken *entity.Us
 
 func (r *userTokenDBRepository) FindOneByTokenAndNotExpired(ctx context.Context, token string) (*entity.UserToken, error) {
 	var userToken model.UserTokenModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if err := driver.QueryRowxContext(
 		ctx,

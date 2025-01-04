@@ -34,7 +34,7 @@ func (r *agentDBRepository) Create(ctx context.Context, agent *entity.Agent) err
 		return ErrRequiredAgent
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
 
 	_, err := driver.NamedExecContext(
@@ -51,7 +51,7 @@ func (r *agentDBRepository) Update(ctx context.Context, agent *entity.Agent) err
 		return ErrRequiredAgent
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
 
 	if _, err := driver.NamedExecContext(
@@ -70,7 +70,7 @@ func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) err
 		return ErrRequiredAgent
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	agentModel := transformer.ToAgentModel(agent)
 
 	_, err := driver.NamedExecContext(
@@ -84,7 +84,7 @@ func (r *agentDBRepository) Delete(ctx context.Context, agent *entity.Agent) err
 
 func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Agent, error) {
 	var agent model.AgentModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -119,7 +119,7 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 
 func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
 	agents := []*model.AgentModel{}
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	rows, err := driver.QueryxContext(
 		ctx,
@@ -148,7 +148,7 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 	}
 
 	agents := []*model.AgentModel{}
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	query, args, err := sqlx.Named(
 		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id IN (:ids) AND user_id = :user_id AND deleted_at IS NULL;`,
@@ -184,7 +184,7 @@ func (r *agentDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context,
 }
 
 func (r *agentDBRepository) updatePolicies(ctx context.Context, id uuid.UUID, policieIDs []uuid.UUID) error {
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if _, err := driver.NamedExecContext(
 		ctx,

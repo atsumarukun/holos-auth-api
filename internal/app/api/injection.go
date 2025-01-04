@@ -20,7 +20,7 @@ var (
 )
 
 func inject(db *sqlx.DB) {
-	transactionObject := database.NewSqlxTransactionObject(db)
+	transactionObject := database.NewDBTransactionObject(db)
 
 	userDBRepository := database.NewUserDBRepository(db)
 	userTokenDBRepository := database.NewUserTokenDBRepository(db)

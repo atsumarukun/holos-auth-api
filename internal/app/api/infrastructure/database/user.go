@@ -34,7 +34,7 @@ func (r *userDBRepository) Create(ctx context.Context, user *entity.User) error 
 		return ErrRequiredUser
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
 
 	_, err := driver.NamedExecContext(
@@ -51,7 +51,7 @@ func (r *userDBRepository) Update(ctx context.Context, user *entity.User) error 
 		return ErrRequiredUser
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
 
 	_, err := driver.NamedExecContext(
@@ -68,7 +68,7 @@ func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) error 
 		return ErrRequiredUser
 	}
 
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 	userModel := transformer.ToUserModel(user)
 
 	_, err := driver.NamedExecContext(
@@ -82,7 +82,7 @@ func (r *userDBRepository) Delete(ctx context.Context, user *entity.User) error 
 
 func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user model.UserModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if err := driver.QueryRowxContext(
 		ctx,
@@ -100,7 +100,7 @@ func (r *userDBRepository) FindOneByIDAndNotDeleted(ctx context.Context, id uuid
 
 func (r *userDBRepository) FindOneByName(ctx context.Context, name string) (*entity.User, error) {
 	var user model.UserModel
-	driver := getSqlxDriver(ctx, r.db)
+	driver := getDriver(ctx, r.db)
 
 	if err := driver.QueryRowxContext(
 		ctx,

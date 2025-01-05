@@ -425,6 +425,27 @@ paths:
           required: true
           description: "実行者"
           example: "USER"
+        - in: "query"
+          name: "service"
+          schema:
+            type: "string"
+          required: true
+          description: "サービス"
+          example: "STORAGE"
+        - in: "query"
+          name: "path"
+          schema:
+            type: "string"
+          required: true
+          description: "パス"
+          example: "/path"
+        - in: "query"
+          name: "method"
+          schema:
+            type: "string"
+          required: true
+          description: "メソッド"
+          example: "GET"
       responses:
         200:
           description: "成功"

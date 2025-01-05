@@ -180,7 +180,7 @@ func (u *agentUsecase) GenerateToken(ctx context.Context, id uuid.UUID, userID u
 
 		return u.agentTokenRepository.Save(ctx, agentToken)
 	}); err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return agentToken.Token, nil

@@ -183,7 +183,7 @@ func TestUserToken_FindOneByTokenAndNotExpired(t *testing.T) {
 			},
 		},
 		{
-			name:         "not found",
+			name:         "find error",
 			inputToken:   userToken.Token,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,

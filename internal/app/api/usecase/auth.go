@@ -63,6 +63,7 @@ func (u *authUsecase) Signin(ctx context.Context, userName string, password stri
 	}); err != nil {
 		return "", err
 	}
+
 	return userToken.Token, nil
 }
 

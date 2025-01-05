@@ -19,6 +19,8 @@ func registerRouter(r *gin.Engine) {
 		agents.DELETE("/:id", agentHandler.Delete)
 		agents.GET("/:id/policies", agentHandler.GetPolicies)
 		agents.PUT("/:id/policies", agentHandler.UpdatePolicies)
+		agents.POST("/:id/token", agentHandler.GenerateToken)
+		agents.DELETE("/:id/token", agentHandler.DeleteToken)
 	}
 
 	policies := r.Group("policies")

@@ -227,6 +227,57 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
+  /agents/{id}/token:
+    post:
+      summary: "エージェントのトークン作成"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_agent_token"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    delete:
+      summary: "エージェントのトークン削除"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
   /policies:
     get:
       summary: "ポリシー一覧取得"
@@ -712,6 +763,14 @@ components:
             type: "array"
             items:
               $ref: "#/components/schemas/policy"
+    create_agent_token:
+      description: "エージェントのトークン作成"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            description: "トークン"
+            example: "GyTPPWGLe32H_2lZuoM7x0AV8OS_Yvit"
     get_policies:
       description: "ポリシー一覧取得"
       content:

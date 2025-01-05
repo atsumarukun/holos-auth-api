@@ -20,6 +20,8 @@ type AgentHandler interface {
 	Gets(*gin.Context)
 	UpdatePolicies(*gin.Context)
 	GetPolicies(*gin.Context)
+	GenerateToken(*gin.Context)
+	DeleteToken(*gin.Context)
 }
 
 type agentHandler struct {
@@ -217,4 +219,63 @@ func (h *agentHandler) GetPolicies(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, builder.ToPolicyResponses(dtos))
+}
+
+func (h *agentHandler) GenerateToken(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	token, err := h.agentUsecase.GenerateToken(ctx, id, userID)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, token)
+}
+
+func (h *agentHandler) DeleteToken(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	if err := h.agentUsecase.DeleteToken(ctx, id, userID); err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

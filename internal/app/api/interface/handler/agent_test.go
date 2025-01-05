@@ -556,3 +556,181 @@ func TestAgent_GetPolicies(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_GenerateToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agentToken, err := entity.NewAgentToken(agent.ID)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockAgentUsecase)
+	}{
+		{
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockAgentUsecase) {
+				u.EXPECT().
+					GenerateToken(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(agentToken.Token, nil).
+					Times(1)
+			},
+		},
+		{
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockAgentUsecase) {},
+		},
+		{
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockAgentUsecase) {},
+		},
+		{
+			name:                   "generate token error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockAgentUsecase) {
+				u.EXPECT().
+					GenerateToken(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return("", sql.ErrConnDone).
+					Times(1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("POST", "/agents/:id/token", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: agent.ID.String()})
+			}
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", agent.UserID)
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			u := mockUsecase.NewMockAgentUsecase(ctrl)
+			tt.setMockUsecase(u)
+
+			h := handler.NewAgentHandler(u)
+			h.GenerateToken(ctx)
+
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
+			}
+		})
+	}
+}
+
+func TestAgent_DeleteToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockAgentUsecase)
+	}{
+		{
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockAgentUsecase) {
+				u.EXPECT().
+					DeleteToken(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockAgentUsecase) {},
+		},
+		{
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockAgentUsecase) {},
+		},
+		{
+			name:                   "delete token error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockAgentUsecase) {
+				u.EXPECT().
+					DeleteToken(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("DELETE", "/agents/:id/token", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: agent.ID.String()})
+			}
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", agent.UserID)
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			u := mockUsecase.NewMockAgentUsecase(ctrl)
+			tt.setMockUsecase(u)
+
+			h := handler.NewAgentHandler(u)
+			h.DeleteToken(ctx)
+
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
+			}
+		})
+	}
+}

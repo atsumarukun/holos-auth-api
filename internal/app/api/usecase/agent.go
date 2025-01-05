@@ -17,6 +17,7 @@ import (
 var (
 	ErrAgentAlreadyExists = status.Error(http.StatusBadRequest, "agent already exists")
 	ErrAgentNotFound      = status.Error(http.StatusNotFound, "agent not found")
+	ErrAgentTokenNotFound = status.Error(http.StatusNotFound, "agent token not found")
 )
 
 type AgentUsecase interface {
@@ -26,19 +27,28 @@ type AgentUsecase interface {
 	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, error)
 	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, error)
 	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, error)
+	GenerateToken(context.Context, uuid.UUID, uuid.UUID) (string, error)
+	DeleteToken(context.Context, uuid.UUID, uuid.UUID) error
 }
 
 type agentUsecase struct {
-	transactionObject domain.TransactionObject
-	agentRepository   repository.AgentRepository
-	policyrepository  repository.PolicyRepository
+	transactionObject    domain.TransactionObject
+	agentRepository      repository.AgentRepository
+	agentTokenRepository repository.AgentTokenRepository
+	policyrepository     repository.PolicyRepository
 }
 
-func NewAgentUsecase(transactionObject domain.TransactionObject, agentRepository repository.AgentRepository, policyrepository repository.PolicyRepository) AgentUsecase {
+func NewAgentUsecase(
+	transactionObject domain.TransactionObject,
+	agentRepository repository.AgentRepository,
+	agentTokenRepository repository.AgentTokenRepository,
+	policyrepository repository.PolicyRepository,
+) AgentUsecase {
 	return &agentUsecase{
-		transactionObject: transactionObject,
-		agentRepository:   agentRepository,
-		policyrepository:  policyrepository,
+		transactionObject:    transactionObject,
+		agentRepository:      agentRepository,
+		agentTokenRepository: agentTokenRepository,
+		policyrepository:     policyrepository,
 	}
 }
 
@@ -149,4 +159,43 @@ func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uui
 	}
 
 	return mapper.ToPolicyDTOs(policies), nil
+}
+
+func (u *agentUsecase) GenerateToken(ctx context.Context, id uuid.UUID, userID uuid.UUID) (string, error) {
+	var agentToken *entity.AgentToken
+
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+		if err != nil {
+			return err
+		}
+		if agent == nil {
+			return ErrAgentNotFound
+		}
+
+		agentToken, err = entity.NewAgentToken(agent.ID)
+		if err != nil {
+			return err
+		}
+
+		return u.agentTokenRepository.Save(ctx, agentToken)
+	}); err != nil {
+		return "", err
+	}
+
+	return agentToken.Token, nil
+}
+
+func (u *agentUsecase) DeleteToken(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		agentToken, err := u.agentTokenRepository.FindOneByAgentIDAndUserID(ctx, id, userID)
+		if err != nil {
+			return err
+		}
+		if agentToken == nil {
+			return ErrAgentTokenNotFound
+		}
+
+		return u.agentTokenRepository.Delete(ctx, agentToken)
+	})
 }

@@ -77,7 +77,7 @@ func TestAgent_Create(t *testing.T) {
 
 			tt.setMockAgentRepository(ctx, ar)
 
-			au := usecase.NewAgentUsecase(nil, ar, nil)
+			au := usecase.NewAgentUsecase(nil, ar, nil, nil)
 			result, err := au.Create(ctx, tt.inputUserID, tt.inputName)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -240,7 +240,7 @@ func TestAgent_Update(t *testing.T) {
 			tt.setMockTransactionObject(ctx, to)
 			tt.setMockAgentRepository(ctx, ar)
 
-			au := usecase.NewAgentUsecase(to, ar, nil)
+			au := usecase.NewAgentUsecase(to, ar, nil, nil)
 			result, err := au.Update(ctx, tt.inputID, tt.inputUserID, tt.inputName)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -371,7 +371,7 @@ func TestAgent_Delete(t *testing.T) {
 			tt.setMockTransactionObject(ctx, to)
 			tt.setMockAgentRepository(ctx, ar)
 
-			au := usecase.NewAgentUsecase(to, ar, nil)
+			au := usecase.NewAgentUsecase(to, ar, nil, nil)
 			if err := au.Delete(ctx, tt.inputID, tt.inputUserID); !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
@@ -440,7 +440,7 @@ func TestAgent_Gets(t *testing.T) {
 
 			tt.setMockAgentRepository(ctx, ar)
 
-			au := usecase.NewAgentUsecase(nil, ar, nil)
+			au := usecase.NewAgentUsecase(nil, ar, nil, nil)
 			result, err := au.Gets(ctx, tt.inputUserID)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -627,7 +627,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 			tt.setMockAgentRepository(ctx, ar)
 			tt.setMockPolicyRepository(ctx, pr)
 
-			au := usecase.NewAgentUsecase(to, ar, pr)
+			au := usecase.NewAgentUsecase(to, ar, nil, pr)
 			result, err := au.UpdatePolicies(ctx, tt.inputID, tt.inputUserID, tt.inputPolicyIDs)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -800,7 +800,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			tt.setMockAgentRepository(ctx, ar)
 			tt.setMockPolicyRepository(ctx, pr)
 
-			au := usecase.NewAgentUsecase(to, ar, pr)
+			au := usecase.NewAgentUsecase(to, ar, nil, pr)
 			result, err := au.GetPolicies(ctx, tt.inputID, tt.inputUserID)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)

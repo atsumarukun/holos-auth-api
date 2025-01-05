@@ -408,6 +408,146 @@ func TestAgent_FindOneByIDAndUserIDAndNotDeleted(t *testing.T) {
 	}
 }
 
+func TestAgent_FindOneByTokenAndNotDeleted(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agentToken, err := entity.NewAgentToken(agent.ID)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name         string
+		inputToken   string
+		expectResult *entity.Agent
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
+	}{
+		{
+			name:         "found",
+			inputToken:   agentToken.Token,
+			expectResult: agent,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta(
+					`SELECT
+						agents.id,
+						agents.user_id,
+						agents.name,
+						agents.created_at,
+						agents.updated_at,
+						GROUP_CONCAT(permissions.policy_id ORDER BY permissions.policy_id) as policies
+					FROM
+						agents
+						INNER JOIN agent_tokens ON agents.id = agent_tokens.agent_id
+						LEFT JOIN permissions ON agents.id = permissions.agent_id
+					WHERE
+						agent_tokens.token = ?
+						AND agents.deleted_at IS NULL
+					GROUP BY
+						agents.id
+					LIMIT 1;`,
+				)).
+					WithArgs(agentToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).
+							AddRow(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt),
+					).
+					WillReturnError(nil)
+			},
+		},
+		{
+			name:         "not found",
+			inputToken:   agentToken.Token,
+			expectResult: nil,
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta(
+					`SELECT
+						agents.id,
+						agents.user_id,
+						agents.name,
+						agents.created_at,
+						agents.updated_at,
+						GROUP_CONCAT(permissions.policy_id ORDER BY permissions.policy_id) as policies
+					FROM
+						agents
+						INNER JOIN agent_tokens ON agents.id = agent_tokens.agent_id
+						LEFT JOIN permissions ON agents.id = permissions.agent_id
+					WHERE
+						agent_tokens.token = ?
+						AND agents.deleted_at IS NULL
+					GROUP BY
+						agents.id
+					LIMIT 1;`,
+				)).
+					WithArgs(agentToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}),
+					).
+					WillReturnError(sql.ErrNoRows)
+			},
+		},
+		{
+			name:         "find error",
+			inputToken:   agentToken.Token,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta(
+					`SELECT
+						agents.id,
+						agents.user_id,
+						agents.name,
+						agents.created_at,
+						agents.updated_at,
+						GROUP_CONCAT(permissions.policy_id ORDER BY permissions.policy_id) as policies
+					FROM
+						agents
+						INNER JOIN agent_tokens ON agents.id = agent_tokens.agent_id
+						LEFT JOIN permissions ON agents.id = permissions.agent_id
+					WHERE
+						agent_tokens.token = ?
+						AND agents.deleted_at IS NULL
+					GROUP BY
+						agents.id
+					LIMIT 1;`,
+				)).
+					WithArgs(agentToken.Token).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewAgentDBRepository(db)
+			result, err := r.FindOneByTokenAndNotDeleted(ctx, tt.inputToken)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
+			}
+		})
+	}
+}
+
 func TestAgent_FindByUserIDAndNotDeleted(t *testing.T) {
 	agent, err := entity.NewAgent(uuid.New(), "name")
 	if err != nil {

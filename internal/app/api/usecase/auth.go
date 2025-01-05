@@ -12,13 +12,16 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrAuthenticationFailed = status.Error(http.StatusUnauthorized, "authentication failed")
+var (
+	ErrAuthenticationFailed = status.Error(http.StatusUnauthorized, "authentication failed")
+	ErrAuthorizationFaild   = status.Error(http.StatusForbidden, "authorization failed")
+)
 
 type AuthUsecase interface {
 	Signin(context.Context, string, string) (string, error)
 	Signout(context.Context, string) error
 	Authenticate(context.Context, string) (uuid.UUID, error)
-	Authorize(context.Context, string) (uuid.UUID, error)
+	Authorize(context.Context, string, string) (uuid.UUID, error)
 }
 
 type authUsecase struct {
@@ -89,14 +92,13 @@ func (u *authUsecase) Authenticate(ctx context.Context, token string) (uuid.UUID
 	return userToken.UserID, nil
 }
 
-func (u *authUsecase) Authorize(ctx context.Context, token string) (uuid.UUID, error) {
-	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
-	if err != nil {
-		return uuid.Nil, err
-	}
-	if userToken == nil {
+func (u *authUsecase) Authorize(ctx context.Context, token string, operatorType string) (uuid.UUID, error) {
+	switch operatorType {
+	case "USER":
+		return u.Authenticate(ctx, token)
+	case "AGENT":
+		return uuid.Nil, ErrAuthorizationFaild
+	default:
 		return uuid.Nil, ErrAuthenticationFailed
 	}
-
-	return userToken.UserID, nil
 }

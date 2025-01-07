@@ -51,18 +51,18 @@ func (mr *MockAuthUsecaseMockRecorder) Authenticate(arg0, arg1 interface{}) *gom
 }
 
 // Authorize mocks base method.
-func (m *MockAuthUsecase) Authorize(arg0 context.Context, arg1, arg2 string) (uuid.UUID, error) {
+func (m *MockAuthUsecase) Authorize(arg0 context.Context, arg1, arg2, arg3, arg4, arg5 string) (uuid.UUID, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Authorize", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Authorize", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(uuid.UUID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Authorize indicates an expected call of Authorize.
-func (mr *MockAuthUsecaseMockRecorder) Authorize(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAuthUsecaseMockRecorder) Authorize(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockAuthUsecase)(nil).Authorize), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockAuthUsecase)(nil).Authorize), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Signin mocks base method.

@@ -9,6 +9,7 @@ import (
 	"holos-auth-api/internal/app/api/usecase/dto"
 	mockDomain "holos-auth-api/test/mock/domain"
 	mockRepository "holos-auth-api/test/mock/domain/repository"
+	mockService "holos-auth-api/test/mock/domain/service"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -471,7 +472,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 		expectError              error
 		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
 		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
-		setMockPolicyRepository  func(context.Context, *mockRepository.MockPolicyRepository)
+		setMockAgentService      func(context.Context, *mockService.MockAgentService)
 	}{
 		{
 			name:           "success",
@@ -498,9 +499,9 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 					Return(nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
@@ -526,7 +527,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 					Return(nil, nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {},
 		},
 		{
 			name:           "find agent error",
@@ -549,7 +550,7 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {},
 		},
 		{
 			name:           "find policies error",
@@ -572,9 +573,9 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -604,9 +605,9 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 					Return(sql.ErrConnDone).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
@@ -619,15 +620,15 @@ func TestAgent_UpdatePolicies(t *testing.T) {
 
 			to := mockDomain.NewMockTransactionObject(ctrl)
 			ar := mockRepository.NewMockAgentRepository(ctrl)
-			pr := mockRepository.NewMockPolicyRepository(ctrl)
+			as := mockService.NewMockAgentService(ctrl)
 
 			ctx := context.Background()
 
 			tt.setMockTransactionObject(ctx, to)
 			tt.setMockAgentRepository(ctx, ar)
-			tt.setMockPolicyRepository(ctx, pr)
+			tt.setMockAgentService(ctx, as)
 
-			au := usecase.NewAgentUsecase(to, ar, nil, pr)
+			au := usecase.NewAgentUsecase(to, ar, nil, as)
 			result, err := au.UpdatePolicies(ctx, tt.inputID, tt.inputUserID, tt.inputPolicyIDs)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -657,7 +658,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 		expectError              error
 		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
 		setMockAgentRepository   func(context.Context, *mockRepository.MockAgentRepository)
-		setMockPolicyRepository  func(context.Context, *mockRepository.MockPolicyRepository)
+		setMockAgentService      func(context.Context, *mockService.MockAgentService)
 	}{
 		{
 			name:         "success",
@@ -679,9 +680,9 @@ func TestAgent_GetPolicies(t *testing.T) {
 					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
@@ -706,7 +707,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 					Return(nil, nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {},
 		},
 		{
 			name:         "policies not found",
@@ -728,9 +729,9 @@ func TestAgent_GetPolicies(t *testing.T) {
 					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return(nil, nil).
 					Times(1)
 			},
@@ -755,7 +756,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {},
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {},
 		},
 		{
 			name:         "find policies error",
@@ -777,9 +778,9 @@ func TestAgent_GetPolicies(t *testing.T) {
 					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
 					Times(1)
 			},
-			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
-				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
+			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
+				as.EXPECT().
+					GetPolicies(ctx, gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -792,15 +793,15 @@ func TestAgent_GetPolicies(t *testing.T) {
 
 			to := mockDomain.NewMockTransactionObject(ctrl)
 			ar := mockRepository.NewMockAgentRepository(ctrl)
-			pr := mockRepository.NewMockPolicyRepository(ctrl)
+			as := mockService.NewMockAgentService(ctrl)
 
 			ctx := context.Background()
 
 			tt.setMockTransactionObject(ctx, to)
 			tt.setMockAgentRepository(ctx, ar)
-			tt.setMockPolicyRepository(ctx, pr)
+			tt.setMockAgentService(ctx, as)
 
-			au := usecase.NewAgentUsecase(to, ar, nil, pr)
+			au := usecase.NewAgentUsecase(to, ar, nil, as)
 			result, err := au.GetPolicies(ctx, tt.inputID, tt.inputUserID)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)

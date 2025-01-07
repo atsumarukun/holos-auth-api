@@ -6,6 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
+	"holos-auth-api/internal/app/api/domain/service"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"holos-auth-api/internal/app/api/usecase/mapper"
@@ -35,20 +36,20 @@ type agentUsecase struct {
 	transactionObject    domain.TransactionObject
 	agentRepository      repository.AgentRepository
 	agentTokenRepository repository.AgentTokenRepository
-	policyrepository     repository.PolicyRepository
+	agentService         service.AgentService
 }
 
 func NewAgentUsecase(
 	transactionObject domain.TransactionObject,
 	agentRepository repository.AgentRepository,
 	agentTokenRepository repository.AgentTokenRepository,
-	policyrepository repository.PolicyRepository,
+	agentService service.AgentService,
 ) AgentUsecase {
 	return &agentUsecase{
 		transactionObject:    transactionObject,
 		agentRepository:      agentRepository,
 		agentTokenRepository: agentTokenRepository,
-		policyrepository:     policyrepository,
+		agentService:         agentService,
 	}
 }
 
@@ -125,7 +126,7 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 			return ErrAgentNotFound
 		}
 
-		policies, err = u.policyrepository.FindByIDsAndUserIDAndNotDeleted(ctx, policyIDs, userID)
+		policies, err = u.agentService.GetPolicies(ctx, agent)
 		if err != nil {
 			return err
 		}
@@ -152,7 +153,7 @@ func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uui
 			return ErrAgentNotFound
 		}
 
-		policies, err = u.policyrepository.FindByIDsAndUserIDAndNotDeleted(ctx, agent.Policies, userID)
+		policies, err = u.agentService.GetPolicies(ctx, agent)
 		return err
 	}); err != nil {
 		return nil, err

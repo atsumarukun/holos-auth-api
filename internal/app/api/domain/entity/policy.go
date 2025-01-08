@@ -135,7 +135,7 @@ func (p *Policy) SetPath(path string) error {
 	if path[0] != '/' || path[len(path)-1:] == "/" && 1 < len(path) {
 		return ErrInvalidPolicyPath
 	}
-	matched, err := regexp.MatchString(`^[a-z\-/]*$`, path)
+	matched, err := regexp.MatchString(`^[a-z\-:/]*$`, path)
 	if err != nil {
 		return err
 	}

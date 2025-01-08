@@ -109,6 +109,21 @@ func (mr *MockAgentRepositoryMockRecorder) FindOneByIDAndUserIDAndNotDeleted(arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndUserIDAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByIDAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
+// FindOneByTokenAndNotDeleted mocks base method.
+func (m *MockAgentRepository) FindOneByTokenAndNotDeleted(arg0 context.Context, arg1 string) (*entity.Agent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindOneByTokenAndNotDeleted", arg0, arg1)
+	ret0, _ := ret[0].(*entity.Agent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindOneByTokenAndNotDeleted indicates an expected call of FindOneByTokenAndNotDeleted.
+func (mr *MockAgentRepositoryMockRecorder) FindOneByTokenAndNotDeleted(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByTokenAndNotDeleted", reflect.TypeOf((*MockAgentRepository)(nil).FindOneByTokenAndNotDeleted), arg0, arg1)
+}
+
 // Update mocks base method.
 func (m *MockAgentRepository) Update(arg0 context.Context, arg1 *entity.Agent) error {
 	m.ctrl.T.Helper()

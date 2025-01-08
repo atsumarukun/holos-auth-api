@@ -35,19 +35,34 @@ func (m *MockAuthUsecase) EXPECT() *MockAuthUsecaseMockRecorder {
 	return m.recorder
 }
 
-// GetUserID mocks base method.
-func (m *MockAuthUsecase) GetUserID(arg0 context.Context, arg1 string) (uuid.UUID, error) {
+// Authenticate mocks base method.
+func (m *MockAuthUsecase) Authenticate(arg0 context.Context, arg1 string) (uuid.UUID, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserID", arg0, arg1)
+	ret := m.ctrl.Call(m, "Authenticate", arg0, arg1)
 	ret0, _ := ret[0].(uuid.UUID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserID indicates an expected call of GetUserID.
-func (mr *MockAuthUsecaseMockRecorder) GetUserID(arg0, arg1 interface{}) *gomock.Call {
+// Authenticate indicates an expected call of Authenticate.
+func (mr *MockAuthUsecaseMockRecorder) Authenticate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserID", reflect.TypeOf((*MockAuthUsecase)(nil).GetUserID), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockAuthUsecase)(nil).Authenticate), arg0, arg1)
+}
+
+// Authorize mocks base method.
+func (m *MockAuthUsecase) Authorize(arg0 context.Context, arg1, arg2, arg3, arg4, arg5 string) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Authorize", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Authorize indicates an expected call of Authorize.
+func (mr *MockAuthUsecaseMockRecorder) Authorize(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockAuthUsecase)(nil).Authorize), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Signin mocks base method.

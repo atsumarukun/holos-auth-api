@@ -117,6 +117,40 @@ func (r *agentDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Contex
 	return transformer.ToAgentEntity(&agent)
 }
 
+func (r *agentDBRepository) FindOneByTokenAndNotDeleted(ctx context.Context, token string) (*entity.Agent, error) {
+	var agent model.AgentModel
+	driver := getDriver(ctx, r.db)
+
+	if err := driver.QueryRowxContext(
+		ctx,
+		`SELECT
+			agents.id,
+			agents.user_id,
+			agents.name,
+			agents.created_at,
+			agents.updated_at,
+			GROUP_CONCAT(permissions.policy_id ORDER BY permissions.policy_id) as policies
+		FROM
+			agents
+			INNER JOIN agent_tokens ON agents.id = agent_tokens.agent_id
+			LEFT JOIN permissions ON agents.id = permissions.agent_id
+		WHERE
+			agent_tokens.token = ?
+			AND agents.deleted_at IS NULL
+		GROUP BY
+			agents.id
+		LIMIT 1;`,
+		token,
+	).StructScan(&agent); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return transformer.ToAgentEntity(&agent)
+}
+
 func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
 	agents := []*model.AgentModel{}
 	driver := getDriver(ctx, r.db)

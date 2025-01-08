@@ -343,6 +343,11 @@ func TestPolicy_SetPath(t *testing.T) {
 			expectError: nil,
 		},
 		{
+			name:        "colon",
+			inputPath:   "/:id",
+			expectError: nil,
+		},
+		{
 			name:        "slash only",
 			inputPath:   "/",
 			expectError: nil,

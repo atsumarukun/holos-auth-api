@@ -9,6 +9,7 @@ var (
 	StatusOK                  = status.New(http.StatusOK, "success")
 	StatusBadRequest          = status.New(http.StatusBadRequest, "invalid request")
 	StatusUnauthorized        = status.New(http.StatusUnauthorized, "unauthorized")
+	StatusForbidden           = status.New(http.StatusForbidden, "forbidden")
 	StatusNotFound            = status.New(http.StatusNotFound, "resource not found")
 	StatusInternalServerError = status.New(http.StatusInternalServerError, "internal server error")
 )
@@ -26,6 +27,8 @@ func HandleError(err error) *status.Status {
 		return s
 	case http.StatusUnauthorized:
 		return StatusUnauthorized
+	case http.StatusForbidden:
+		return StatusForbidden
 	case http.StatusNotFound:
 		return StatusNotFound
 	default:

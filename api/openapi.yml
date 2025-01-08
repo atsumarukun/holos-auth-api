@@ -135,6 +135,8 @@ paths:
           schema:
             type: "string"
           required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       requestBody:
         $ref: "#/components/requestBodies/update_agent"
       responses:
@@ -162,6 +164,8 @@ paths:
           schema:
             type: "string"
           required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       responses:
         204:
           description: "成功"
@@ -187,6 +191,8 @@ paths:
           schema:
             type: "string"
           required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       responses:
         200:
           description: "成功"
@@ -212,6 +218,8 @@ paths:
           schema:
             type: "string"
           required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       requestBody:
         $ref: "#/components/requestBodies/update_agent_policies"
       responses:
@@ -347,6 +355,8 @@ paths:
           schema:
             type: "string"
           required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       responses:
         204:
           description: "成功"
@@ -400,20 +410,52 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
-  /auth/user_id:
+  /auth/authorization:
     get:
-      summary: "ユーザーID取得"
+      summary: "認可"
       tags:
         - "auth"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Holos-Operator-Type"
+          schema:
+            type: "string"
+          required: true
+          description: "実行者"
+          example: "USER"
+        - in: "query"
+          name: "service"
+          schema:
+            type: "string"
+          required: true
+          description: "サービス"
+          example: "STORAGE"
+        - in: "query"
+          name: "path"
+          schema:
+            type: "string"
+          required: true
+          description: "パス"
+          example: "/path"
+        - in: "query"
+          name: "method"
+          schema:
+            type: "string"
+          required: true
+          description: "メソッド"
+          example: "GET"
       responses:
         200:
           description: "成功"
-          $ref: "#/components/responses/get_user_id"
+          $ref: "#/components/responses/auth_authorization"
         401:
           description: "認証エラー"
           $ref: "#/components/responses/401"
+        403:
+          description: "認可エラー"
+          $ref: "#/components/responses/403"
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
@@ -807,8 +849,8 @@ components:
             type: "array"
             items:
               $ref: "#/components/schemas/agent"
-    get_user_id:
-      description: "ユーザーID取得"
+    auth_authorization:
+      description: "認可"
       content:
         text/plain:
           schema:
@@ -828,6 +870,13 @@ components:
           schema:
             type: "string"
             example: "unauthorized"
+    403:
+      description: "Forbidden"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            example: "forbidden"
     404:
       description: "Resource Not Found"
       content:

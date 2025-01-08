@@ -69,7 +69,7 @@ func TestAuth_Authenticate(t *testing.T) {
 			defer ctrl.Finish()
 
 			au := mock_usecase.NewMockAuthUsecase(ctrl)
-			au.EXPECT().GetUserID(gomock.Any(), gomock.Any()).Return(tt.id, tt.resultError).AnyTimes()
+			au.EXPECT().Authenticate(gomock.Any(), gomock.Any()).Return(tt.id, tt.resultError).AnyTimes()
 
 			am := middleware.NewAuthMiddleware(au)
 			am.Authenticate(ctx)

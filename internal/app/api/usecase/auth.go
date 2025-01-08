@@ -6,6 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
+	"holos-auth-api/internal/app/api/domain/service"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
@@ -21,20 +22,30 @@ type AuthUsecase interface {
 	Signin(context.Context, string, string) (string, error)
 	Signout(context.Context, string) error
 	Authenticate(context.Context, string) (uuid.UUID, error)
-	Authorize(context.Context, string, string) (uuid.UUID, error)
+	Authorize(context.Context, string, string, string, string, string) (uuid.UUID, error)
 }
 
 type authUsecase struct {
 	transactionObject   domain.TransactionObject
 	userRepository      repository.UserRepository
 	userTokenRepository repository.UserTokenRepository
+	agentRepository     repository.AgentRepository
+	agentService        service.AgentService
 }
 
-func NewAuthUsecase(transactionObject domain.TransactionObject, userRepository repository.UserRepository, userTokenRepository repository.UserTokenRepository) AuthUsecase {
+func NewAuthUsecase(
+	transactionObject domain.TransactionObject,
+	userRepository repository.UserRepository,
+	userTokenRepository repository.UserTokenRepository,
+	agentRepository repository.AgentRepository,
+	agentService service.AgentService,
+) AuthUsecase {
 	return &authUsecase{
 		transactionObject:   transactionObject,
 		userRepository:      userRepository,
 		userTokenRepository: userTokenRepository,
+		agentRepository:     agentRepository,
+		agentService:        agentService,
 	}
 }
 
@@ -93,11 +104,37 @@ func (u *authUsecase) Authenticate(ctx context.Context, token string) (uuid.UUID
 	return userToken.UserID, nil
 }
 
-func (u *authUsecase) Authorize(ctx context.Context, token string, operatorType string) (uuid.UUID, error) {
+func (u *authUsecase) Authorize(ctx context.Context, token string, operatorType string, service string, path string, method string) (uuid.UUID, error) {
 	switch operatorType {
 	case "USER":
 		return u.Authenticate(ctx, token)
 	case "AGENT":
+		var userID uuid.UUID
+		if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+			agent, err := u.agentRepository.FindOneByTokenAndNotDeleted(ctx, token)
+			if err != nil {
+				return err
+			}
+			if agent == nil {
+				return ErrAuthenticationFailed
+			}
+
+			hasPermission, err := u.agentService.HasPermission(ctx, agent, service, path, method)
+			if err != nil {
+				return err
+			}
+			if hasPermission {
+				userID = agent.UserID
+			}
+
+			return nil
+		}); err != nil {
+			return uuid.Nil, err
+		}
+
+		if userID != uuid.Nil {
+			return userID, nil
+		}
 		return uuid.Nil, ErrAuthorizationFaild
 	default:
 		return uuid.Nil, ErrAuthenticationFailed

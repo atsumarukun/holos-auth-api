@@ -81,9 +81,13 @@ func (h *authHandler) Authorize(c *gin.Context) {
 
 	operatorType := c.Request.Header.Get("Holos-Operator-Type")
 
+	service := c.Query("service")
+	path := c.Query("path")
+	method := c.Query("method")
+
 	ctx := c.Request.Context()
 
-	userID, err := h.authUsecase.Authorize(ctx, bearerToken[1], operatorType)
+	userID, err := h.authUsecase.Authorize(ctx, bearerToken[1], operatorType, service, path, method)
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())

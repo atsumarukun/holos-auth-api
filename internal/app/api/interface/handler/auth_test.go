@@ -176,7 +176,7 @@ func TestAuth_Authorize(t *testing.T) {
 			expectStatusCode:    http.StatusOK,
 			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
 				u.EXPECT().
-					Authorize(gomock.Any(), gomock.Any(), gomock.Any()).
+					Authorize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(userToken.UserID, nil).
 					Times(1)
 			},
@@ -193,7 +193,7 @@ func TestAuth_Authorize(t *testing.T) {
 			expectStatusCode:    http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
 				u.EXPECT().
-					Authorize(gomock.Any(), gomock.Any(), gomock.Any()).
+					Authorize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uuid.Nil, sql.ErrConnDone).
 					Times(1)
 			},

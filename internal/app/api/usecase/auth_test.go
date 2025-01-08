@@ -161,7 +161,7 @@ func TestAuth_Signin(t *testing.T) {
 			tt.setMockUserRepository(ctx, ur)
 			tt.setMockUserTokenRepository(ctx, utr)
 
-			au := usecase.NewAuthUsecase(to, ur, utr)
+			au := usecase.NewAuthUsecase(to, ur, utr, nil, nil)
 			_, err = au.Signin(ctx, tt.inputUserName, tt.inputPassword)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
@@ -281,7 +281,7 @@ func TestAuth_Signout(t *testing.T) {
 			tt.setMockTransactionObject(ctx, to)
 			tt.setMockUserTokenRepository(ctx, utr)
 
-			au := usecase.NewAuthUsecase(to, nil, utr)
+			au := usecase.NewAuthUsecase(to, nil, utr, nil, nil)
 			if err := au.Signout(ctx, tt.inputToken); !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}
@@ -350,7 +350,7 @@ func TestAuth_Authenticate(t *testing.T) {
 
 			tt.setMockUserTokenRepository(ctx, utr)
 
-			au := usecase.NewAuthUsecase(nil, nil, utr)
+			au := usecase.NewAuthUsecase(nil, nil, utr, nil, nil)
 			result, err := au.Authenticate(ctx, tt.inputToken)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)

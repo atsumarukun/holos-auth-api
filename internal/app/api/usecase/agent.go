@@ -36,6 +36,7 @@ type agentUsecase struct {
 	transactionObject    domain.TransactionObject
 	agentRepository      repository.AgentRepository
 	agentTokenRepository repository.AgentTokenRepository
+	policyRepository     repository.PolicyRepository
 	agentService         service.AgentService
 }
 
@@ -43,12 +44,14 @@ func NewAgentUsecase(
 	transactionObject domain.TransactionObject,
 	agentRepository repository.AgentRepository,
 	agentTokenRepository repository.AgentTokenRepository,
+	policyRepository repository.PolicyRepository,
 	agentService service.AgentService,
 ) AgentUsecase {
 	return &agentUsecase{
 		transactionObject:    transactionObject,
 		agentRepository:      agentRepository,
 		agentTokenRepository: agentTokenRepository,
+		policyRepository:     policyRepository,
 		agentService:         agentService,
 	}
 }
@@ -126,7 +129,7 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 			return ErrAgentNotFound
 		}
 
-		policies, err = u.agentService.GetPolicies(ctx, agent)
+		policies, err = u.policyRepository.FindByIDsAndUserIDAndNotDeleted(ctx, policyIDs, userID)
 		if err != nil {
 			return err
 		}

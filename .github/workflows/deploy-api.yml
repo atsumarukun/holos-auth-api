@@ -38,4 +38,4 @@ jobs:
           provenance: false
           tags: |
             ghcr.io/${{ github.repository_owner }}/holos-auth-api:latest
-            ghcr.io/${{ github.repository_owner }}/holos-auth-api:1.0.2
+            ghcr.io/${{ github.repository_owner }}/holos-auth-api:1.0.0

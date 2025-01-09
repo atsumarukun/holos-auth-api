@@ -1,25 +1,20 @@
 package entity
 
 import (
-	"crypto/rand"
-	"encoding/base64"
-	"holos-auth-api/internal/pkg/apierr"
-	"net/http"
+	"holos-auth-api/internal/app/api/domain/pkg/token"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-var ErrUserTokenTooLong = apierr.NewApiError(http.StatusInternalServerError, "user token must be 32 characters or less")
-
 type UserToken struct {
-	UserID    uuid.UUID `db:"user_id"`
-	Token     string    `db:"token"`
-	ExpiresAt time.Time `db:"expires_at"`
+	UserID    uuid.UUID
+	Token     string
+	ExpiresAt time.Time
 }
 
-func NewUserToken(userID uuid.UUID) (*UserToken, apierr.ApiError) {
-	token, err := generateToken()
+func NewUserToken(userID uuid.UUID) (*UserToken, error) {
+	token, err := token.Generate()
 	if err != nil {
 		return nil, err
 	}
@@ -31,14 +26,10 @@ func NewUserToken(userID uuid.UUID) (*UserToken, apierr.ApiError) {
 	}, nil
 }
 
-func generateToken() (string, apierr.ApiError) {
-	buf := make([]byte, 24)
-	if _, err := rand.Read(buf); err != nil {
-		return "", apierr.NewApiError(http.StatusInternalServerError, err.Error())
+func RestoreUserToken(userID uuid.UUID, token string, expiresAt time.Time) *UserToken {
+	return &UserToken{
+		UserID:    userID,
+		Token:     token,
+		ExpiresAt: expiresAt,
 	}
-	token := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(buf)
-	if 32 < len(token) {
-		return "", ErrUserTokenTooLong
-	}
-	return token, nil
 }

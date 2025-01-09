@@ -2,7 +2,7 @@ package api
 
 import (
 	"holos-auth-api/internal/app/api/domain/service"
-	"holos-auth-api/internal/app/api/infrastructure"
+	"holos-auth-api/internal/app/api/infrastructure/database"
 	"holos-auth-api/internal/app/api/interface/handler"
 	"holos-auth-api/internal/app/api/interface/middleware"
 	"holos-auth-api/internal/app/api/usecase"
@@ -13,23 +13,34 @@ import (
 var (
 	authMiddleware middleware.AuthMiddleware
 
-	userHandler handler.UserHandler
-	authHandler handler.AuthHandler
+	userHandler   handler.UserHandler
+	agentHandler  handler.AgentHandler
+	policyHandler handler.PolicyHandler
+	authHandler   handler.AuthHandler
 )
 
 func inject(db *sqlx.DB) {
-	transactionObject := infrastructure.NewSqlxTransactionObject(db)
+	transactionObject := database.NewDBTransactionObject(db)
 
-	userInfrastructure := infrastructure.NewUserInfrastructure(db)
-	userTokenInfrastructure := infrastructure.NewUserTokenInfrastructure(db)
+	userDBRepository := database.NewUserDBRepository(db)
+	userTokenDBRepository := database.NewUserTokenDBRepository(db)
+	agentDBRepository := database.NewAgentDBRepository(db)
+	agentTokenDBRepository := database.NewAgentTokenDBRepository(db)
+	policyDBRepository := database.NewPolicyDBRepository(db)
 
-	userService := service.NewUserService(userInfrastructure)
+	userService := service.NewUserService(userDBRepository)
+	agentService := service.NewAgentService(policyDBRepository)
+	policyService := service.NewPolicyService(agentDBRepository)
 
-	userUsecase := usecase.NewUserUsecase(transactionObject, userInfrastructure, userService)
-	authUsecase := usecase.NewAuthUsecase(transactionObject, userInfrastructure, userTokenInfrastructure)
+	userUsecase := usecase.NewUserUsecase(transactionObject, userDBRepository, userService)
+	agentUsecase := usecase.NewAgentUsecase(transactionObject, agentDBRepository, agentTokenDBRepository, policyDBRepository, agentService)
+	policyUsecase := usecase.NewPolicyUsecase(transactionObject, policyDBRepository, agentDBRepository, policyService)
+	authUsecase := usecase.NewAuthUsecase(transactionObject, userDBRepository, userTokenDBRepository, agentDBRepository, agentService)
 
 	authMiddleware = middleware.NewAuthMiddleware(authUsecase)
 
 	userHandler = handler.NewUserHandler(userUsecase)
+	agentHandler = handler.NewAgentHandler(agentUsecase)
+	policyHandler = handler.NewPolicyHandler(policyUsecase)
 	authHandler = handler.NewAuthHandler(authUsecase)
 }

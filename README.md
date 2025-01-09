@@ -33,6 +33,26 @@ issue-${ISSUE_NUMBER}   // issue-1
 create: 新規機能を作成.
 ```
 
+## デプロイ
+
+mainブランチへmergeすることでデプロイが行われる.
+
+デプロイされるリソースは以下の通り.
+
+| resource | destination |
+| --- | --- |
+| API | GitHub Container Registry |
+| SwaggerUI | GitHub Pages |
+
+### API
+
+APIのデプロイを行う前に.github/workflows/deploy-api.yml内のapiバージョンを更新する.<br />
+https://github.com/atsumarukun/holos-auth-api/pkgs/container/holos-auth-api
+
+### SwaggerUI
+
+https://atsumarukun.github.io/holos-auth-api/
+
 ## データベース接続
 
 本開発環境はDBコンテナをhostにポートフォワードしていない.<br />

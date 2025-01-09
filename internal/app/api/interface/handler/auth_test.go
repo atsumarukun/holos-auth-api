@@ -2,9 +2,10 @@ package handler_test
 
 import (
 	"bytes"
+	"database/sql"
+	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/interface/handler"
-	"holos-auth-api/internal/pkg/apierr"
-	mock_usecase "holos-auth-api/test/mock/usecase"
+	mockUsecase "holos-auth-api/test/mock/usecase"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,33 +17,45 @@ import (
 
 func TestAuth_Signin(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
-		name         string
-		requestJSON  string
-		resultString string
-		resultError  apierr.ApiError
-		expect       int
+		name             string
+		requestJSON      string
+		expectStatusCode int
+		setMockUsecase   func(*mockUsecase.MockAuthUsecase)
 	}{
 		{
-			name:         "success",
-			requestJSON:  `{"user_name": "user_name", "password": "password"}`,
-			resultString: "token",
-			resultError:  nil,
-			expect:       http.StatusOK,
+			name:             "success",
+			requestJSON:      `{"user_name": "user_name", "password": "password"}`,
+			expectStatusCode: http.StatusCreated,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Signin(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(userToken.Token, nil).
+					Times(1)
+			},
 		},
 		{
-			name:         "invalid_request",
-			requestJSON:  "",
-			resultString: "token",
-			resultError:  nil,
-			expect:       http.StatusBadRequest,
+			name:             "invalid request",
+			requestJSON:      "",
+			expectStatusCode: http.StatusBadRequest,
+			setMockUsecase:   func(u *mockUsecase.MockAuthUsecase) {},
 		},
 		{
-			name:         "result_error",
-			requestJSON:  `{"name": "name", "password": "password", "confirm_password": "password"}`,
-			resultString: "",
-			resultError:  apierr.NewApiError(http.StatusInternalServerError, "test error"),
-			expect:       http.StatusInternalServerError,
+			name:             "signin error",
+			requestJSON:      `{"user_name": "user_name", "password": "password"}`,
+			expectStatusCode: http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Signin(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return("", sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -59,14 +72,14 @@ func TestAuth_Signin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAuthUsecase(ctrl)
-			au.EXPECT().Signin(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.resultString, tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockAuthUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ah := handler.NewAuthHandler(au)
-			ah.Signin(ctx)
+			h := handler.NewAuthHandler(u)
+			h.Signin(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
@@ -74,29 +87,45 @@ func TestAuth_Signin(t *testing.T) {
 
 func TestAuth_Signout(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
-		expect              int
+		expectStatusCode    int
+		setMockUsecase      func(*mockUsecase.MockAuthUsecase)
 	}{
 		{
 			name:                "success",
-			authorizationHeader: "Bearer token",
-			resultError:         nil,
-			expect:              http.StatusOK,
+			authorizationHeader: "Bearer " + userToken.Token,
+			expectStatusCode:    http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Signout(gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
 		},
 		{
-			name:                "invalid_header",
+			name:                "invalid header",
 			authorizationHeader: "",
-			resultError:         nil,
-			expect:              http.StatusUnauthorized,
+			expectStatusCode:    http.StatusUnauthorized,
+			setMockUsecase:      func(u *mockUsecase.MockAuthUsecase) {},
 		},
 		{
-			name:                "result_error",
-			authorizationHeader: "Bearer token",
-			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
-			expect:              http.StatusInternalServerError,
+			name:                "signout error",
+			authorizationHeader: "Bearer " + userToken.Token,
+			expectStatusCode:    http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Signout(gomock.Any(), gomock.Any()).
+					Return(sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -114,44 +143,60 @@ func TestAuth_Signout(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAuthUsecase(ctrl)
-			au.EXPECT().Signout(gomock.Any(), gomock.Any()).Return(tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockAuthUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ah := handler.NewAuthHandler(au)
-			ah.Signout(ctx)
+			h := handler.NewAuthHandler(u)
+			h.Signout(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}
 }
 
-func TestAuth_GetUserID(t *testing.T) {
+func TestAuth_Authorize(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	userToken, err := entity.NewUserToken(uuid.New())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	tests := []struct {
 		name                string
 		authorizationHeader string
-		resultError         apierr.ApiError
-		expect              int
+		expectStatusCode    int
+		setMockUsecase      func(*mockUsecase.MockAuthUsecase)
 	}{
 		{
 			name:                "success",
-			authorizationHeader: "Bearer token",
-			resultError:         nil,
-			expect:              http.StatusOK,
+			authorizationHeader: "Bearer " + userToken.Token,
+			expectStatusCode:    http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Authorize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(userToken.UserID, nil).
+					Times(1)
+			},
 		},
 		{
-			name:                "invalid_header",
+			name:                "invalid header",
 			authorizationHeader: "",
-			resultError:         nil,
-			expect:              http.StatusUnauthorized,
+			expectStatusCode:    http.StatusUnauthorized,
+			setMockUsecase:      func(u *mockUsecase.MockAuthUsecase) {},
 		},
 		{
-			name:                "result_error",
-			authorizationHeader: "Bearer token",
-			resultError:         apierr.NewApiError(http.StatusInternalServerError, "test error"),
-			expect:              http.StatusInternalServerError,
+			name:                "signout error",
+			authorizationHeader: "Bearer " + userToken.Token,
+			expectStatusCode:    http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockAuthUsecase) {
+				u.EXPECT().
+					Authorize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uuid.Nil, sql.ErrConnDone).
+					Times(1)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -169,14 +214,14 @@ func TestAuth_GetUserID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			au := mock_usecase.NewMockAuthUsecase(ctrl)
-			au.EXPECT().GetUserID(gomock.Any(), gomock.Any()).Return(uuid.New(), tt.resultError).AnyTimes()
+			u := mockUsecase.NewMockAuthUsecase(ctrl)
+			tt.setMockUsecase(u)
 
-			ah := handler.NewAuthHandler(au)
-			ah.GetUserID(ctx)
+			h := handler.NewAuthHandler(u)
+			h.Authorize(ctx)
 
-			if w.Code != tt.expect {
-				t.Errorf("expect %d but got %d", tt.expect, w.Code)
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
 			}
 		})
 	}

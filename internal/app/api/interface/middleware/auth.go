@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"context"
+	"holos-auth-api/internal/app/api/interface/pkg/errors"
 	"holos-auth-api/internal/app/api/usecase"
-	"net/http"
+	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -23,19 +24,23 @@ func NewAuthMiddleware(authUsecase usecase.AuthUsecase) AuthMiddleware {
 	}
 }
 
-func (am *authMiddleware) Authenticate(c *gin.Context) {
+func (m *authMiddleware) Authenticate(c *gin.Context) {
 	bearerToken := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-		c.String(http.StatusUnauthorized, "unauthorized")
+		status := errors.StatusUnauthorized
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		c.Abort()
 		return
 	}
 
 	ctx := context.Background()
 
-	userID, err := am.authUsecase.GetUserID(ctx, bearerToken[1])
+	userID, err := m.authUsecase.Authenticate(ctx, bearerToken[1])
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		c.Abort()
 		return
 	}

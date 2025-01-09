@@ -2,7 +2,7 @@ package entity
 
 import (
 	"errors"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 	"regexp"
 	"time"
@@ -12,28 +12,28 @@ import (
 )
 
 var (
-	ErrUserNameTooShort         = apierr.NewApiError(http.StatusBadRequest, "user name must be 3 characters or more")
-	ErrUserNameTooLong          = apierr.NewApiError(http.StatusBadRequest, "user name must be 24 characters or less")
-	ErrInvalidUserName          = apierr.NewApiError(http.StatusBadRequest, "invalid user name")
-	ErrUserPasswordDoesNotMatch = apierr.NewApiError(http.StatusBadRequest, "password does not match")
-	ErrUserPasswordTooShort     = apierr.NewApiError(http.StatusBadRequest, "user password must be 8 characters or more")
-	ErrUserPasswordTooLong      = apierr.NewApiError(http.StatusBadRequest, "user password must be 72 characters or less")
-	ErrInvalidUserPassword      = apierr.NewApiError(http.StatusBadRequest, "invalid user password")
-	ErrAuthenticationFailed     = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
+	ErrUserNameTooShort         = status.Error(http.StatusBadRequest, "user name must be 3 characters or more")
+	ErrUserNameTooLong          = status.Error(http.StatusBadRequest, "user name must be 24 characters or less")
+	ErrInvalidUserName          = status.Error(http.StatusBadRequest, "invalid user name")
+	ErrUserPasswordDoesNotMatch = status.Error(http.StatusBadRequest, "password does not match")
+	ErrUserPasswordTooShort     = status.Error(http.StatusBadRequest, "user password must be 8 characters or more")
+	ErrUserPasswordTooLong      = status.Error(http.StatusBadRequest, "user password must be 72 characters or less")
+	ErrInvalidUserPassword      = status.Error(http.StatusBadRequest, "invalid user password")
+	ErrAuthenticationFailed     = status.Error(http.StatusUnauthorized, "authentication failed")
 )
 
 type User struct {
-	ID        uuid.UUID `db:"id"`
-	Name      string    `db:"name"`
-	Password  string    `db:"password"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID
+	Name      string
+	Password  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func NewUser(name string, password string, confirmPassword string) (*User, apierr.ApiError) {
+func NewUser(name string, password string, confirmPassword string) (*User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	user := &User{
@@ -43,7 +43,6 @@ func NewUser(name string, password string, confirmPassword string) (*User, apier
 	if err := user.SetName(name); err != nil {
 		return nil, err
 	}
-
 	if err := user.SetPassword(password, confirmPassword); err != nil {
 		return nil, err
 	}
@@ -55,7 +54,17 @@ func NewUser(name string, password string, confirmPassword string) (*User, apier
 	return user, nil
 }
 
-func (u *User) SetName(name string) apierr.ApiError {
+func RestoreUser(id uuid.UUID, name string, password string, createdAt time.Time, updatedAt time.Time) *User {
+	return &User{
+		ID:        id,
+		Name:      name,
+		Password:  password,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+}
+
+func (u *User) SetName(name string) error {
 	if len(name) < 3 {
 		return ErrUserNameTooShort
 	}
@@ -64,7 +73,7 @@ func (u *User) SetName(name string) apierr.ApiError {
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9_]*$`, name)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidUserName
@@ -74,7 +83,7 @@ func (u *User) SetName(name string) apierr.ApiError {
 	return nil
 }
 
-func (u *User) SetPassword(password string, confirmPassword string) apierr.ApiError {
+func (u *User) SetPassword(password string, confirmPassword string) error {
 	if password != confirmPassword {
 		return ErrUserPasswordDoesNotMatch
 	}
@@ -86,27 +95,26 @@ func (u *User) SetPassword(password string, confirmPassword string) apierr.ApiEr
 	}
 	matched, err := regexp.MatchString(`^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|~]*$`, password)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	if !matched {
 		return ErrInvalidUserPassword
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return apierr.NewApiError(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	u.Password = string(hashed)
 	u.UpdatedAt = time.Now()
 	return nil
 }
 
-func (u *User) ComparePassword(password string) apierr.ApiError {
+func (u *User) ComparePassword(password string) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return ErrAuthenticationFailed
-		} else {
-			return apierr.NewApiError(http.StatusInternalServerError, err.Error())
 		}
+		return err
 	}
 	return nil
 }

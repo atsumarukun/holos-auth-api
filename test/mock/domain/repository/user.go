@@ -7,7 +7,6 @@ package mock_repository
 import (
 	context "context"
 	entity "holos-auth-api/internal/app/api/domain/entity"
-	apierr "holos-auth-api/internal/pkg/apierr"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -38,10 +37,10 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserRepository) Create(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
+func (m *MockUserRepository) Create(arg0 context.Context, arg1 *entity.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -52,10 +51,10 @@ func (mr *MockUserRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomock
 }
 
 // Delete mocks base method.
-func (m *MockUserRepository) Delete(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
+func (m *MockUserRepository) Delete(arg0 context.Context, arg1 *entity.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -65,27 +64,27 @@ func (mr *MockUserRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserRepository)(nil).Delete), arg0, arg1)
 }
 
-// FindOneByID mocks base method.
-func (m *MockUserRepository) FindOneByID(arg0 context.Context, arg1 uuid.UUID) (*entity.User, apierr.ApiError) {
+// FindOneByIDAndNotDeleted mocks base method.
+func (m *MockUserRepository) FindOneByIDAndNotDeleted(arg0 context.Context, arg1 uuid.UUID) (*entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindOneByID", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindOneByIDAndNotDeleted", arg0, arg1)
 	ret0, _ := ret[0].(*entity.User)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindOneByID indicates an expected call of FindOneByID.
-func (mr *MockUserRepositoryMockRecorder) FindOneByID(arg0, arg1 interface{}) *gomock.Call {
+// FindOneByIDAndNotDeleted indicates an expected call of FindOneByIDAndNotDeleted.
+func (mr *MockUserRepositoryMockRecorder) FindOneByIDAndNotDeleted(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByID", reflect.TypeOf((*MockUserRepository)(nil).FindOneByID), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneByIDAndNotDeleted", reflect.TypeOf((*MockUserRepository)(nil).FindOneByIDAndNotDeleted), arg0, arg1)
 }
 
 // FindOneByName mocks base method.
-func (m *MockUserRepository) FindOneByName(arg0 context.Context, arg1 string) (*entity.User, apierr.ApiError) {
+func (m *MockUserRepository) FindOneByName(arg0 context.Context, arg1 string) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOneByName", arg0, arg1)
 	ret0, _ := ret[0].(*entity.User)
-	ret1, _ := ret[1].(apierr.ApiError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -96,10 +95,10 @@ func (mr *MockUserRepositoryMockRecorder) FindOneByName(arg0, arg1 interface{}) 
 }
 
 // Update mocks base method.
-func (m *MockUserRepository) Update(arg0 context.Context, arg1 *entity.User) apierr.ApiError {
+func (m *MockUserRepository) Update(arg0 context.Context, arg1 *entity.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(apierr.ApiError)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

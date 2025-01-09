@@ -4,11 +4,10 @@ package repository
 import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
-	"holos-auth-api/internal/pkg/apierr"
 )
 
 type UserTokenRepository interface {
-	Save(context.Context, *entity.UserToken) apierr.ApiError
-	Delete(context.Context, *entity.UserToken) apierr.ApiError
-	FindOneByTokenAndNotExpired(context.Context, string) (*entity.UserToken, apierr.ApiError)
+	Save(context.Context, *entity.UserToken) error
+	Delete(context.Context, *entity.UserToken) error
+	FindOneByTokenAndNotExpired(context.Context, string) (*entity.UserToken, error)
 }

@@ -1,10 +1,12 @@
 package handler
 
 import (
-	"context"
+	"holos-auth-api/internal/app/api/interface/builder"
+	"holos-auth-api/internal/app/api/interface/pkg/errors"
+	"holos-auth-api/internal/app/api/interface/pkg/parameter"
 	"holos-auth-api/internal/app/api/interface/request"
-	"holos-auth-api/internal/app/api/interface/response"
 	"holos-auth-api/internal/app/api/usecase"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,104 +30,111 @@ func NewUserHandler(userUsecase usecase.UserUsecase) UserHandler {
 	}
 }
 
-func (uh *userHandler) Create(c *gin.Context) {
+func (h *userHandler) Create(c *gin.Context) {
 	var req request.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
-	dto, err := uh.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
+	dto, err := h.userUsecase.Create(ctx, req.Name, req.Password, req.ConfirmPassword)
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	c.JSON(http.StatusCreated, builder.ToUserResponse(dto))
 }
 
-func (uh *userHandler) UpdateName(c *gin.Context) {
+func (h *userHandler) UpdateName(c *gin.Context) {
 	var req request.UpdateUserNameRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
-		return
-	}
-
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
-	}
-
-	ctx := context.Background()
-
-	dto, err := uh.userUsecase.UpdateName(ctx, id, req.Name)
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	ctx := c.Request.Context()
+
+	dto, err := h.userUsecase.UpdateName(ctx, id, req.Name)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, builder.ToUserResponse(dto))
 }
 
-func (uh *userHandler) UpdatePassword(c *gin.Context) {
+func (h *userHandler) UpdatePassword(c *gin.Context) {
 	var req request.UpdateUserPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
-		return
-	}
-
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
-	}
-
-	ctx := context.Background()
-
-	dto, err := uh.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
 	if err != nil {
-		c.String(err.Error())
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	c.JSON(http.StatusOK, response.NewUserResponse(dto.Name, dto.CreatedAt, dto.UpdatedAt))
+	ctx := c.Request.Context()
+
+	dto, err := h.userUsecase.UpdatePassword(ctx, id, req.CurrentPassword, req.NewPassword, req.ConfirmNewPassword)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, builder.ToUserResponse(dto))
 }
 
-func (uh *userHandler) Delete(c *gin.Context) {
+func (h *userHandler) Delete(c *gin.Context) {
 	var req request.DeleteUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		status := errors.StatusBadRequest
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusInternalServerError, "context does not have user id")
+	id, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 
-	id, ok := userID.(uuid.UUID)
-	if !ok {
-		c.String(http.StatusInternalServerError, "Invalid user id type")
-	}
+	ctx := c.Request.Context()
 
-	ctx := context.Background()
-
-	if err := uh.userUsecase.Delete(ctx, id, req.Password); err != nil {
-		c.String(err.Error())
+	if err := h.userUsecase.Delete(ctx, id, req.Password); err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
 		return
 	}
 

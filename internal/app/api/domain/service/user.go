@@ -5,11 +5,10 @@ import (
 	"context"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/pkg/apierr"
 )
 
 type UserService interface {
-	Exists(context.Context, *entity.User) (bool, apierr.ApiError)
+	Exists(context.Context, *entity.User) (bool, error)
 }
 
 type userService struct {
@@ -22,10 +21,10 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 	}
 }
 
-func (us *userService) Exists(ctx context.Context, user *entity.User) (bool, apierr.ApiError) {
-	u, err := us.userRepository.FindOneByName(ctx, user.Name)
+func (s *userService) Exists(ctx context.Context, user *entity.User) (bool, error) {
+	user, err := s.userRepository.FindOneByName(ctx, user.Name)
 	if err != nil {
 		return false, err
 	}
-	return u != nil, nil
+	return user != nil, nil
 }

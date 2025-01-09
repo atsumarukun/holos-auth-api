@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 
 info:
-  title: "holos auth-api"
+  title: "holos: 認証認可 API"
   version: "1.0.0"
 
 servers:
@@ -29,6 +29,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/delete_user"
       responses:
@@ -50,6 +58,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/update_user_name"
       responses:
@@ -72,6 +88,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/update_user_password"
       responses:
@@ -87,20 +111,508 @@ paths:
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
-  /auth/user_id:
+  /agents:
     get:
-      summary: "ユーザーID取得"
+      summary: "エージェント一覧取得"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_agents"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    post:
+      summary: "エージェント作成"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+      requestBody:
+        $ref: "#/components/requestBodies/create_agent"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_agent"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /agents/{id}:
+    put:
+      summary: "エージェント更新"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      requestBody:
+        $ref: "#/components/requestBodies/update_agent"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_agent"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    delete:
+      summary: "エージェント削除"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /agents/{id}/policies:
+    get:
+      summary: "エージェントのポリシー一覧取得"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_agent_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    put:
+      summary: "エージェントのポリシー更新"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      requestBody:
+        $ref: "#/components/requestBodies/update_agent_policies"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_agent_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /agents/{id}/token:
+    post:
+      summary: "エージェントのトークン作成"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_agent_token"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    delete:
+      summary: "エージェントのトークン削除"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /policies:
+    get:
+      summary: "ポリシー一覧取得"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_policies"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    post:
+      summary: "ポリシー作成"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+      requestBody:
+        $ref: "#/components/requestBodies/create_policy"
+      responses:
+        201:
+          description: "成功"
+          $ref: "#/components/responses/create_policy"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /policies/{id}:
+    put:
+      summary: "ポリシー更新"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      requestBody:
+        $ref: "#/components/requestBodies/update_policy"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_policy"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    delete:
+      summary: "ポリシー削除"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        204:
+          description: "成功"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /policies/{id}/agents:
+    get:
+      summary: "ポリシーのエージェント一覧取得"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_policy_agents"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+    put:
+      summary: "ポリシーのエージェント更新"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      requestBody:
+        $ref: "#/components/requestBodies/update_policy_agents"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/update_policy_agents"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
+  /auth/authorization:
+    get:
+      summary: "認可"
       tags:
         - "auth"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "header"
+          name: "Holos-Operator-Type"
+          schema:
+            type: "string"
+          required: true
+          description: "実行者"
+          example: "USER"
+        - in: "query"
+          name: "service"
+          schema:
+            type: "string"
+          required: true
+          description: "サービス"
+          example: "STORAGE"
+        - in: "query"
+          name: "path"
+          schema:
+            type: "string"
+          required: true
+          description: "パス"
+          example: "/path"
+        - in: "query"
+          name: "method"
+          schema:
+            type: "string"
+          required: true
+          description: "メソッド"
+          example: "GET"
       responses:
         200:
           description: "成功"
-          $ref: "#/components/responses/get_user_id"
+          $ref: "#/components/responses/auth_authorization"
         401:
           description: "認証エラー"
           $ref: "#/components/responses/401"
+        403:
+          description: "認可エラー"
+          $ref: "#/components/responses/403"
         500:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
@@ -112,7 +624,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/auth_signin"
       responses:
-        200:
+        201:
           description: "成功"
           $ref: "#/components/responses/auth_signin"
         401:
@@ -128,6 +640,14 @@ paths:
         - "auth"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       responses:
         204:
           description: "成功"
@@ -163,7 +683,7 @@ components:
       properties:
         id:
           type: "string"
-          description: "id"
+          description: "ID"
           example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
           readOnly: true
         name:
@@ -186,8 +706,76 @@ components:
           $ref: "#/components/schemas/updated_at"
       required:
         - "id"
+        - "name"
         - "password"
         - "confirm_password"
+        - "created_at"
+        - "updated_at"
+    agent:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+          readOnly: true
+        name:
+          type: "string"
+          description: "エージェント名"
+          example: "agent_name"
+        created_at:
+          $ref: "#/components/schemas/created_at"
+        updated_at:
+          $ref: "#/components/schemas/updated_at"
+      required:
+        - "id"
+        - "name"
+        - "created_at"
+        - "updated_at"
+    policy:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+          readOnly: true
+        name:
+          type: "string"
+          description: "ポリシー名"
+          example: "policy_name"
+        effect:
+          type: "string"
+          description: "効果"
+          example: "ALLOW"
+        service:
+          type: "string"
+          description: "サービス"
+          example: "STORAGE"
+        path:
+          type: "string"
+          description: "パス"
+          example: "/files/:id"
+        methods:
+          type: "array"
+          description: "メソッド"
+          items:
+            type: "string"
+          example:
+            - "GET"
+            - "POST"
+            - "PUT"
+        created_at:
+          $ref: "#/components/schemas/created_at"
+        updated_at:
+          $ref: "#/components/schemas/updated_at"
+      required:
+        - "id"
+        - "name"
+        - "effect"
+        - "service"
+        - "path"
+        - "method"
         - "created_at"
         - "updated_at"
 
@@ -247,6 +835,58 @@ components:
                     readOnly: true
                   confirm_password:
                     readOnly: true
+    create_agent:
+      description: "エージェント作成"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/agent"
+    update_agent:
+      description: "エージェント更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/agent"
+    update_agent_policies:
+      description: "エージェントのポリシー更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              policy_ids:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/policy/properties/id"
+    create_policy:
+      description: "ポリシー作成"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    update_policy:
+      description: "ポリシー更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    update_policy_agents:
+      description: "ポリシーのエージェント更新"
+      required: true
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              agent_ids:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/agent/properties/id"
     auth_signin:
       description: "サインイン"
       required: true
@@ -294,8 +934,88 @@ components:
                 properties:
                   id:
                     writeOnly: true
-    get_user_id:
-      description: "ユーザーID取得"
+    get_agents:
+      description: "エージェント一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
+    create_agent:
+      description: "エージェント作成"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/agent"
+    update_agent:
+      description: "エージェント更新"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/agent"
+    get_agent_policies:
+      description: "エージェントのポリシー一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
+    update_agent_policies:
+      description: "エージェントのポリシー更新"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
+    create_agent_token:
+      description: "エージェントのトークン作成"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            description: "トークン"
+            example: "GyTPPWGLe32H_2lZuoM7x0AV8OS_Yvit"
+    get_policies:
+      description: "ポリシー一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/policy"
+    create_policy:
+      description: "ポリシー作成"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    update_policy:
+      description: "ポリシー更新"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    get_policy_agents:
+      description: "ポリシーのエージェント一覧取得"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
+    update_policy_agents:
+      description: "ポリシーのエージェント更新"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/agent"
+    auth_authorization:
+      description: "認可"
       content:
         text/plain:
           schema:
@@ -315,6 +1035,13 @@ components:
           schema:
             type: "string"
             example: "unauthorized"
+    403:
+      description: "Forbidden"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            example: "forbidden"
     404:
       description: "Resource Not Found"
       content:

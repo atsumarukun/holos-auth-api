@@ -1,10 +1,10 @@
+//go:generate mockgen -source=$GOFILE -destination=../../../../test/mock/domain/$GOFILE
 package domain
 
 import (
 	"context"
-	"holos-auth-api/internal/pkg/apierr"
 )
 
 type TransactionObject interface {
-	Transaction(context.Context, func(context.Context) apierr.ApiError) apierr.ApiError
+	Transaction(context.Context, func(context.Context) error) error
 }

@@ -6,39 +6,54 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
-	"holos-auth-api/internal/pkg/apierr"
+	"holos-auth-api/internal/app/api/domain/service"
+	"holos-auth-api/internal/app/api/pkg/status"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
-var ErrAuthenticationFailed = apierr.NewApiError(http.StatusUnauthorized, "authentication failed")
+var (
+	ErrAuthenticationFailed = status.Error(http.StatusUnauthorized, "authentication failed")
+	ErrAuthorizationFaild   = status.Error(http.StatusForbidden, "authorization failed")
+)
 
 type AuthUsecase interface {
-	Signin(context.Context, string, string) (string, apierr.ApiError)
-	Signout(context.Context, string) apierr.ApiError
-	GetUserID(context.Context, string) (uuid.UUID, apierr.ApiError)
+	Signin(context.Context, string, string) (string, error)
+	Signout(context.Context, string) error
+	Authenticate(context.Context, string) (uuid.UUID, error)
+	Authorize(context.Context, string, string, string, string, string) (uuid.UUID, error)
 }
 
 type authUsecase struct {
 	transactionObject   domain.TransactionObject
 	userRepository      repository.UserRepository
 	userTokenRepository repository.UserTokenRepository
+	agentRepository     repository.AgentRepository
+	agentService        service.AgentService
 }
 
-func NewAuthUsecase(transactionObject domain.TransactionObject, userRepository repository.UserRepository, userTokenRepository repository.UserTokenRepository) AuthUsecase {
+func NewAuthUsecase(
+	transactionObject domain.TransactionObject,
+	userRepository repository.UserRepository,
+	userTokenRepository repository.UserTokenRepository,
+	agentRepository repository.AgentRepository,
+	agentService service.AgentService,
+) AuthUsecase {
 	return &authUsecase{
 		transactionObject:   transactionObject,
 		userRepository:      userRepository,
 		userTokenRepository: userTokenRepository,
+		agentRepository:     agentRepository,
+		agentService:        agentService,
 	}
 }
 
-func (au *authUsecase) Signin(ctx context.Context, userName string, password string) (string, apierr.ApiError) {
+func (u *authUsecase) Signin(ctx context.Context, userName string, password string) (string, error) {
 	var userToken *entity.UserToken
 
-	if err := au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		user, err := au.userRepository.FindOneByName(ctx, userName)
+	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		user, err := u.userRepository.FindOneByName(ctx, userName)
 		if err != nil {
 			return err
 		}
@@ -55,16 +70,17 @@ func (au *authUsecase) Signin(ctx context.Context, userName string, password str
 			return err
 		}
 
-		return au.userTokenRepository.Save(ctx, userToken)
+		return u.userTokenRepository.Save(ctx, userToken)
 	}); err != nil {
 		return "", err
 	}
+
 	return userToken.Token, nil
 }
 
-func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiError {
-	return au.transactionObject.Transaction(ctx, func(ctx context.Context) apierr.ApiError {
-		userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+func (u *authUsecase) Signout(ctx context.Context, token string) error {
+	return u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+		userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 		if err != nil {
 			return err
 		}
@@ -72,12 +88,12 @@ func (au *authUsecase) Signout(ctx context.Context, token string) apierr.ApiErro
 			return ErrAuthenticationFailed
 		}
 
-		return au.userTokenRepository.Delete(ctx, userToken)
+		return u.userTokenRepository.Delete(ctx, userToken)
 	})
 }
 
-func (au *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, apierr.ApiError) {
-	userToken, err := au.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
+func (u *authUsecase) Authenticate(ctx context.Context, token string) (uuid.UUID, error) {
+	userToken, err := u.userTokenRepository.FindOneByTokenAndNotExpired(ctx, token)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -86,4 +102,41 @@ func (au *authUsecase) GetUserID(ctx context.Context, token string) (uuid.UUID, 
 	}
 
 	return userToken.UserID, nil
+}
+
+func (u *authUsecase) Authorize(ctx context.Context, token string, operatorType string, service string, path string, method string) (uuid.UUID, error) {
+	switch operatorType {
+	case "USER":
+		return u.Authenticate(ctx, token)
+	case "AGENT":
+		var userID uuid.UUID
+		if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
+			agent, err := u.agentRepository.FindOneByTokenAndNotDeleted(ctx, token)
+			if err != nil {
+				return err
+			}
+			if agent == nil {
+				return ErrAuthenticationFailed
+			}
+
+			hasPermission, err := u.agentService.HasPermission(ctx, agent, service, path, method)
+			if err != nil {
+				return err
+			}
+			if hasPermission {
+				userID = agent.UserID
+			}
+
+			return nil
+		}); err != nil {
+			return uuid.Nil, err
+		}
+
+		if userID != uuid.Nil {
+			return userID, nil
+		}
+		return uuid.Nil, ErrAuthorizationFaild
+	default:
+		return uuid.Nil, ErrAuthenticationFailed
+	}
 }

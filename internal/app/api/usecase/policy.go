@@ -6,6 +6,7 @@ import (
 	"holos-auth-api/internal/app/api/domain"
 	"holos-auth-api/internal/app/api/domain/entity"
 	"holos-auth-api/internal/app/api/domain/repository"
+	"holos-auth-api/internal/app/api/domain/service"
 	"holos-auth-api/internal/app/api/pkg/status"
 	"holos-auth-api/internal/app/api/usecase/dto"
 	"holos-auth-api/internal/app/api/usecase/mapper"
@@ -31,13 +32,20 @@ type policyUsecase struct {
 	transactionObject domain.TransactionObject
 	policyRepository  repository.PolicyRepository
 	agentRepository   repository.AgentRepository
+	policyService     service.PolicyService
 }
 
-func NewPolicyUsecase(transactionObject domain.TransactionObject, policyRepository repository.PolicyRepository, agentRepository repository.AgentRepository) PolicyUsecase {
+func NewPolicyUsecase(
+	transactionObject domain.TransactionObject,
+	policyRepository repository.PolicyRepository,
+	agentRepository repository.AgentRepository,
+	policyService service.PolicyService,
+) PolicyUsecase {
 	return &policyUsecase{
 		transactionObject: transactionObject,
 		policyRepository:  policyRepository,
 		agentRepository:   agentRepository,
+		policyService:     policyService,
 	}
 }
 
@@ -153,7 +161,7 @@ func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid
 			return ErrPolicyNotFound
 		}
 
-		agents, err = u.agentRepository.FindByIDsAndUserIDAndNotDeleted(ctx, policy.Agents, userID)
+		agents, err = u.policyService.GetAgents(ctx, policy)
 		return err
 	}); err != nil {
 		return nil, err

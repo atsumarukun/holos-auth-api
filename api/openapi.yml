@@ -29,6 +29,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/delete_user"
       responses:
@@ -50,6 +58,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/update_user_name"
       responses:
@@ -72,6 +88,14 @@ paths:
         - "users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/update_user_password"
       responses:
@@ -94,6 +118,14 @@ paths:
         - "agents"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       responses:
         200:
           description: "成功"
@@ -110,6 +142,14 @@ paths:
         - "agents"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/create_agent"
       responses:
@@ -130,6 +170,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -159,6 +206,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -186,6 +240,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -213,6 +274,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -243,6 +311,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -267,6 +342,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -293,6 +375,14 @@ paths:
         - "policies"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       responses:
         200:
           description: "成功"
@@ -309,6 +399,14 @@ paths:
         - "policies"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       requestBody:
         $ref: "#/components/requestBodies/create_policy"
       responses:
@@ -328,6 +426,21 @@ paths:
         - "policies"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       requestBody:
         $ref: "#/components/requestBodies/update_policy"
       responses:
@@ -350,6 +463,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "path"
           name: "id"
           schema:
@@ -376,6 +496,21 @@ paths:
         - "policies"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       responses:
         200:
           description: "成功"
@@ -395,6 +530,21 @@ paths:
         - "policies"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
       requestBody:
         $ref: "#/components/requestBodies/update_policy_agents"
       responses:
@@ -418,6 +568,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
         - in: "header"
           name: "Holos-Operator-Type"
           schema:
@@ -483,6 +640,14 @@ paths:
         - "auth"
       security:
         - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
       responses:
         204:
           description: "成功"

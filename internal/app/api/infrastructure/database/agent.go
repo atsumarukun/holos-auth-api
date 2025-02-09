@@ -151,13 +151,14 @@ func (r *agentDBRepository) FindOneByTokenAndNotDeleted(ctx context.Context, tok
 	return transformer.ToAgentEntity(&agent)
 }
 
-func (r *agentDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Agent, error) {
+func (r *agentDBRepository) FindByNamePrefixAndUserIDAndNotDeleted(ctx context.Context, keyword string, userID uuid.UUID) ([]*entity.Agent, error) {
 	agents := []*model.AgentModel{}
 	driver := getDriver(ctx, r.db)
 
 	rows, err := driver.QueryxContext(
 		ctx,
-		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE user_id = ? AND deleted_at IS NULL;`,
+		`SELECT id, user_id, name, created_at, updated_at FROM agents WHERE name LIKE ? AND user_id = ? AND deleted_at IS NULL;`,
+		keyword+"%",
 		userID,
 	)
 	if err != nil {

@@ -140,9 +140,11 @@ func (h *agentHandler) Gets(c *gin.Context) {
 		return
 	}
 
+	keyword := c.Query("keyword")
+
 	ctx := c.Request.Context()
 
-	dtos, err := h.agentUsecase.Gets(ctx, userID)
+	dtos, err := h.agentUsecase.Gets(ctx, keyword, userID)
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())

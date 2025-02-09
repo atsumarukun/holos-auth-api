@@ -388,6 +388,7 @@ func TestAgent_Gets(t *testing.T) {
 
 	tests := []struct {
 		name                   string
+		inputKeyword           string
 		inputUserID            uuid.UUID
 		expectResult           []*dto.AgentDTO
 		expectError            error
@@ -395,36 +396,39 @@ func TestAgent_Gets(t *testing.T) {
 	}{
 		{
 			name:         "found",
+			inputKeyword: "name",
 			inputUserID:  agent.UserID,
 			expectResult: []*dto.AgentDTO{{ID: agent.ID, UserID: agent.UserID, Name: agent.Name, Policies: []uuid.UUID{}, CreatedAt: agent.CreatedAt, UpdatedAt: agent.UpdatedAt}},
 			expectError:  nil,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
 					Return([]*entity.Agent{entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},
 		{
 			name:         "not found",
+			inputKeyword: "name",
 			inputUserID:  agent.UserID,
 			expectResult: []*dto.AgentDTO{},
 			expectError:  nil,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
 					Return(nil, nil).
 					Times(1)
 			},
 		},
 		{
 			name:         "find error",
+			inputKeyword: "name",
 			inputUserID:  agent.UserID,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, agent.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), agent.UserID).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -442,7 +446,7 @@ func TestAgent_Gets(t *testing.T) {
 			tt.setMockAgentRepository(ctx, ar)
 
 			au := usecase.NewAgentUsecase(nil, ar, nil, nil, nil)
-			result, err := au.Gets(ctx, tt.inputUserID)
+			result, err := au.Gets(ctx, tt.inputKeyword, tt.inputUserID)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}

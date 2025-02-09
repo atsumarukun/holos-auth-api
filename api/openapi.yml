@@ -126,6 +126,12 @@ paths:
           required: true
           description: "認証トークン"
           example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "query"
+          name: "keyword"
+          schema:
+            type: "string"
+          description: "検索キーワード"
+          example: "agent_name"
       responses:
         200:
           description: "成功"
@@ -383,6 +389,12 @@ paths:
           required: true
           description: "認証トークン"
           example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "query"
+          name: "keyword"
+          schema:
+            type: "string"
+          description: "検索キーワード"
+          example: "policy_name"
       responses:
         200:
           description: "成功"

@@ -81,18 +81,18 @@ func (mr *MockPolicyUsecaseMockRecorder) GetAgents(arg0, arg1, arg2 interface{})
 }
 
 // Gets mocks base method.
-func (m *MockPolicyUsecase) Gets(arg0 context.Context, arg1 uuid.UUID) ([]*dto.PolicyDTO, error) {
+func (m *MockPolicyUsecase) Gets(arg0 context.Context, arg1 string, arg2 uuid.UUID) ([]*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Gets", arg0, arg1)
+	ret := m.ctrl.Call(m, "Gets", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*dto.PolicyDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Gets indicates an expected call of Gets.
-func (mr *MockPolicyUsecaseMockRecorder) Gets(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPolicyUsecaseMockRecorder) Gets(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Gets", reflect.TypeOf((*MockPolicyUsecase)(nil).Gets), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Gets", reflect.TypeOf((*MockPolicyUsecase)(nil).Gets), arg0, arg1, arg2)
 }
 
 // Update mocks base method.

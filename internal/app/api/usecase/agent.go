@@ -25,7 +25,7 @@ type AgentUsecase interface {
 	Create(context.Context, uuid.UUID, string) (*dto.AgentDTO, error)
 	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, error)
 	Delete(context.Context, uuid.UUID, uuid.UUID) error
-	Gets(context.Context, uuid.UUID) ([]*dto.AgentDTO, error)
+	Gets(context.Context, string, uuid.UUID) ([]*dto.AgentDTO, error)
 	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, error)
 	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, error)
 	GenerateToken(context.Context, uuid.UUID, uuid.UUID) (string, error)
@@ -108,8 +108,8 @@ func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	})
 }
 
-func (u *agentUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.AgentDTO, error) {
-	agents, err := u.agentRepository.FindByUserIDAndNotDeleted(ctx, userID)
+func (u *agentUsecase) Gets(ctx context.Context, keyword string, userID uuid.UUID) ([]*dto.AgentDTO, error) {
+	agents, err := u.agentRepository.FindByNamePrefixAndUserIDAndNotDeleted(ctx, keyword, userID)
 	if err != nil {
 		return nil, err
 	}

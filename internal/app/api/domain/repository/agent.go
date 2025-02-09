@@ -14,6 +14,6 @@ type AgentRepository interface {
 	Delete(context.Context, *entity.Agent) error
 	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Agent, error)
 	FindOneByTokenAndNotDeleted(context.Context, string) (*entity.Agent, error)
-	FindByUserIDAndNotDeleted(context.Context, uuid.UUID) ([]*entity.Agent, error)
+	FindByNamePrefixAndUserIDAndNotDeleted(context.Context, string, uuid.UUID) ([]*entity.Agent, error)
 	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Agent, error)
 }

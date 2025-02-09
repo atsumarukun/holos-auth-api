@@ -130,13 +130,14 @@ func (r *policyDBRepository) FindOneByIDAndUserIDAndNotDeleted(ctx context.Conte
 	return transformer.ToPolicyEntity(&policy)
 }
 
-func (r *policyDBRepository) FindByUserIDAndNotDeleted(ctx context.Context, userID uuid.UUID) ([]*entity.Policy, error) {
+func (r *policyDBRepository) FindByNamePrefixAndUserIDAndNotDeleted(ctx context.Context, keyword string, userID uuid.UUID) ([]*entity.Policy, error) {
 	var policies []*model.PolicyModel
 	driver := getDriver(ctx, r.db)
 
 	rows, err := driver.QueryxContext(
 		ctx,
-		`SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE user_id = ? AND deleted_at IS NULL;`,
+		`SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE name LIKE ? AND user_id = ? AND deleted_at IS NULL;`,
+		keyword+"%",
 		userID,
 	)
 	if err != nil {

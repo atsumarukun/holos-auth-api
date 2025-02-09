@@ -79,19 +79,19 @@ func (mr *MockPolicyRepositoryMockRecorder) FindByIDsAndUserIDAndNotDeleted(arg0
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIDsAndUserIDAndNotDeleted", reflect.TypeOf((*MockPolicyRepository)(nil).FindByIDsAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
-// FindByUserIDAndNotDeleted mocks base method.
-func (m *MockPolicyRepository) FindByUserIDAndNotDeleted(arg0 context.Context, arg1 uuid.UUID) ([]*entity.Policy, error) {
+// FindByNamePrefixAndUserIDAndNotDeleted mocks base method.
+func (m *MockPolicyRepository) FindByNamePrefixAndUserIDAndNotDeleted(arg0 context.Context, arg1 string, arg2 uuid.UUID) ([]*entity.Policy, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByUserIDAndNotDeleted", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindByNamePrefixAndUserIDAndNotDeleted", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*entity.Policy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindByUserIDAndNotDeleted indicates an expected call of FindByUserIDAndNotDeleted.
-func (mr *MockPolicyRepositoryMockRecorder) FindByUserIDAndNotDeleted(arg0, arg1 interface{}) *gomock.Call {
+// FindByNamePrefixAndUserIDAndNotDeleted indicates an expected call of FindByNamePrefixAndUserIDAndNotDeleted.
+func (mr *MockPolicyRepositoryMockRecorder) FindByNamePrefixAndUserIDAndNotDeleted(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserIDAndNotDeleted", reflect.TypeOf((*MockPolicyRepository)(nil).FindByUserIDAndNotDeleted), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByNamePrefixAndUserIDAndNotDeleted", reflect.TypeOf((*MockPolicyRepository)(nil).FindByNamePrefixAndUserIDAndNotDeleted), arg0, arg1, arg2)
 }
 
 // FindOneByIDAndUserIDAndNotDeleted mocks base method.

@@ -580,6 +580,7 @@ func TestPolicy_Gets(t *testing.T) {
 
 	tests := []struct {
 		name                    string
+		inputKeyword            string
 		inputUserID             uuid.UUID
 		expectResult            []*dto.PolicyDTO
 		expectError             error
@@ -587,36 +588,39 @@ func TestPolicy_Gets(t *testing.T) {
 	}{
 		{
 			name:         "found",
+			inputKeyword: "name",
 			inputUserID:  policy.UserID,
 			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: policy.Agents, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, policy.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), policy.UserID).
 					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
 		},
 		{
 			name:         "not found",
+			inputKeyword: "name",
 			inputUserID:  policy.UserID,
 			expectResult: []*dto.PolicyDTO{},
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, policy.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), policy.UserID).
 					Return(nil, nil).
 					Times(1)
 			},
 		},
 		{
 			name:         "find error",
+			inputKeyword: "name",
 			inputUserID:  policy.UserID,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByUserIDAndNotDeleted(ctx, policy.UserID).
+					FindByNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), policy.UserID).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -634,7 +638,7 @@ func TestPolicy_Gets(t *testing.T) {
 			tt.setMockPolicyRepository(ctx, pr)
 
 			pu := usecase.NewPolicyUsecase(nil, pr, nil, nil)
-			result, err := pu.Gets(ctx, tt.inputUserID)
+			result, err := pu.Gets(ctx, tt.inputKeyword, tt.inputUserID)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}

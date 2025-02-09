@@ -422,6 +422,7 @@ func TestAgent_Gets(t *testing.T) {
 		},
 		{
 			name:         "find error",
+			inputKeyword: "name",
 			inputUserID:  agent.UserID,
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,

@@ -23,7 +23,7 @@ type PolicyUsecase interface {
 	Create(context.Context, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
 	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
 	Delete(context.Context, uuid.UUID, uuid.UUID) error
-	Gets(context.Context, uuid.UUID) ([]*dto.PolicyDTO, error)
+	Gets(context.Context, string, uuid.UUID) ([]*dto.PolicyDTO, error)
 	UpdateAgents(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.AgentDTO, error)
 	GetAgents(context.Context, uuid.UUID, uuid.UUID) ([]*dto.AgentDTO, error)
 }
@@ -113,8 +113,8 @@ func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 	})
 }
 
-func (u *policyUsecase) Gets(ctx context.Context, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
-	policies, err := u.policyRepository.FindByUserIDAndNotDeleted(ctx, userID)
+func (u *policyUsecase) Gets(ctx context.Context, keyword string, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
+	policies, err := u.policyRepository.FindByNamePrefixAndUserIDAndNotDeleted(ctx, keyword, userID)
 	if err != nil {
 		return nil, err
 	}

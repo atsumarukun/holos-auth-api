@@ -380,6 +380,86 @@ func TestAgent_Delete(t *testing.T) {
 	}
 }
 
+func TestAgent_Get(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name                   string
+		inputID                uuid.UUID
+		inputUserID            uuid.UUID
+		expectResult           *dto.AgentDTO
+		expectError            error
+		setMockAgentRepository func(context.Context, *mockRepository.MockAgentRepository)
+	}{
+		{
+			name:         "success",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: &dto.AgentDTO{ID: agent.ID, UserID: agent.UserID, Name: agent.Name, Policies: []uuid.UUID{}, CreatedAt: agent.CreatedAt, UpdatedAt: agent.UpdatedAt},
+			expectError:  nil,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(entity.RestoreAgent(agent.ID, agent.UserID, agent.Name, agent.Policies, agent.CreatedAt, agent.UpdatedAt), nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "agent not found",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  usecase.ErrAgentNotFound,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "find error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
+				ar.EXPECT().
+					FindOneByIDAndUserIDAndNotDeleted(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ar := mockRepository.NewMockAgentRepository(ctrl)
+
+			ctx := context.Background()
+
+			tt.setMockAgentRepository(ctx, ar)
+
+			au := usecase.NewAgentUsecase(nil, ar, nil, nil, nil)
+			result, err := au.Get(ctx, tt.inputID, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(dto.AgentDTO{}, "UpdatedAt"),
+			}
+			if diff := cmp.Diff(result, tt.expectResult, opts...); diff != "" {
+				t.Error(diff)
+			}
+		})
+	}
+}
+
 func TestAgent_Gets(t *testing.T) {
 	agent, err := entity.NewAgent(uuid.New(), "name")
 	if err != nil {

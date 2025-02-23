@@ -94,6 +94,21 @@ func (mr *MockAgentUsecaseMockRecorder) GenerateToken(arg0, arg1, arg2 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockAgentUsecase)(nil).GenerateToken), arg0, arg1, arg2)
 }
 
+// Get mocks base method.
+func (m *MockAgentUsecase) Get(arg0 context.Context, arg1, arg2 uuid.UUID) (*dto.AgentDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*dto.AgentDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockAgentUsecaseMockRecorder) Get(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockAgentUsecase)(nil).Get), arg0, arg1, arg2)
+}
+
 // GetPolicies mocks base method.
 func (m *MockAgentUsecase) GetPolicies(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*dto.PolicyDTO, error) {
 	m.ctrl.T.Helper()

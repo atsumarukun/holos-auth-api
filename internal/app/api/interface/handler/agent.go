@@ -17,6 +17,7 @@ type AgentHandler interface {
 	Create(*gin.Context)
 	Update(*gin.Context)
 	Delete(*gin.Context)
+	Get(*gin.Context)
 	Gets(*gin.Context)
 	UpdatePolicies(*gin.Context)
 	GetPolicies(*gin.Context)
@@ -129,6 +130,36 @@ func (h *agentHandler) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *agentHandler) Get(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dto, err := h.agentUsecase.Get(ctx, id, userID)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, builder.ToAgentResponse(dto))
 }
 
 func (h *agentHandler) Gets(c *gin.Context) {

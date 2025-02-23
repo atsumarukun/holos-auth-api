@@ -289,6 +289,93 @@ func TestPolicy_Delete(t *testing.T) {
 	}
 }
 
+func TestPolicy_Get(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name                   string
+		isSetIDToPathParameter bool
+		isSetUserIDToContext   bool
+		expectStatusCode       int
+		setMockUsecase         func(*mockUsecase.MockPolicyUsecase)
+	}{
+		{
+			name:                   "success",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusOK,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Get(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(mapper.ToPolicyDTO(policy), nil).
+					Times(1)
+			},
+		},
+		{
+			name:                   "no id in path parameter",
+			isSetIDToPathParameter: false,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusBadRequest,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "no user id in context",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   false,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase:         func(u *mockUsecase.MockPolicyUsecase) {},
+		},
+		{
+			name:                   "get error",
+			isSetIDToPathParameter: true,
+			isSetUserIDToContext:   true,
+			expectStatusCode:       http.StatusInternalServerError,
+			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
+				u.EXPECT().
+					Get(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "/policies/:id", nil)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = req
+			if tt.isSetIDToPathParameter {
+				ctx.Params = append(ctx.Params, gin.Param{Key: "id", Value: policy.ID.String()})
+			}
+			if tt.isSetUserIDToContext {
+				ctx.Set("userID", policy.UserID)
+			}
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			u := mockUsecase.NewMockPolicyUsecase(ctrl)
+			tt.setMockUsecase(u)
+
+			h := handler.NewPolicyHandler(u)
+			h.Get(ctx)
+
+			if w.Code != tt.expectStatusCode {
+				t.Errorf("\nexpect: %d \ngot: %d", tt.expectStatusCode, w.Code)
+			}
+		})
+	}
+}
+
 func TestPolicy_Gets(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

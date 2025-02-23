@@ -65,6 +65,21 @@ func (mr *MockPolicyUsecaseMockRecorder) Delete(arg0, arg1, arg2 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPolicyUsecase)(nil).Delete), arg0, arg1, arg2)
 }
 
+// Get mocks base method.
+func (m *MockPolicyUsecase) Get(arg0 context.Context, arg1, arg2 uuid.UUID) (*dto.PolicyDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*dto.PolicyDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockPolicyUsecaseMockRecorder) Get(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPolicyUsecase)(nil).Get), arg0, arg1, arg2)
+}
+
 // GetAgents mocks base method.
 func (m *MockPolicyUsecase) GetAgents(arg0 context.Context, arg1, arg2 uuid.UUID) ([]*dto.AgentDTO, error) {
 	m.ctrl.T.Helper()

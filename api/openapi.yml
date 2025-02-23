@@ -466,6 +466,40 @@ paths:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
   /policies/{id}:
+    get:
+      summary: "ポリシー単体取得"
+      tags:
+        - "policies"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_policy"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        404:
+          description: "存在しないリソース"
+          $ref: "#/components/responses/404"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
     put:
       summary: "ポリシー更新"
       tags:
@@ -1040,6 +1074,12 @@ components:
               $ref: "#/components/schemas/policy"
     create_policy:
       description: "ポリシー作成"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+    get_policy:
+      description: "ポリシー単体取得"
       content:
         application/json:
           schema:

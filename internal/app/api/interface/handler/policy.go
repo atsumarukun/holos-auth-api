@@ -17,6 +17,7 @@ type PolicyHandler interface {
 	Create(*gin.Context)
 	Update(*gin.Context)
 	Delete(*gin.Context)
+	Get(*gin.Context)
 	Gets(*gin.Context)
 	UpdateAgents(*gin.Context)
 	GetAgents(*gin.Context)
@@ -127,6 +128,36 @@ func (h *policyHandler) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *policyHandler) Get(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dto, err := h.policyUsecase.Get(ctx, id, userID)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, builder.ToPolicyResponse(dto))
 }
 
 func (h *policyHandler) Gets(c *gin.Context) {

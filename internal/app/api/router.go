@@ -15,6 +15,7 @@ func registerRouter(r *gin.Engine) {
 		agents.Use(authMiddleware.Authenticate)
 		agents.GET("/", agentHandler.Gets)
 		agents.POST("/", agentHandler.Create)
+		agents.GET("/:id", agentHandler.Get)
 		agents.PUT("/:id", agentHandler.Update)
 		agents.DELETE("/:id", agentHandler.Delete)
 		agents.GET("/:id/policies", agentHandler.GetPolicies)

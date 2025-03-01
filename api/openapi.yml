@@ -294,6 +294,12 @@ paths:
           required: true
           description: "ID"
           example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+        - in: "query"
+          name: "keyword"
+          schema:
+            type: "string"
+          description: "検索キーワード"
+          example: "agent_name"
       responses:
         200:
           description: "成功"

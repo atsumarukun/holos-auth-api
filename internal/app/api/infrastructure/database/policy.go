@@ -197,6 +197,48 @@ func (r *policyDBRepository) FindByIDsAndUserIDAndNotDeleted(ctx context.Context
 	return transformer.ToPolicyEntities(policies)
 }
 
+func (r *policyDBRepository) FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx context.Context, ids []uuid.UUID, keyword string, userID uuid.UUID) ([]*entity.Policy, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	var policies []*model.PolicyModel
+	driver := getDriver(ctx, r.db)
+
+	query, args, err := sqlx.Named(
+		`SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (:ids) AND name LIKE :keyword AND user_id = :user_id AND deleted_at IS NULL;`,
+		map[string]interface{}{
+			"ids":     ids,
+			"keyword": keyword + "%",
+			"user_id": userID,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	query, args, err = sqlx.In(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	query = driver.Rebind(query)
+
+	rows, err := driver.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var policy model.PolicyModel
+		if err := rows.StructScan(&policy); err != nil {
+			return nil, err
+		}
+		policies = append(policies, &policy)
+	}
+
+	return transformer.ToPolicyEntities(policies)
+}
+
 func (r *policyDBRepository) updateAgents(ctx context.Context, id uuid.UUID, agentIDs []uuid.UUID) error {
 	driver := getDriver(ctx, r.db)
 

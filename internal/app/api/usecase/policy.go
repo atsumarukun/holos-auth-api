@@ -23,9 +23,10 @@ type PolicyUsecase interface {
 	Create(context.Context, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
 	Update(context.Context, uuid.UUID, uuid.UUID, string, string, string, string, []string) (*dto.PolicyDTO, error)
 	Delete(context.Context, uuid.UUID, uuid.UUID) error
+	Get(context.Context, uuid.UUID, uuid.UUID) (*dto.PolicyDTO, error)
 	Gets(context.Context, string, uuid.UUID) ([]*dto.PolicyDTO, error)
 	UpdateAgents(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.AgentDTO, error)
-	GetAgents(context.Context, uuid.UUID, uuid.UUID) ([]*dto.AgentDTO, error)
+	GetAgents(context.Context, uuid.UUID, uuid.UUID, string) ([]*dto.AgentDTO, error)
 }
 
 type policyUsecase struct {
@@ -113,6 +114,18 @@ func (u *policyUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 	})
 }
 
+func (u *policyUsecase) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*dto.PolicyDTO, error) {
+	policy, err := u.policyRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		return nil, ErrPolicyNotFound
+	}
+
+	return mapper.ToPolicyDTO(policy), nil
+}
+
 func (u *policyUsecase) Gets(ctx context.Context, keyword string, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
 	policies, err := u.policyRepository.FindByNamePrefixAndUserIDAndNotDeleted(ctx, keyword, userID)
 	if err != nil {
@@ -149,7 +162,7 @@ func (u *policyUsecase) UpdateAgents(ctx context.Context, id uuid.UUID, userID u
 	return mapper.ToAgentDTOs(agents), nil
 }
 
-func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.AgentDTO, error) {
+func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid.UUID, keyword string) ([]*dto.AgentDTO, error) {
 	agents := []*entity.Agent{}
 
 	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
@@ -161,7 +174,7 @@ func (u *policyUsecase) GetAgents(ctx context.Context, id uuid.UUID, userID uuid
 			return ErrPolicyNotFound
 		}
 
-		agents, err = u.policyService.GetAgents(ctx, policy)
+		agents, err = u.policyService.GetAgents(ctx, policy, keyword)
 		return err
 	}); err != nil {
 		return nil, err

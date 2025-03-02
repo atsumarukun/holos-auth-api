@@ -14,3 +14,9 @@ type AgentDTO struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type AgentTokenDTO struct {
+	AgentID     uuid.UUID
+	Token       string
+	GeneratedAt time.Time
+}

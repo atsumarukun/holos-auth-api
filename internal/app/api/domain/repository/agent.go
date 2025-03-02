@@ -16,4 +16,5 @@ type AgentRepository interface {
 	FindOneByTokenAndNotDeleted(context.Context, string) (*entity.Agent, error)
 	FindByNamePrefixAndUserIDAndNotDeleted(context.Context, string, uuid.UUID) ([]*entity.Agent, error)
 	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Agent, error)
+	FindByIDsAndNamePrefixAndUserIDAndNotDeleted(context.Context, []uuid.UUID, string, uuid.UUID) ([]*entity.Agent, error)
 }

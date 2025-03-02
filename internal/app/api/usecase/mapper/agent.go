@@ -23,3 +23,11 @@ func ToAgentDTOs(agents []*entity.Agent) []*dto.AgentDTO {
 	}
 	return dtos
 }
+
+func ToAgentTokenDTO(agentToken *entity.AgentToken) *dto.AgentTokenDTO {
+	return &dto.AgentTokenDTO{
+		AgentID:     agentToken.AgentID,
+		Token:       agentToken.Token,
+		GeneratedAt: agentToken.GeneratedAt,
+	}
+}

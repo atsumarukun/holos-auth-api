@@ -25,11 +25,13 @@ type AgentUsecase interface {
 	Create(context.Context, uuid.UUID, string) (*dto.AgentDTO, error)
 	Update(context.Context, uuid.UUID, uuid.UUID, string) (*dto.AgentDTO, error)
 	Delete(context.Context, uuid.UUID, uuid.UUID) error
+	Get(context.Context, uuid.UUID, uuid.UUID) (*dto.AgentDTO, error)
 	Gets(context.Context, string, uuid.UUID) ([]*dto.AgentDTO, error)
 	UpdatePolicies(context.Context, uuid.UUID, uuid.UUID, []uuid.UUID) ([]*dto.PolicyDTO, error)
-	GetPolicies(context.Context, uuid.UUID, uuid.UUID) ([]*dto.PolicyDTO, error)
+	GetPolicies(context.Context, uuid.UUID, uuid.UUID, string) ([]*dto.PolicyDTO, error)
 	GenerateToken(context.Context, uuid.UUID, uuid.UUID) (string, error)
 	DeleteToken(context.Context, uuid.UUID, uuid.UUID) error
+	GetToken(context.Context, uuid.UUID, uuid.UUID) (*dto.AgentTokenDTO, error)
 }
 
 type agentUsecase struct {
@@ -108,6 +110,18 @@ func (u *agentUsecase) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	})
 }
 
+func (u *agentUsecase) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*dto.AgentDTO, error) {
+	agent, err := u.agentRepository.FindOneByIDAndUserIDAndNotDeleted(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if agent == nil {
+		return nil, ErrAgentNotFound
+	}
+
+	return mapper.ToAgentDTO(agent), nil
+}
+
 func (u *agentUsecase) Gets(ctx context.Context, keyword string, userID uuid.UUID) ([]*dto.AgentDTO, error) {
 	agents, err := u.agentRepository.FindByNamePrefixAndUserIDAndNotDeleted(ctx, keyword, userID)
 	if err != nil {
@@ -144,7 +158,7 @@ func (u *agentUsecase) UpdatePolicies(ctx context.Context, id uuid.UUID, userID 
 	return mapper.ToPolicyDTOs(policies), nil
 }
 
-func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID) ([]*dto.PolicyDTO, error) {
+func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uuid.UUID, keyword string) ([]*dto.PolicyDTO, error) {
 	policies := []*entity.Policy{}
 
 	if err := u.transactionObject.Transaction(ctx, func(ctx context.Context) error {
@@ -156,7 +170,7 @@ func (u *agentUsecase) GetPolicies(ctx context.Context, id uuid.UUID, userID uui
 			return ErrAgentNotFound
 		}
 
-		policies, err = u.agentService.GetPolicies(ctx, agent)
+		policies, err = u.agentService.GetPolicies(ctx, agent, keyword)
 		return err
 	}); err != nil {
 		return nil, err
@@ -202,4 +216,16 @@ func (u *agentUsecase) DeleteToken(ctx context.Context, id uuid.UUID, userID uui
 
 		return u.agentTokenRepository.Delete(ctx, agentToken)
 	})
+}
+
+func (u *agentUsecase) GetToken(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*dto.AgentTokenDTO, error) {
+	agentToken, err := u.agentTokenRepository.FindOneByAgentIDAndUserID(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if agentToken == nil {
+		return nil, nil
+	}
+
+	return mapper.ToAgentTokenDTO(agentToken), nil
 }

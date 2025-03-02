@@ -32,8 +32,8 @@ func TestAgentToken_Save(t *testing.T) {
 			inputAgentToken: agentToken,
 			expectError:     nil,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("REPLACE agent_tokens (agent_id, token) VALUES (?, ?);")).
-					WithArgs(agentToken.AgentID, agentToken.Token).
+				mock.ExpectExec(regexp.QuoteMeta("REPLACE agent_tokens (agent_id, token, generated_at) VALUES (?, ?, ?);")).
+					WithArgs(agentToken.AgentID, agentToken.Token, agentToken.GeneratedAt).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(nil)
 			},
@@ -43,8 +43,8 @@ func TestAgentToken_Save(t *testing.T) {
 			inputAgentToken: agentToken,
 			expectError:     sql.ErrConnDone,
 			setMockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta("REPLACE agent_tokens (agent_id, token) VALUES (?, ?);")).
-					WithArgs(agentToken.AgentID, agentToken.Token).
+				mock.ExpectExec(regexp.QuoteMeta("REPLACE agent_tokens (agent_id, token, generated_at) VALUES (?, ?, ?);")).
+					WithArgs(agentToken.AgentID, agentToken.Token, agentToken.GeneratedAt).
 					WillReturnResult(sqlmock.NewResult(1, 1)).
 					WillReturnError(sql.ErrConnDone)
 			},
@@ -165,7 +165,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(
 					`SELECT
 						agent_tokens.agent_id,
-						agent_tokens.token
+						agent_tokens.token,
+						agent_tokens.generated_at
 					FROM
 						agent_tokens
 						INNER JOIN agents ON agent_tokens.agent_id = agents.id
@@ -176,8 +177,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				)).
 					WithArgs(agentToken.AgentID, agent.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"agent_id", "token"}).
-							AddRow(agentToken.AgentID, agentToken.Token),
+						sqlmock.NewRows([]string{"agent_id", "token", "generated_at"}).
+							AddRow(agentToken.AgentID, agentToken.Token, agentToken.GeneratedAt),
 					).
 					WillReturnError(nil)
 			},
@@ -192,7 +193,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(
 					`SELECT
 						agent_tokens.agent_id,
-						agent_tokens.token
+						agent_tokens.token,
+						agent_tokens.generated_at
 					FROM
 						agent_tokens
 						INNER JOIN agents ON agent_tokens.agent_id = agents.id
@@ -203,8 +205,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				)).
 					WithArgs(agentToken.AgentID, agent.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"agent_id", "token"}).
-							AddRow(agentToken.AgentID, agentToken.Token),
+						sqlmock.NewRows([]string{"agent_id", "token", "generated_at"}).
+							AddRow(agentToken.AgentID, agentToken.Token, agentToken.GeneratedAt),
 					).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -219,7 +221,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(
 					`SELECT
 						agent_tokens.agent_id,
-						agent_tokens.token
+						agent_tokens.token,
+						agent_tokens.generated_at
 					FROM
 						agent_tokens
 						INNER JOIN agents ON agent_tokens.agent_id = agents.id
@@ -230,8 +233,8 @@ func TestAgentToken_FindOneByToken(t *testing.T) {
 				)).
 					WithArgs(agentToken.AgentID, agent.UserID).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"agent_id", "token"}).
-							AddRow(agentToken.AgentID, agentToken.Token),
+						sqlmock.NewRows([]string{"agent_id", "token", "generated_at"}).
+							AddRow(agentToken.AgentID, agentToken.Token, agentToken.GeneratedAt),
 					).
 					WillReturnError(sql.ErrConnDone)
 			},

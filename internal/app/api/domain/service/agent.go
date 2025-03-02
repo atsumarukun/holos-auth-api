@@ -17,7 +17,7 @@ var (
 )
 
 type AgentService interface {
-	GetPolicies(context.Context, *entity.Agent) ([]*entity.Policy, error)
+	GetPolicies(context.Context, *entity.Agent, string) ([]*entity.Policy, error)
 	HasPermission(context.Context, *entity.Agent, string, string, string) (bool, error)
 }
 
@@ -31,16 +31,16 @@ func NewAgentService(policyRepository repository.PolicyRepository) AgentService 
 	}
 }
 
-func (s *agentService) GetPolicies(ctx context.Context, agent *entity.Agent) ([]*entity.Policy, error) {
+func (s *agentService) GetPolicies(ctx context.Context, agent *entity.Agent, keyword string) ([]*entity.Policy, error) {
 	if agent == nil {
 		return nil, ErrRequiredAgent
 	}
 
-	return s.policyRepository.FindByIDsAndUserIDAndNotDeleted(ctx, agent.Policies, agent.UserID)
+	return s.policyRepository.FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, agent.Policies, keyword, agent.UserID)
 }
 
 func (s *agentService) HasPermission(ctx context.Context, agent *entity.Agent, service string, path string, method string) (bool, error) {
-	policies, err := s.GetPolicies(ctx, agent)
+	policies, err := s.policyRepository.FindByIDsAndUserIDAndNotDeleted(ctx, agent.Policies, agent.UserID)
 	if err != nil {
 		return false, err
 	}

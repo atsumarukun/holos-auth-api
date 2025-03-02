@@ -224,7 +224,7 @@ func (u *agentUsecase) GetToken(ctx context.Context, id uuid.UUID, userID uuid.U
 		return nil, err
 	}
 	if agentToken == nil {
-		return nil, ErrAgentTokenNotFound
+		return nil, nil
 	}
 
 	return mapper.ToAgentTokenDTO(agentToken), nil

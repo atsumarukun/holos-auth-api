@@ -343,5 +343,9 @@ func (h *agentHandler) GetToken(c *gin.Context) {
 		return
 	}
 
+	if dto == nil {
+		c.JSON(http.StatusOK, nil)
+		return
+	}
 	c.JSON(http.StatusOK, builder.ToAgentTokenResponse(dto))
 }

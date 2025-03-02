@@ -350,6 +350,37 @@ paths:
           description: "サーバーエラー"
           $ref: "#/components/responses/500"
   /agents/{id}/token:
+    get:
+      summary: "エージェントのトークン取得"
+      tags:
+        - "agents"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "header"
+          name: "Authorization"
+          schema:
+            type: "string"
+          required: true
+          description: "認証トークン"
+          example: "Bearer 1Ty1HKTPKTt8xEi-_3HTbWf2SCHOdqOS"
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+          description: "ID"
+          example: "c99fc6e0-6e62-4de2-8a7e-5c608ceaa8c6"
+      responses:
+        200:
+          description: "成功"
+          $ref: "#/components/responses/get_agent_token"
+        401:
+          description: "認証エラー"
+          $ref: "#/components/responses/401"
+        500:
+          description: "サーバーエラー"
+          $ref: "#/components/responses/500"
     post:
       summary: "エージェントのトークン作成"
       tags:
@@ -760,13 +791,13 @@ components:
   schemas:
     created_at:
       type: "string"
-      description: "作成日"
+      description: "作成日時"
       format: "date-time"
       example: "2017-07-21T17:32:28Z"
       readOnly: true
     updated_at:
       type: "string"
-      description: "更新日"
+      description: "更新日時"
       format: "date-time"
       example: "2017-07-21T17:32:28Z"
       readOnly: true
@@ -1068,6 +1099,19 @@ components:
             type: "array"
             items:
               $ref: "#/components/schemas/policy"
+    get_agent_token:
+      description: "エージェントのトークン取得"
+      content:
+        text/plain:
+          schema:
+            type: "object"
+            properties:
+              generated_at:
+                type: "string"
+                description: "生成日時"
+                format: "date-time"
+                example: "2017-07-21T17:32:28Z"
+                readOnly: true
     create_agent_token:
       description: "エージェントのトークン作成"
       content:

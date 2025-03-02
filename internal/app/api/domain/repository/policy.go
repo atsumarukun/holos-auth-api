@@ -15,4 +15,5 @@ type PolicyRepository interface {
 	FindOneByIDAndUserIDAndNotDeleted(context.Context, uuid.UUID, uuid.UUID) (*entity.Policy, error)
 	FindByNamePrefixAndUserIDAndNotDeleted(context.Context, string, uuid.UUID) ([]*entity.Policy, error)
 	FindByIDsAndUserIDAndNotDeleted(context.Context, []uuid.UUID, uuid.UUID) ([]*entity.Policy, error)
+	FindByIDsAndNamePrefixAndUserIDAndNotDeleted(context.Context, []uuid.UUID, string, uuid.UUID) ([]*entity.Policy, error)
 }

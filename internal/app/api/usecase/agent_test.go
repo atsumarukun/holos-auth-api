@@ -738,6 +738,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 		name                     string
 		inputID                  uuid.UUID
 		inputUserID              uuid.UUID
+		inputKeyword             string
 		expectResult             []*dto.PolicyDTO
 		expectError              error
 		setMockTransactionObject func(context.Context, *mockDomain.MockTransactionObject)
@@ -748,6 +749,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "success",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
+			inputKeyword: "name",
 			expectResult: []*dto.PolicyDTO{{ID: policy.ID, UserID: policy.UserID, Name: policy.Name, Effect: policy.Effect, Service: policy.Service, Path: policy.Path, Methods: policy.Methods, Agents: []uuid.UUID{}, CreatedAt: policy.CreatedAt, UpdatedAt: policy.UpdatedAt}},
 			expectError:  nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
@@ -766,7 +768,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			},
 			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
 				as.EXPECT().
-					GetPolicies(ctx, gomock.Any()).
+					GetPolicies(ctx, gomock.Any(), gomock.Any()).
 					Return([]*entity.Policy{entity.RestorePolicy(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, policy.Methods, policy.Agents, policy.CreatedAt, policy.UpdatedAt)}, nil).
 					Times(1)
 			},
@@ -775,6 +777,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "agent not found",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
+			inputKeyword: "name",
 			expectResult: nil,
 			expectError:  usecase.ErrAgentNotFound,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
@@ -797,6 +800,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "policies not found",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
+			inputKeyword: "keyword",
 			expectResult: []*dto.PolicyDTO{},
 			expectError:  nil,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
@@ -815,7 +819,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			},
 			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
 				as.EXPECT().
-					GetPolicies(ctx, gomock.Any()).
+					GetPolicies(ctx, gomock.Any(), gomock.Any()).
 					Return(nil, nil).
 					Times(1)
 			},
@@ -824,6 +828,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "find agent error",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
+			inputKeyword: "name",
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
@@ -846,6 +851,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			name:         "find policies error",
 			inputID:      agent.ID,
 			inputUserID:  agent.UserID,
+			inputKeyword: "name",
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockTransactionObject: func(ctx context.Context, to *mockDomain.MockTransactionObject) {
@@ -864,7 +870,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			},
 			setMockAgentService: func(ctx context.Context, as *mockService.MockAgentService) {
 				as.EXPECT().
-					GetPolicies(ctx, gomock.Any()).
+					GetPolicies(ctx, gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -886,7 +892,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			tt.setMockAgentService(ctx, as)
 
 			au := usecase.NewAgentUsecase(to, ar, nil, nil, as)
-			result, err := au.GetPolicies(ctx, tt.inputID, tt.inputUserID)
+			result, err := au.GetPolicies(ctx, tt.inputID, tt.inputUserID, tt.inputKeyword)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}

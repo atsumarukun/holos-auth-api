@@ -33,6 +33,9 @@ func TestNewAgentToken(t *testing.T) {
 			if len(agentToken.Token) != 32 {
 				t.Error("token: must be 32 characters")
 			}
+			if agentToken.GeneratedAt.IsZero() {
+				t.Error("generated_at: expect time but got empty")
+			}
 		}
 	}
 }

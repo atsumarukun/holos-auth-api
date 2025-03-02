@@ -595,3 +595,93 @@ func TestPolicy_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 		})
 	}
 }
+
+func TestPolicy_FindByIDsAndNamePrefixAndUserIDAndNotDeleted(t *testing.T) {
+	policy, err := entity.NewPolicy(uuid.New(), "name", "ALLOW", "STORAGE", "/", []string{"GET"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name         string
+		inputIDs     []uuid.UUID
+		inputKeyword string
+		inputUserID  uuid.UUID
+		expectResult []*entity.Policy
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
+	}{
+		{
+			name:         "found",
+			inputIDs:     []uuid.UUID{policy.ID},
+			inputKeyword: "name",
+			inputUserID:  policy.UserID,
+			expectResult: []*entity.Policy{policy},
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(policy.ID, "name%", policy.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}).
+							AddRow(policy.ID, policy.UserID, policy.Name, policy.Effect, policy.Service, policy.Path, fmt.Sprintf(`["%s"]`, strings.Join(policy.Methods, ",")), policy.CreatedAt, policy.UpdatedAt),
+					).
+					WillReturnError(nil)
+			},
+		},
+		{
+			name:         "not found",
+			inputIDs:     []uuid.UUID{policy.ID},
+			inputKeyword: "keyword",
+			inputUserID:  policy.UserID,
+			expectResult: []*entity.Policy{},
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(policy.ID, "keyword%", policy.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
+					).
+					WillReturnError(nil)
+			},
+		},
+		{
+			name:         "find error",
+			inputIDs:     []uuid.UUID{policy.ID},
+			inputKeyword: "name",
+			inputUserID:  policy.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, effect, service, path, methods, created_at, updated_at FROM policies WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(policy.ID, "name%", policy.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "effect", "service", "path", "methods", "created_at", "updated_at"}),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewPolicyDBRepository(db)
+			result, err := r.FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, tt.inputIDs, tt.inputKeyword, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
+			}
+		})
+	}
+}

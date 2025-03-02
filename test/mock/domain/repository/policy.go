@@ -64,6 +64,21 @@ func (mr *MockPolicyRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPolicyRepository)(nil).Delete), arg0, arg1)
 }
 
+// FindByIDsAndNamePrefixAndUserIDAndNotDeleted mocks base method.
+func (m *MockPolicyRepository) FindByIDsAndNamePrefixAndUserIDAndNotDeleted(arg0 context.Context, arg1 []uuid.UUID, arg2 string, arg3 uuid.UUID) ([]*entity.Policy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByIDsAndNamePrefixAndUserIDAndNotDeleted", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*entity.Policy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByIDsAndNamePrefixAndUserIDAndNotDeleted indicates an expected call of FindByIDsAndNamePrefixAndUserIDAndNotDeleted.
+func (mr *MockPolicyRepositoryMockRecorder) FindByIDsAndNamePrefixAndUserIDAndNotDeleted(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIDsAndNamePrefixAndUserIDAndNotDeleted", reflect.TypeOf((*MockPolicyRepository)(nil).FindByIDsAndNamePrefixAndUserIDAndNotDeleted), arg0, arg1, arg2, arg3)
+}
+
 // FindByIDsAndUserIDAndNotDeleted mocks base method.
 func (m *MockPolicyRepository) FindByIDsAndUserIDAndNotDeleted(arg0 context.Context, arg1 []uuid.UUID, arg2 uuid.UUID) ([]*entity.Policy, error) {
 	m.ctrl.T.Helper()

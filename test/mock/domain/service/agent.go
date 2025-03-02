@@ -36,18 +36,18 @@ func (m *MockAgentService) EXPECT() *MockAgentServiceMockRecorder {
 }
 
 // GetPolicies mocks base method.
-func (m *MockAgentService) GetPolicies(arg0 context.Context, arg1 *entity.Agent) ([]*entity.Policy, error) {
+func (m *MockAgentService) GetPolicies(arg0 context.Context, arg1 *entity.Agent, arg2 string) ([]*entity.Policy, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPolicies", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetPolicies", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*entity.Policy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPolicies indicates an expected call of GetPolicies.
-func (mr *MockAgentServiceMockRecorder) GetPolicies(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAgentServiceMockRecorder) GetPolicies(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPolicies", reflect.TypeOf((*MockAgentService)(nil).GetPolicies), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPolicies", reflect.TypeOf((*MockAgentService)(nil).GetPolicies), arg0, arg1, arg2)
 }
 
 // HasPermission mocks base method.

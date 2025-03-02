@@ -27,6 +27,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 	tests := []struct {
 		name                   string
 		inputPolicy            *entity.Policy
+		inputKeyword           string
 		expectResult           []*entity.Agent
 		expectError            error
 		setMockAgentRepository func(context.Context, *mockRepository.MockAgentRepository)
@@ -34,11 +35,12 @@ func TestPolicy_GetAgents(t *testing.T) {
 		{
 			name:         "success",
 			inputPolicy:  policy,
+			inputKeyword: "name",
 			expectResult: []*entity.Agent{agent},
 			expectError:  nil,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]*entity.Agent{agent}, nil).
 					Times(1)
 			},
@@ -46,11 +48,12 @@ func TestPolicy_GetAgents(t *testing.T) {
 		{
 			name:         "not found",
 			inputPolicy:  policy,
+			inputKeyword: "keyword",
 			expectResult: nil,
 			expectError:  nil,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, nil).
 					Times(1)
 			},
@@ -58,11 +61,12 @@ func TestPolicy_GetAgents(t *testing.T) {
 		{
 			name:         "find error",
 			inputPolicy:  policy,
+			inputKeyword: "name",
 			expectResult: nil,
 			expectError:  sql.ErrConnDone,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {
 				ar.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},
@@ -70,6 +74,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 		{
 			name:                   "no policy",
 			inputPolicy:            nil,
+			inputKeyword:           "name",
 			expectResult:           nil,
 			expectError:            service.ErrRequiredPolicy,
 			setMockAgentRepository: func(ctx context.Context, ar *mockRepository.MockAgentRepository) {},
@@ -87,7 +92,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			tt.setMockAgentRepository(ctx, ar)
 
 			as := service.NewPolicyService(ar)
-			result, err := as.GetAgents(ctx, tt.inputPolicy)
+			result, err := as.GetAgents(ctx, tt.inputPolicy, tt.inputKeyword)
 			if !errors.Is(err, tt.expectError) {
 				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
 			}

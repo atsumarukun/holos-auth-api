@@ -14,7 +14,7 @@ var (
 )
 
 type PolicyService interface {
-	GetAgents(context.Context, *entity.Policy) ([]*entity.Agent, error)
+	GetAgents(context.Context, *entity.Policy, string) ([]*entity.Agent, error)
 }
 
 type policyService struct {
@@ -27,10 +27,10 @@ func NewPolicyService(agentRepository repository.AgentRepository) PolicyService 
 	}
 }
 
-func (s *policyService) GetAgents(ctx context.Context, polisy *entity.Policy) ([]*entity.Agent, error) {
+func (s *policyService) GetAgents(ctx context.Context, polisy *entity.Policy, keyword string) ([]*entity.Agent, error) {
 	if polisy == nil {
 		return nil, ErrRequiredPolicy
 	}
 
-	return s.agentRepository.FindByIDsAndUserIDAndNotDeleted(ctx, polisy.Agents, polisy.UserID)
+	return s.agentRepository.FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, polisy.Agents, keyword, polisy.UserID)
 }

@@ -239,9 +239,11 @@ func (h *policyHandler) GetAgents(c *gin.Context) {
 		return
 	}
 
+	keyword := c.Query("keyword")
+
 	ctx := c.Request.Context()
 
-	dtos, err := h.policyUsecase.GetAgents(ctx, id, userID)
+	dtos, err := h.policyUsecase.GetAgents(ctx, id, userID, keyword)
 	if err != nil {
 		status := errors.HandleError(err)
 		log.Println(status.Message())

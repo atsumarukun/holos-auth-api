@@ -46,7 +46,7 @@ mainブランチへmergeすることでデプロイが行われる.
 
 ### API
 
-APIのデプロイを行う前に.github/workflows/deploy-api.yml内のapiバージョンを更新する.<br />
+APIのデプロイを行う前に.github/workflows/deploy-api.yml内のapiバージョンとSwaggerUI内のapiバージョンを更新する.<br />
 https://github.com/atsumarukun/holos-auth-api/pkgs/container/holos-auth-api
 
 ### SwaggerUI

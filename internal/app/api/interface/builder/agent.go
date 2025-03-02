@@ -21,3 +21,9 @@ func ToAgentResponses(agents []*dto.AgentDTO) []*response.AgentResponse {
 	}
 	return responses
 }
+
+func ToAgentTokenResponse(agentToken *dto.AgentTokenDTO) *response.AgentTokenResponse {
+	return &response.AgentTokenResponse{
+		GeneratedAt: agentToken.GeneratedAt,
+	}
+}

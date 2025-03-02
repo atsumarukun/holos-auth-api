@@ -1164,3 +1164,84 @@ func TestAgent_DeleteToken(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_GetToken(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	agentToken, err := entity.NewAgentToken(agent.ID)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name                        string
+		inputID                     uuid.UUID
+		inputUserID                 uuid.UUID
+		expectResult                *dto.AgentTokenDTO
+		expectError                 error
+		setMockAgentTokenRepository func(context.Context, *mockRepository.MockAgentTokenRepository)
+	}{
+		{
+			name:         "success",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: &dto.AgentTokenDTO{AgentID: agentToken.AgentID, Token: agentToken.Token, GeneratedAt: agentToken.GeneratedAt},
+			expectError:  nil,
+			setMockAgentTokenRepository: func(ctx context.Context, pr *mockRepository.MockAgentTokenRepository) {
+				pr.EXPECT().
+					FindOneByAgentIDAndUserID(ctx, agent.ID, agent.UserID).
+					Return(agentToken, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "agent token not found",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  nil,
+			setMockAgentTokenRepository: func(ctx context.Context, pr *mockRepository.MockAgentTokenRepository) {
+				pr.EXPECT().
+					FindOneByAgentIDAndUserID(ctx, agent.ID, agent.UserID).
+					Return(nil, nil).
+					Times(1)
+			},
+		},
+		{
+			name:         "find agent token error",
+			inputID:      agent.ID,
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockAgentTokenRepository: func(ctx context.Context, pr *mockRepository.MockAgentTokenRepository) {
+				pr.EXPECT().
+					FindOneByAgentIDAndUserID(ctx, agent.ID, agent.UserID).
+					Return(nil, sql.ErrConnDone).
+					Times(1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			atr := mockRepository.NewMockAgentTokenRepository(ctrl)
+
+			ctx := context.Background()
+
+			tt.setMockAgentTokenRepository(ctx, atr)
+
+			au := usecase.NewAgentUsecase(nil, nil, atr, nil, nil)
+			result, err := au.GetToken(ctx, tt.inputID, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+		})
+	}
+}

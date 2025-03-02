@@ -12,3 +12,7 @@ type AgentResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type AgentTokenResponse struct {
+	GeneratedAt time.Time `json:"generated_at"`
+}

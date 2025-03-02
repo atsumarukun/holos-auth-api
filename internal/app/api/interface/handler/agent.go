@@ -23,6 +23,7 @@ type AgentHandler interface {
 	GetPolicies(*gin.Context)
 	GenerateToken(*gin.Context)
 	DeleteToken(*gin.Context)
+	GetToken(*gin.Context)
 }
 
 type agentHandler struct {
@@ -313,4 +314,34 @@ func (h *agentHandler) DeleteToken(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *agentHandler) GetToken(c *gin.Context) {
+	id, err := parameter.GetPathParameter[uuid.UUID](c, "id")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	userID, err := parameter.GetContextParameter[uuid.UUID](c, "userID")
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	dto, err := h.agentUsecase.GetToken(ctx, id, userID)
+	if err != nil {
+		status := errors.HandleError(err)
+		log.Println(status.Message())
+		c.String(status.Code(), status.Message())
+		return
+	}
+
+	c.JSON(http.StatusOK, builder.ToAgentTokenResponse(dto))
 }

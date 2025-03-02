@@ -579,7 +579,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			expectStatusCode:       http.StatusOK,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					GetAgents(gomock.Any(), gomock.Any(), gomock.Any()).
+					GetAgents(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]*dto.AgentDTO{mapper.ToAgentDTO(agent)}, nil).
 					Times(1)
 			},
@@ -605,7 +605,7 @@ func TestPolicy_GetAgents(t *testing.T) {
 			expectStatusCode:       http.StatusInternalServerError,
 			setMockUsecase: func(u *mockUsecase.MockPolicyUsecase) {
 				u.EXPECT().
-					GetAgents(gomock.Any(), gomock.Any(), gomock.Any()).
+					GetAgents(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},

@@ -31,6 +31,7 @@ type AgentUsecase interface {
 	GetPolicies(context.Context, uuid.UUID, uuid.UUID, string) ([]*dto.PolicyDTO, error)
 	GenerateToken(context.Context, uuid.UUID, uuid.UUID) (string, error)
 	DeleteToken(context.Context, uuid.UUID, uuid.UUID) error
+	GetToken(context.Context, uuid.UUID, uuid.UUID) (*dto.AgentTokenDTO, error)
 }
 
 type agentUsecase struct {
@@ -215,4 +216,16 @@ func (u *agentUsecase) DeleteToken(ctx context.Context, id uuid.UUID, userID uui
 
 		return u.agentTokenRepository.Delete(ctx, agentToken)
 	})
+}
+
+func (u *agentUsecase) GetToken(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*dto.AgentTokenDTO, error) {
+	agentToken, err := u.agentTokenRepository.FindOneByAgentIDAndUserID(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if agentToken == nil {
+		return nil, ErrAgentTokenNotFound
+	}
+
+	return mapper.ToAgentTokenDTO(agentToken), nil
 }

@@ -719,3 +719,93 @@ func TestAgent_FindByIDsAndUserIDAndNotDeleted(t *testing.T) {
 		})
 	}
 }
+
+func TestAgent_FindByIDsAndNamePrefixAndUserIDAndNotDeleted(t *testing.T) {
+	agent, err := entity.NewAgent(uuid.New(), "name")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tests := []struct {
+		name         string
+		inputIDs     []uuid.UUID
+		inputKeyword string
+		inputUserID  uuid.UUID
+		expectResult []*entity.Agent
+		expectError  error
+		setMockDB    func(sqlmock.Sqlmock)
+	}{
+		{
+			name:         "found",
+			inputIDs:     []uuid.UUID{agent.ID},
+			inputKeyword: "name",
+			inputUserID:  agent.UserID,
+			expectResult: []*entity.Agent{agent},
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(agent.ID, "name%", agent.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}).
+							AddRow(agent.ID, agent.UserID, agent.Name, agent.CreatedAt, agent.UpdatedAt),
+					).
+					WillReturnError(nil)
+			},
+		},
+		{
+			name:         "not found",
+			inputIDs:     []uuid.UUID{agent.ID},
+			inputKeyword: "keyword",
+			inputUserID:  agent.UserID,
+			expectResult: []*entity.Agent{},
+			expectError:  nil,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(agent.ID, "keyword%", agent.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}),
+					).
+					WillReturnError(nil)
+			},
+		},
+		{
+			name:         "find error",
+			inputIDs:     []uuid.UUID{agent.ID},
+			inputKeyword: "name",
+			inputUserID:  agent.UserID,
+			expectResult: nil,
+			expectError:  sql.ErrConnDone,
+			setMockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, user_id, name, created_at, updated_at FROM agents WHERE id IN (?) AND name LIKE ? AND user_id = ? AND deleted_at IS NULL;")).
+					WithArgs(agent.ID, "name%", agent.UserID).
+					WillReturnRows(
+						sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "updated_at"}),
+					).
+					WillReturnError(sql.ErrConnDone)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock := test.NewMockDB(t)
+			defer db.Close()
+
+			ctx := context.Background()
+
+			tt.setMockDB(mock)
+
+			r := database.NewAgentDBRepository(db)
+			result, err := r.FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, tt.inputIDs, tt.inputKeyword, tt.inputUserID)
+			if !errors.Is(err, tt.expectError) {
+				t.Errorf("\nexpect: %v\ngot: %v", tt.expectError, err)
+			}
+			if diff := cmp.Diff(result, tt.expectResult); diff != "" {
+				t.Error(diff)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Error(err.Error())
+			}
+		})
+	}
+}

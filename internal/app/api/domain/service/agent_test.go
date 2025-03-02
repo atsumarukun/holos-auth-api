@@ -40,7 +40,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]*entity.Policy{policy}, nil).
 					Times(1)
 			},
@@ -53,7 +53,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			expectError:  nil,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, nil).
 					Times(1)
 			},
@@ -66,7 +66,7 @@ func TestAgent_GetPolicies(t *testing.T) {
 			expectError:  sql.ErrConnDone,
 			setMockPolicyRepository: func(ctx context.Context, pr *mockRepository.MockPolicyRepository) {
 				pr.EXPECT().
-					FindByIDsAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any()).
+					FindByIDsAndNamePrefixAndUserIDAndNotDeleted(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, sql.ErrConnDone).
 					Times(1)
 			},

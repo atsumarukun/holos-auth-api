@@ -2,13 +2,15 @@ package entity
 
 import (
 	"holos-auth-api/internal/app/api/domain/pkg/token"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type AgentToken struct {
-	AgentID uuid.UUID
-	Token   string
+	AgentID     uuid.UUID
+	Token       string
+	GeneratedAt time.Time
 }
 
 func NewAgentToken(agentID uuid.UUID) (*AgentToken, error) {
@@ -18,14 +20,16 @@ func NewAgentToken(agentID uuid.UUID) (*AgentToken, error) {
 	}
 
 	return &AgentToken{
-		AgentID: agentID,
-		Token:   token,
+		AgentID:     agentID,
+		Token:       token,
+		GeneratedAt: time.Now(),
 	}, nil
 }
 
-func RestoreAgentToken(agentID uuid.UUID, token string) *AgentToken {
+func RestoreAgentToken(agentID uuid.UUID, token string, generatedAt time.Time) *AgentToken {
 	return &AgentToken{
-		AgentID: agentID,
-		Token:   token,
+		AgentID:     agentID,
+		Token:       token,
+		GeneratedAt: generatedAt,
 	}
 }

@@ -1071,7 +1071,7 @@ func TestAgent_DeleteToken(t *testing.T) {
 			setMockAgentTokenRepository: func(ctx context.Context, pr *mockRepository.MockAgentTokenRepository) {
 				pr.EXPECT().
 					FindOneByAgentIDAndUserID(ctx, agent.ID, agent.UserID).
-					Return(entity.RestoreAgentToken(agentToken.AgentID, agentToken.Token), nil).
+					Return(agentToken, nil).
 					Times(1)
 				pr.EXPECT().
 					Delete(ctx, gomock.Any()).
@@ -1135,7 +1135,7 @@ func TestAgent_DeleteToken(t *testing.T) {
 			setMockAgentTokenRepository: func(ctx context.Context, pr *mockRepository.MockAgentTokenRepository) {
 				pr.EXPECT().
 					FindOneByAgentIDAndUserID(ctx, agent.ID, agent.UserID).
-					Return(entity.RestoreAgentToken(agentToken.AgentID, agentToken.Token), nil).
+					Return(agentToken, nil).
 					Times(1)
 				pr.EXPECT().
 					Delete(ctx, gomock.Any()).

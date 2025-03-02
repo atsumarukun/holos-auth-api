@@ -39,7 +39,7 @@ func (r *agentTokenDBRepository) Save(ctx context.Context, agentToken *entity.Ag
 
 	_, err := driver.NamedExecContext(
 		ctx,
-		`REPLACE agent_tokens (agent_id, token) VALUES (:agent_id, :token);`,
+		`REPLACE agent_tokens (agent_id, token, generated_at) VALUES (:agent_id, :token, :generated_at);`,
 		agentTokenModel,
 	)
 
@@ -71,7 +71,8 @@ func (r *agentTokenDBRepository) FindOneByAgentIDAndUserID(ctx context.Context, 
 		ctx,
 		`SELECT
 			agent_tokens.agent_id,
-			agent_tokens.token
+			agent_tokens.token,
+			agent_tokens.generated_at
 		FROM
 			agent_tokens
 			INNER JOIN agents ON agent_tokens.agent_id = agents.id

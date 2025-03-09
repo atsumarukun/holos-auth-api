@@ -284,7 +284,7 @@ func (h *agentHandler) GenerateToken(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, token)
+	c.String(http.StatusOK, token)
 }
 
 func (h *agentHandler) DeleteToken(c *gin.Context) {
